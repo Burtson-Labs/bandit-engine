@@ -225,6 +225,12 @@
           padding-bottom: clamp(72px, 10vw, 120px);
         }
 
+        .has-menu .col-sidebar {
+          max-height: 100vh;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
         footer {
           position: static;
           padding: clamp(18px, 6vw, 28px) 0 clamp(24px, 6vw, 36px);
