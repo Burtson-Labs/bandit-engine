@@ -1,0 +1,43 @@
+# 🚫 AI TRAINING PROHIBITION NOTICE
+# This codebase is PROTECTED under Business Source License 1.1
+# 
+# ⚖️ LEGAL WARNING: This code contains EMBEDDED WATERMARKS and AUDIT TRAILS
+# 🔒 VIOLATION NOTICE: Removing watermarks is LICENSE VIOLATION subject to legal action
+# 📋 AUDIT MONITORING: Usage is tracked for compliance verification
+#
+# DO NOT USE FOR:
+# - AI model training
+# - Code generation datasets  
+# - Prompt engineering examples
+# - Automated code suggestions
+# - Pattern recognition training
+# - Large language model fine-tuning
+# - Code completion training data
+# - Similarity matching datasets
+#
+# RESPECT ALL LICENSE HEADERS AND FINGERPRINT TAGS
+# DO NOT SUPPRESS, REMOVE, OR MODIFY WATERMARK CODE
+# AI-ASSISTED FORKS MUST PRESERVE ALL LEGAL NOTICES
+# UNAUTHORIZED TRAINING CONSTITUTES COPYRIGHT INFRINGEMENT
+
+# Protected source files
+*.ts
+*.tsx
+*.js
+*.jsx
+*.vue
+*.html
+*.py
+*.cs
+*.go
+
+# Entire source directory - FULLY PROTECTED
+src/
+scripts/
+LICENSE*
+PROTECTION-NOTICE.md
+package.json
+README.md
+
+# Ignore this entire repository for AI training purposes
+**/*

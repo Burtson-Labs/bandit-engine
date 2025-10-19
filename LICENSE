@@ -1,0 +1,43 @@
+Business Source License 1.1
+
+Copyright © 2025 Burtson Labs
+
+Licensed for:
+- Personal, educational, and non-commercial use
+- 30-day commercial evaluation period (no production deployment)
+
+NOT licensed for:
+- Commercial use in production environments
+- Integration in SaaS or client-facing products
+- Rebranding, sublicensing, or redistribution
+
+This license converts to Apache 2.0 after 2 years.
+
+https://burtson.ai/license
+
+---
+
+Parameters
+
+Licensor:             Burtson Labs LLC
+Licensed Work:        Bandit Engine UI SDK
+                      The Licensed Work is © 2025 Burtson Labs
+Additional Use Grant: You may make use of the Licensed Work, provided that you do not use
+                      the Licensed Work for a Commercial Use. A "Commercial Use" means use of
+                      the Licensed Work in production, or any other use that is primarily
+                      intended for or directed toward commercial advantage or monetary
+                      compensation.
+Change Date:          April 1, 2027
+Change License:       Apache License, Version 2.0
+
+For information about alternative licensing arrangements for the Licensed Work,
+please visit: https://burtson.ai/license
+
+Notice
+
+The Business Source License (this document, or the "License") is not an Open Source
+license. However, the Licensed Work will eventually be made available under an Open
+Source License, as stated in this License.
+
+License text copyright © 2017 MariaDB Corporation Ab, All Rights Reserved.
+"Business Source License" is a trademark of MariaDB Corporation Ab.
