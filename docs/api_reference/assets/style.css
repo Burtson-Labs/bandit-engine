@@ -1418,6 +1418,8 @@ img {
         gap: 1.5rem;
         max-height: 100vh;
         padding: 1rem 2rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     .has-menu .tsd-navigation {
         max-height: 100%;
