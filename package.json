@@ -1,6 +1,6 @@
 {
   "name": "@burtson-labs/bandit-engine",
-  "version": "2.0.29",
+  "version": "2.0.30",
   "license": "BUSL-1.1",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -17,7 +17,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Burtson-Labs/bandit.git",
+    "url": "https://github.com/Burtson-Labs/bandit-engine.git",
     "directory": "packages/bandit-engine"
   },
   "homepage": "https://banditailabs.com/npm-package",
