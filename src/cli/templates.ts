@@ -1269,16 +1269,10 @@ export const buildGitignore = (): string =>
     )
   );
 
-export const buildNpmrc = (): string => {
-  const tokenExpr = "${GITHUB_NPM_TOKEN}";
-  const template = `@burtson-labs:registry=https://npm.pkg.github.com/
-//npm.pkg.github.com/:_authToken=__NPM_TOKEN__
-`;
-
-  return ensureTrailingNewline(
-    normalizeLineEndings(template.replace(/__NPM_TOKEN__/g, tokenExpr))
+export const buildNpmrc = (): string =>
+  ensureTrailingNewline(
+    normalizeLineEndings(`registry=https://registry.npmjs.org/\n`)
   );
-};
 
 export const buildReadme = (ctx: QuickstartTemplateContext): string =>
   ensureTrailingNewline(
