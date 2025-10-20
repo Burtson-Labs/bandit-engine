@@ -9,6 +9,9 @@ The public `bandit-engine` package is synchronized from an internal strategy rep
 1. Review your proposal and request updates if needed.
 2. Merge approved changes upstream with the full commit history intact.
 3. Push the synchronized branch back to this repository and close the public PR with a note referencing the upstream merge.
+   - Example PR: [#2 — 1-defect/1#fix-type-doc-mobile](https://github.com/Burtson-Labs/bandit-engine/pull/2)
+   - Linked issue: [#1 — Mobile Type Doc panel not scrollable](https://github.com/Burtson-Labs/bandit-engine/issues/1)
+   - Maintainer response: “Thank you for your contribution! Merged upstream into the private monorepo for the next public sync ✅ …”
 
 This approach keeps our release history consistent while still giving you credit for the work. Expect commit messages in the public history to include the originating issue number and branch name (for example, `1234-fix-streaming: adjust memory store`).
 
