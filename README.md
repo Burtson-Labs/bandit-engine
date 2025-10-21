@@ -238,7 +238,8 @@ To run the quickstart purely against an Ollama daemon:
    ```
 
 
-<p class="gateway-note">Set <code>VITE_DEFAULT_MODEL</code> / <code>VITE_FALLBACK_MODEL</code> to the exact Ollama model tags you have available (<code>gemma</code>, <code>llava</code>, <code>moondream</code>, or your own custom builds). Bandit automatically detects multimodal Ollama models, so setting <code>llava</code>, <code>moondream</code>, or other vision-capable variants enables image understanding with no extra code.</p>
+> **Gateway tip**  
+> Set `VITE_DEFAULT_MODEL` / `VITE_FALLBACK_MODEL` to the exact Ollama model tags you have available (`gemma`, `llava`, `moondream`, or your own custom builds). Bandit automatically detects multimodal Ollama models, so using `llava`, `moondream`, or other vision-capable variants enables image understanding with no extra code.
 
 ### 🎤 Voice Services (TTS/STT)
 
