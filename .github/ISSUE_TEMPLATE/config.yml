@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Commercial license & support
+    url: mailto:team@burtson.ai?subject=Bandit%20Engine%20Commercial%20Inquiry
+    about: Reach out for production licensing, support agreements, or enterprise roadmap requests.
+  - name: Bandit Engine Documentation
+    url: https://banditailabs.com/docs
+    about: Review the official docs before filing an issue—most setup questions are answered there.

@@ -21,6 +21,7 @@ This approach keeps our release history consistent while still giving you credit
 2. Install dependencies with `npm install` at the repo root.
 3. Focus your changes within this package so reviews stay scoped and easy to sync upstream.
 4. Open an issue first for large or controversial changes so we can align on scope.
+5. When filing an issue, pick the appropriate template from `.github/ISSUE_TEMPLATE/` so we have the right repro details or roadmap context.
 
 ## Development workflow
 
