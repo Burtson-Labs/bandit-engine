@@ -230,13 +230,12 @@ To run the quickstart purely against an Ollama daemon:
    ```ini
    # Frontend
    VITE_GATEWAY_PROVIDER=ollama
-  VITE_DEFAULT_MODEL=llava:latest # any model installed on your Ollama box
+   VITE_DEFAULT_MODEL=llava:latest # any model installed on your Ollama box
    VITE_FALLBACK_MODEL=gemma2:9b-instruct # optional, but handy for text-only fallbacks
 
    # Gateway / server
-   OLLAMA_URL=http://localhost:11434      # or the remote daemon address
+   OLLAMA_URL=http://localhost:11434 # or the remote daemon address
    ```
-
 
 > **Gateway tip**  
 > Set `VITE_DEFAULT_MODEL` / `VITE_FALLBACK_MODEL` to the exact Ollama model tags you have available (`gemma`, `llava`, `moondream`, or your own custom builds). Bandit automatically detects multimodal Ollama models, so using `llava`, `moondream`, or other vision-capable variants enables image understanding with no extra code.
