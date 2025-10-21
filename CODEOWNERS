@@ -1,0 +1,6 @@
+# Default owners for everything in this package.
+* @markymarkburt @bburtson
+
+# Documentation assets
+/docs/** @markymarkburt @bburtson
+/typedoc/** @markymarkburt @bburtson
