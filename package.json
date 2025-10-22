@@ -1,6 +1,6 @@
 {
   "name": "@burtson-labs/bandit-engine",
-  "version": "2.0.32",
+  "version": "2.0.33",
   "license": "BUSL-1.1",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -43,7 +43,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "docs": "typedoc src --out docs/api_reference --skipErrorChecking && node ./scripts/post-typedoc.mjs",
+    "docs": "typedoc src --out docs/api_reference --skipErrorChecking --sourceLinkTemplate \"https://github.com/Burtson-Labs/bandit-engine/blob/{gitRevision}/{path}#L{line}\" && node ./scripts/post-typedoc.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest",
     "protect": "node scripts/add-license-headers.js",
