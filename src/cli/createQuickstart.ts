@@ -42,10 +42,14 @@ import {
   buildTsConfig,
   buildViteConfig,
   buildNpmrc,
+  buildNextChatRoute,
+  buildNextHealthRoute,
+  buildNextModelsRoute,
+  buildNextGatewayReadme,
   QuickstartTemplateContext,
 } from "./templates";
 
-type SupportedProvider = "openai" | "ollama" | "azure" | "anthropic";
+type SupportedProvider = "openai" | "ollama" | "azure" | "anthropic" | "xai";
 
 interface LogoResolution {
   dataUrl: string;
@@ -203,6 +207,9 @@ const normalizeProvider = (value?: string): SupportedProvider => {
   if (normalized === "anthropic") {
     return "anthropic";
   }
+  if (normalized === "xai" || normalized === "grok") {
+    return "xai";
+  }
   return "openai";
 };
 
@@ -215,6 +222,9 @@ const inferDefaultModelId = (provider: SupportedProvider): string => {
   }
   if (provider === "anthropic") {
     return "anthropic:claude-3-5-sonnet-latest";
+  }
+  if (provider === "xai") {
+    return "xai:grok-2-latest";
   }
   return "openai:gpt-4o-mini";
 };
@@ -231,6 +241,9 @@ const inferFallbackModelId = (provider: SupportedProvider, defaultId: string): s
       ? "anthropic:claude-3-5-sonnet-latest"
       : "anthropic:claude-3-5-haiku-latest";
   }
+  if (provider === "xai") {
+    return defaultId === "xai:grok-2-mini" ? "xai:grok-2-latest" : "xai:grok-2-mini";
+  }
   return defaultId === "openai:gpt-4.1-mini" ? "openai:gpt-4o-mini" : "openai:gpt-4.1-mini";
 };
 
@@ -239,6 +252,7 @@ const promptForProvider = async (): Promise<SupportedProvider> => {
     { label: "OpenAI (default)", value: "openai" },
     { label: "Azure OpenAI", value: "azure" },
     { label: "Anthropic", value: "anthropic" },
+    { label: "xAI (Grok)", value: "xai" },
     { label: "Ollama (self-hosted)", value: "ollama" },
   ];
 
@@ -400,6 +414,10 @@ const writeProject = async (inputs: CreateQuickstartInputs): Promise<string[]> =
     "src/theme.ts": buildThemeTs(),
     "public/config.json": buildBrandingConfig(context),
     "server/gateway.js": buildGatewayServer(context),
+    "server/next-app/app/api/chat/completions/route.ts": buildNextChatRoute(context),
+    "server/next-app/app/api/health/route.ts": buildNextHealthRoute(),
+    "server/next-app/app/api/models/route.ts": buildNextModelsRoute(context),
+    "server/next-app/README.md": buildNextGatewayReadme(),
     ".env.example": buildEnvExample(context),
     ".gitignore": buildGitignore(),
     ".npmrc": buildNpmrc(),

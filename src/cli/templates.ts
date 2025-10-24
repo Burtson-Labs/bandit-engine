@@ -34,7 +34,7 @@ export interface QuickstartTemplateContext {
   isDefaultLogo: boolean;
   gatewayPort: number;
   frontendPort: number;
-  defaultProvider: "openai" | "ollama" | "azure" | "anthropic";
+  defaultProvider: "openai" | "ollama" | "azure" | "anthropic" | "xai";
   defaultGatewayUrl: string;
   defaultModelId: string;
   fallbackModelId?: string;
@@ -85,7 +85,7 @@ export const buildPackageJson = (ctx: QuickstartTemplateContext): string =>
 export const buildEnvExample = (ctx: QuickstartTemplateContext): string =>
   ensureTrailingNewline(
     normalizeLineEndings(
-      `# Frontend configuration\nVITE_DEV_PORT=${ctx.frontendPort}\nVITE_GATEWAY_URL=${ctx.defaultGatewayUrl}\nVITE_DEFAULT_MODEL=${ctx.defaultModelId}\nVITE_FALLBACK_MODEL=${ctx.fallbackModelId ?? ""}\nVITE_GATEWAY_PROVIDER=${ctx.defaultProvider}\nVITE_BRANDING_TEXT=${ctx.brandingText}\n\n# Gateway configuration\n# OPENAI_API_KEY=sk-................................\n# AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com\n# AZURE_OPENAI_API_KEY=................................................................\n# AZURE_OPENAI_API_VERSION=2024-08-01-preview\n# AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o\n# AZURE_OPENAI_COMPLETIONS_DEPLOYMENT=gpt-35-turbo-instruct\n# AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-3-large\n# ANTHROPIC_API_KEY=sk-ant-................................\n# ANTHROPIC_BASE_URL=https://api.anthropic.com\n# ANTHROPIC_API_VERSION=2023-06-01\n# ANTHROPIC_MAX_TOKENS=1024\n# OLLAMA_URL=http://localhost:11434\n# PORT=${ctx.gatewayPort}\n`
+      `# Frontend configuration\nVITE_DEV_PORT=${ctx.frontendPort}\nVITE_GATEWAY_URL=${ctx.defaultGatewayUrl}\nVITE_DEFAULT_MODEL=${ctx.defaultModelId}\nVITE_FALLBACK_MODEL=${ctx.fallbackModelId ?? ""}\nVITE_GATEWAY_PROVIDER=${ctx.defaultProvider}\nVITE_BRANDING_TEXT=${ctx.brandingText}\n\n# Gateway configuration\n# OPENAI_API_KEY=sk-................................\n# AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com\n# AZURE_OPENAI_API_KEY=................................................................\n# AZURE_OPENAI_API_VERSION=2024-08-01-preview\n# AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o\n# AZURE_OPENAI_COMPLETIONS_DEPLOYMENT=gpt-35-turbo-instruct\n# AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-3-large\n# ANTHROPIC_API_KEY=sk-ant-................................\n# ANTHROPIC_BASE_URL=https://api.anthropic.com\n# ANTHROPIC_API_VERSION=2023-06-01\n# ANTHROPIC_MAX_TOKENS=1024\n# XAI_API_KEY=sk-xai-................................\n# XAI_BASE_URL=https://api.x.ai/v1\n# OLLAMA_URL=http://localhost:11434\n# PORT=${ctx.gatewayPort}\n`
     )
   );
 
@@ -182,7 +182,7 @@ const gatewayBaseUrl = (import.meta.env.VITE_GATEWAY_URL ?? "${ctx.defaultGatewa
 const defaultModelId = import.meta.env.VITE_DEFAULT_MODEL ?? "${ctx.defaultModelId}";
 const fallbackModelId = import.meta.env.VITE_FALLBACK_MODEL ?? ${ctx.fallbackModelId ? `${QUOTE}${ctx.fallbackModelId}${QUOTE}` : "undefined"};
 const brandingText = import.meta.env.VITE_BRANDING_TEXT ?? "${ctx.brandingText}";
-const provider = (import.meta.env.VITE_GATEWAY_PROVIDER ?? "${ctx.defaultProvider}") as "openai" | "ollama" | "azure" | "anthropic";
+const provider = (import.meta.env.VITE_GATEWAY_PROVIDER ?? "${ctx.defaultProvider}") as "openai" | "ollama" | "azure" | "anthropic" | "xai";
 
 const gatewayApiUrl = gatewayBaseUrl.endsWith("/api") ? gatewayBaseUrl : gatewayBaseUrl + "/api";
 const banditHeadLogoUrl = "https://cdn.burtson.ai/images/bandit-head.png";
@@ -364,7 +364,7 @@ function App() {
               {brandingText}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Build, brand, and launch your assistant with a drop-in chat surface plus a secure gateway for OpenAI, Azure OpenAI, Anthropic, or Ollama.
+              Build, brand, and launch your assistant with a drop-in chat surface plus a secure gateway for OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama.
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button component={RouterLink} to="/chat" variant="contained" color="primary">
@@ -411,7 +411,7 @@ function App() {
                 Ship secure gateways
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Keep API keys server-side while proxying requests to OpenAI, Azure OpenAI, Anthropic, or Ollama through the included Express gateway.
+                Keep API keys server-side while proxying requests to OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama through the included Express gateway.
               </Typography>
             </CardContent>
           </Card>
@@ -578,6 +578,674 @@ export const buildBrandingConfig = (ctx: QuickstartTemplateContext): string =>
     knowledgeDocs: []
   });
 
+const NEXT_CHAT_ROUTE_TEMPLATE = `import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+const DEFAULT_PROVIDER = "__DEFAULT_PROVIDER__";
+const DEFAULT_MODEL = "__DEFAULT_MODEL__";
+const FALLBACK_MODEL = __FALLBACK_MODEL__;
+
+const OLLAMA_URL = (process.env.OLLAMA_URL ?? "http://localhost:11434").replace(/\\/$/, "");
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT ? process.env.AZURE_OPENAI_ENDPOINT.replace(/\\/$/, "") : undefined;
+const AZURE_OPENAI_API_KEY = process.env.AZURE_OPENAI_API_KEY;
+const AZURE_OPENAI_API_VERSION = process.env.AZURE_OPENAI_API_VERSION ?? "2024-08-01-preview";
+const AZURE_OPENAI_CHAT_DEPLOYMENT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT;
+const AZURE_OPENAI_COMPLETIONS_DEPLOYMENT = process.env.AZURE_OPENAI_COMPLETIONS_DEPLOYMENT ?? AZURE_OPENAI_CHAT_DEPLOYMENT;
+const AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT = process.env.AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const ANTHROPIC_BASE_URL = (process.env.ANTHROPIC_BASE_URL ?? "https://api.anthropic.com").replace(/\\/$/, "");
+const ANTHROPIC_API_VERSION = process.env.ANTHROPIC_API_VERSION ?? "2023-06-01";
+const ANTHROPIC_MAX_TOKENS = Number.isFinite(Number(process.env.ANTHROPIC_MAX_TOKENS))
+  ? Number(process.env.ANTHROPIC_MAX_TOKENS)
+  : 1024;
+const XAI_API_KEY = process.env.XAI_API_KEY;
+const XAI_BASE_URL = (process.env.XAI_BASE_URL ?? "https://api.x.ai/v1").replace(/\\/$/, "");
+
+interface GatewayChatBody {
+  provider?: string;
+  model?: string;
+  messages?: Array<{ role: string; content: unknown }>;
+  prompt?: string;
+  stream?: boolean;
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  stop?: string | string[];
+  stop_sequences?: string | string[];
+  tools?: unknown;
+  tool_choice?: unknown;
+  metadata?: unknown;
+  thinking?: unknown;
+  images?: string[];
+  [key: string]: unknown;
+}
+
+const normalizeProvider = (input: string): "openai" | "azure" | "anthropic" | "ollama" | "xai" => {
+  const value = input.toLowerCase();
+  if (value === "azure-openai" || value === "azureopenai" || value === "azure") return "azure";
+  if (value === "anthropic" || value === "claude") return "anthropic";
+  if (value === "ollama") return "ollama";
+  if (value === "xai" || value === "grok") return "xai";
+  return "openai";
+};
+
+const stripPrefix = (model: unknown, prefix: string, fallback: string): string => {
+  if (typeof model === "string") {
+    return model.replace(new RegExp(\`^\${prefix}:\`), "");
+  }
+  return fallback;
+};
+
+const requireOpenAIKey = () => {
+  if (!OPENAI_API_KEY) {
+    throw new Error("Missing OPENAI_API_KEY. Add it to your .env file to route requests to OpenAI.");
+  }
+  return OPENAI_API_KEY;
+};
+
+const requireXAIKey = () => {
+  if (!XAI_API_KEY) {
+    throw new Error("Missing XAI_API_KEY. Add it to your .env file to route requests to xAI.");
+  }
+  return XAI_API_KEY;
+};
+
+const requireAnthropicKey = () => {
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error("Missing ANTHROPIC_API_KEY. Add it to your .env file to route requests to Anthropic.");
+  }
+  return ANTHROPIC_API_KEY;
+};
+
+const isAzureConfigured = () => Boolean(AZURE_OPENAI_ENDPOINT && AZURE_OPENAI_API_KEY);
+
+const requireAzureBaseConfig = () => {
+  if (!AZURE_OPENAI_ENDPOINT) {
+    throw new Error("Missing AZURE_OPENAI_ENDPOINT. Add it to your .env file to route requests to Azure OpenAI.");
+  }
+  if (!AZURE_OPENAI_API_KEY) {
+    throw new Error("Missing AZURE_OPENAI_API_KEY. Add it to your .env file to route requests to Azure OpenAI.");
+  }
+  return {
+    endpoint: AZURE_OPENAI_ENDPOINT,
+    apiKey: AZURE_OPENAI_API_KEY,
+  };
+};
+
+const buildAzureDeploymentUrl = (deployment: string | undefined, suffix: string) => {
+  if (!deployment) {
+    throw new Error(\`Missing Azure OpenAI \${suffix.split("/")[0]} deployment name.\`);
+  }
+  const { endpoint } = requireAzureBaseConfig();
+  const normalized = suffix.replace(/^\\/+/, "");
+  return \`\${endpoint}/openai/deployments/\${deployment}/\${normalized}?api-version=\${AZURE_OPENAI_API_VERSION}\`;
+};
+
+const resolveAzureDeployment = (model: unknown, fallback: string | undefined, kind: "chat" | "completions" | "embeddings") => {
+  const explicit = typeof model === "string" ? model.replace(/^azure:/, "") : undefined;
+  if (explicit) return explicit;
+  if (kind === "embeddings") return AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT ?? fallback;
+  if (kind === "completions") return AZURE_OPENAI_COMPLETIONS_DEPLOYMENT ?? fallback;
+  return AZURE_OPENAI_CHAT_DEPLOYMENT ?? fallback;
+};
+
+const flattenGatewayContent = (content: unknown): string => {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === "string") return part;
+        if (part && typeof part === "object" && "type" in part) {
+          const typed = part as { type?: string; text?: string; image_url?: { url?: string } };
+          if (typed.type === "text" && typeof typed.text === "string") return typed.text;
+          if (typed.type === "image_url" && typed.image_url?.url) return \`[Image: \${typed.image_url.url}]\`;
+        }
+        return JSON.stringify(part ?? {});
+      })
+      .join("\\n");
+  }
+  if (content && typeof content === "object") return JSON.stringify(content);
+  return "";
+};
+
+const toAnthropicMessages = (messages: Array<{ role: string; content: unknown }> = []) => {
+  const anthropicMessages: Array<{ role: "user" | "assistant"; content: Array<{ type: "text"; text: string }> }> = [];
+  let systemPrompt = "";
+
+  for (const message of messages) {
+    if (!message) continue;
+    const text = flattenGatewayContent(message.content);
+    if (message.role === "system") {
+      systemPrompt = systemPrompt ? \`\${systemPrompt}\\n\\n\${text}\` : text;
+      continue;
+    }
+    const role = message.role === "assistant" ? "assistant" : "user";
+    anthropicMessages.push({
+      role,
+      content: [{ type: "text", text }],
+    });
+  }
+
+  return { messages: anthropicMessages, system: systemPrompt || undefined };
+};
+
+const convertAnthropicResponseToGateway = (responseBody: any, modelName: string) => {
+  if (!responseBody) {
+    return {
+      id: \`anthropic-\${Date.now()}\`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model: modelName.startsWith("anthropic:") ? modelName : \`anthropic:\${modelName}\`,
+      choices: [],
+    };
+  }
+
+  const textContent = Array.isArray(responseBody.content)
+    ? responseBody.content
+        .filter((item: any) => item && item.type === "text" && typeof item.text === "string")
+        .map((item: any) => item.text)
+        .join("\\n")
+    : typeof responseBody.content === "string"
+      ? responseBody.content
+      : "";
+
+  const promptTokens = responseBody.usage?.input_tokens ?? 0;
+  const completionTokens = responseBody.usage?.output_tokens ?? 0;
+
+  return {
+    id: responseBody.id ?? \`anthropic-\${Date.now()}\`,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: modelName.startsWith("anthropic:") ? modelName : \`anthropic:\${modelName}\`,
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: responseBody.role ?? "assistant",
+          content: textContent,
+        },
+        finish_reason: responseBody.stop_reason ?? responseBody.stop_sequence ?? null,
+      },
+    ],
+    usage: responseBody.usage
+      ? {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: promptTokens + completionTokens,
+        }
+      : undefined,
+  };
+};
+
+const passthroughResponse = (upstream: Response) => {
+  const headers = new Headers(upstream.headers);
+  return new Response(upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers,
+  });
+};
+
+const jsonResponse = async (upstream: Response) => {
+  const data = await upstream.json().catch(async () => ({ raw: await upstream.text() }));
+  return NextResponse.json(data, { status: upstream.status });
+};
+
+const errorResponse = (status: number, error: unknown) =>
+  NextResponse.json(
+    {
+      error: error instanceof Error ? error.message : String(error ?? "Unknown error"),
+    },
+    { status }
+  );
+
+export async function POST(request: NextRequest) {
+  const body = (await request.json()) as GatewayChatBody;
+  const provider = normalizeProvider(body.provider ?? DEFAULT_PROVIDER);
+  const stream = body.stream !== false;
+
+  try {
+    switch (provider) {
+      case "openai": {
+        const openaiKey = requireOpenAIKey();
+        const { provider: _provider, ...cleanBody } = body;
+        const requestBody = {
+          ...cleanBody,
+          stream,
+          model: stripPrefix(body.model ?? DEFAULT_MODEL, "openai", "gpt-4o"),
+        };
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: \`Bearer \${openaiKey}\`,
+          },
+          body: JSON.stringify(requestBody),
+        });
+        if (!response.ok) {
+          const details = await response.text();
+          return NextResponse.json({ error: \`OpenAI chat failed: \${response.status}\`, details }, { status: response.status });
+        }
+        return stream ? passthroughResponse(response) : jsonResponse(response);
+      }
+
+      case "xai": {
+        const xaiKey = requireXAIKey();
+        const { provider: _provider, ...cleanBody } = body;
+        const requestBody = {
+          ...cleanBody,
+          stream,
+          model: stripPrefix(body.model ?? DEFAULT_MODEL, "xai", "grok-2-latest"),
+        };
+        const response = await fetch(\`\${XAI_BASE_URL}/chat/completions\`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: \`Bearer \${xaiKey}\`,
+          },
+          body: JSON.stringify(requestBody),
+        });
+        if (!response.ok) {
+          const details = await response.text();
+          return NextResponse.json({ error: \`xAI chat failed: \${response.status}\`, details }, { status: response.status });
+        }
+        return stream ? passthroughResponse(response) : jsonResponse(response);
+      }
+
+      case "anthropic": {
+        const anthropicKey = requireAnthropicKey();
+        const requestedModel = stripPrefix(body.model ?? DEFAULT_MODEL, "anthropic", "claude-3-5-sonnet-latest");
+        const stopSequences = Array.isArray(body.stop)
+          ? body.stop
+          : Array.isArray(body.stop_sequences)
+            ? body.stop_sequences
+            : body.stop
+              ? [body.stop]
+              : undefined;
+        const { messages, system } = toAnthropicMessages(Array.isArray(body.messages) ? body.messages : []);
+        const fallbackText = typeof body.prompt === "string" && body.prompt.trim().length > 0
+          ? body.prompt
+          : "Hello from Bandit quickstart gateway";
+
+        const requestBody: Record<string, unknown> = {
+          model: requestedModel,
+          messages: messages.length > 0
+            ? messages
+            : [
+                {
+                  role: "user",
+                  content: [{ type: "text", text: fallbackText }],
+                },
+              ],
+          stream,
+          max_tokens: typeof body.max_tokens === "number" && body.max_tokens > 0 ? body.max_tokens : ANTHROPIC_MAX_TOKENS,
+        };
+
+        if (system) requestBody.system = system;
+        if (typeof body.temperature === "number") requestBody.temperature = body.temperature;
+        if (typeof body.top_p === "number") requestBody.top_p = body.top_p;
+        if (typeof body.top_k === "number") requestBody.top_k = body.top_k;
+        if (stopSequences) requestBody.stop_sequences = stopSequences;
+        if (body.metadata) requestBody.metadata = body.metadata;
+        if (body.tools) requestBody.tools = body.tools;
+        if (body.tool_choice) requestBody.tool_choice = body.tool_choice;
+        if (body.thinking) requestBody.thinking = body.thinking;
+
+        const response = await fetch(\`\${ANTHROPIC_BASE_URL}/v1/messages\`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": anthropicKey,
+            "anthropic-version": ANTHROPIC_API_VERSION,
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const details = await response.text();
+          return NextResponse.json({ error: \`Anthropic chat failed: \${response.status}\`, details }, { status: response.status });
+        }
+
+        if (stream) {
+          return passthroughResponse(response);
+        }
+
+        const data = await response.json();
+        const normalized = convertAnthropicResponseToGateway(data, requestedModel);
+        return NextResponse.json(normalized);
+      }
+
+      case "azure": {
+        const { apiKey } = requireAzureBaseConfig();
+        const deployment = resolveAzureDeployment(body.model, AZURE_OPENAI_CHAT_DEPLOYMENT, "chat");
+        const { provider: _provider, model: _model, ...cleanBody } = body;
+        const requestBody = {
+          ...cleanBody,
+          stream,
+        };
+
+        const response = await fetch(buildAzureDeploymentUrl(deployment, "chat/completions"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": apiKey,
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const details = await response.text();
+          return NextResponse.json({ error: \`Azure OpenAI chat failed: \${response.status}\`, details }, { status: response.status });
+        }
+
+        return stream ? passthroughResponse(response) : jsonResponse(response);
+      }
+
+      case "ollama": {
+        const { provider: _provider, ...cleanBody } = body;
+        const requestBody = {
+          ...cleanBody,
+          stream,
+          model: stripPrefix(body.model ?? DEFAULT_MODEL, "ollama", "llama3.1"),
+        };
+
+        const response = await fetch(\`\${OLLAMA_URL}/api/chat\`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const details = await response.text();
+          return NextResponse.json({ error: \`Ollama chat failed: \${response.status}\`, details }, { status: response.status });
+        }
+
+        return stream ? passthroughResponse(response) : jsonResponse(response);
+      }
+
+      default:
+        return errorResponse(400, \`Unsupported provider: \${provider}\`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const status = message.startsWith("Missing") ? 400 : 500;
+    return errorResponse(status, error);
+  }
+}
+
+`;
+const NEXT_HEALTH_ROUTE_TEMPLATE = `import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+const QUICKSTART_VERSION = "0.1.0";
+const OLLAMA_URL = (process.env.OLLAMA_URL ?? "http://localhost:11434").replace(/\\/$/, "");
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT ? process.env.AZURE_OPENAI_ENDPOINT.replace(/\\/$/, "") : undefined;
+const AZURE_OPENAI_API_KEY = process.env.AZURE_OPENAI_API_KEY;
+const AZURE_OPENAI_API_VERSION = process.env.AZURE_OPENAI_API_VERSION ?? "2024-08-01-preview";
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const ANTHROPIC_BASE_URL = (process.env.ANTHROPIC_BASE_URL ?? "https://api.anthropic.com").replace(/\\/$/, "");
+const ANTHROPIC_API_VERSION = process.env.ANTHROPIC_API_VERSION ?? "2023-06-01";
+const XAI_API_KEY = process.env.XAI_API_KEY;
+const XAI_BASE_URL = (process.env.XAI_BASE_URL ?? "https://api.x.ai/v1").replace(/\\/$/, "");
+
+const isAzureConfigured = () => Boolean(AZURE_OPENAI_ENDPOINT && AZURE_OPENAI_API_KEY);
+
+const buildAzurePath = (path: string) => {
+  const normalized = path.replace(/^\\/+/, "");
+  if (!AZURE_OPENAI_ENDPOINT) {
+    throw new Error("Missing AZURE_OPENAI_ENDPOINT. Add it to your .env file to route requests to Azure OpenAI.");
+  }
+  return \`\${AZURE_OPENAI_ENDPOINT}/openai/\${normalized}?api-version=\${AZURE_OPENAI_API_VERSION}\`;
+};
+
+export async function GET() {
+  const providers: Array<Record<string, unknown>> = [];
+
+  // OpenAI
+  try {
+    if (OPENAI_API_KEY) {
+      const response = await fetch("https://api.openai.com/v1/models", {
+        headers: { Authorization: \`Bearer \${OPENAI_API_KEY}\` },
+      });
+      providers.push({
+        name: "openai",
+        status: response.ok ? "healthy" : "unhealthy",
+        provider: "openai",
+      });
+    } else {
+      providers.push({
+        name: "openai",
+        status: "unconfigured",
+        provider: "openai",
+        error: "API key not configured",
+      });
+    }
+  } catch (error) {
+    providers.push({
+      name: "openai",
+      status: "unhealthy",
+      provider: "openai",
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // Azure
+  if (AZURE_OPENAI_ENDPOINT || AZURE_OPENAI_API_KEY) {
+    if (!isAzureConfigured()) {
+      providers.push({
+        name: "azure",
+        status: "unconfigured",
+        provider: "azure",
+        error: "Endpoint or API key not configured",
+        endpoint: AZURE_OPENAI_ENDPOINT,
+      });
+    } else {
+      try {
+        const response = await fetch(buildAzurePath("deployments"), {
+          headers: { "api-key": AZURE_OPENAI_API_KEY ?? "" },
+        });
+        providers.push({
+          name: "azure",
+          status: response.ok ? "healthy" : "unhealthy",
+          provider: "azure",
+          endpoint: AZURE_OPENAI_ENDPOINT,
+        });
+      } catch (error) {
+        providers.push({
+          name: "azure",
+          status: "unhealthy",
+          provider: "azure",
+          endpoint: AZURE_OPENAI_ENDPOINT,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  } else {
+    providers.push({
+      name: "azure",
+      status: "unconfigured",
+      provider: "azure",
+      error: "Endpoint or API key not configured",
+    });
+  }
+
+  // Anthropic
+  if (ANTHROPIC_API_KEY) {
+    try {
+      const response = await fetch(\`\${ANTHROPIC_BASE_URL}/v1/models\`, {
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": ANTHROPIC_API_VERSION,
+        },
+      });
+      providers.push({
+        name: "anthropic",
+        status: response.ok ? "healthy" : "unhealthy",
+        provider: "anthropic",
+        endpoint: ANTHROPIC_BASE_URL,
+      });
+    } catch (error) {
+      providers.push({
+        name: "anthropic",
+        status: "unhealthy",
+        provider: "anthropic",
+        endpoint: ANTHROPIC_BASE_URL,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  } else {
+    providers.push({
+      name: "anthropic",
+      status: "unconfigured",
+      provider: "anthropic",
+      error: "API key not configured",
+    });
+  }
+
+  // xAI
+  if (XAI_API_KEY) {
+    try {
+      const response = await fetch(\`\${XAI_BASE_URL}/models\`, {
+        headers: { Authorization: \`Bearer \${XAI_API_KEY}\` },
+      });
+      providers.push({
+        name: "xai",
+        status: response.ok ? "healthy" : "unhealthy",
+        provider: "xai",
+        endpoint: XAI_BASE_URL,
+      });
+    } catch (error) {
+      providers.push({
+        name: "xai",
+        status: "unhealthy",
+        provider: "xai",
+        endpoint: XAI_BASE_URL,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  } else {
+    providers.push({
+      name: "xai",
+      status: "unconfigured",
+      provider: "xai",
+      error: "API key not configured",
+      endpoint: XAI_BASE_URL,
+    });
+  }
+
+  // Ollama
+  try {
+    const response = await fetch(\`\${OLLAMA_URL}/api/tags\`);
+    providers.push({
+      name: "ollama",
+      status: response.ok ? "healthy" : "unhealthy",
+      provider: "ollama",
+      url: OLLAMA_URL,
+    });
+  } catch (error) {
+    providers.push({
+      name: "ollama",
+      status: "offline",
+      provider: "ollama",
+      url: OLLAMA_URL,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  const overallHealthy = providers.some((provider) => provider.status === "healthy");
+
+  return NextResponse.json({
+    status: overallHealthy ? "healthy" : "unhealthy",
+    version: QUICKSTART_VERSION,
+    uptime: Math.round(process.uptime()),
+    providers,
+  });
+}
+
+`;
+const NEXT_MODELS_ROUTE_TEMPLATE = `import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
+const BASE_GATEWAY_MODELS = __GATEWAY_MODELS__;
+
+export function toGatewayModels() {
+  return BASE_GATEWAY_MODELS.map((model) => ({
+    ...model,
+    created: Date.now(),
+    modified_at: new Date().toISOString(),
+    size: 0,
+    digest: "",
+    details: {
+      format: "chat",
+      family: model.provider,
+      families: [model.provider],
+      parameter_size: "",
+      quantization_level: "",
+    },
+  }));
+}
+
+export async function GET() {
+  return NextResponse.json({ models: toGatewayModels() });
+}
+
+`;
+const NEXT_GATEWAY_README_TEMPLATE = `# Next.js Gateway API
+
+This directory contains a minimal Next.js App Router implementation of the Bandit gateway API. It mirrors the Express gateway in
+\`server/gateway.js\` but is ready to drop into a Next.js project.
+
+## Routes
+
+- \`app/api/health/route.ts\` – provider health and availability checks
+- \`app/api/chat/completions/route.ts\` – provider-aware chat completions endpoint (OpenAI, Azure OpenAI, Anthropic, xAI, Ollama)
+- \`app/api/models/route.ts\` – exposes the scaffolded gateway model metadata used by the frontend
+
+## Usage
+
+1. Copy the contents of \`server/next-app/\` into the \`app/\` directory of a Next.js project.
+2. Ensure the environment variables listed in \`.env.example\` are available to the Next.js runtime. At minimum you will want the
+   provider API keys you plan to use (OpenAI, Azure OpenAI, Anthropic, xAI, or Ollama).
+3. Start Next.js with \`npm run dev\` (or your project’s equivalent). The routes are server-only (\`export const dynamic = "force-dynamic"\`)
+   and can coexist with any frontend pages.
+
+The generated routes favour clarity over cleverness so you can extend them with custom auth, logging, and provider routing logic.
+`;
+
+export const buildNextChatRoute = (ctx: QuickstartTemplateContext): string => {
+  const fallbackModel = ctx.fallbackModelId ? `"${ctx.fallbackModelId}"` : "undefined";
+  return ensureTrailingNewline(
+    normalizeLineEndings(
+      NEXT_CHAT_ROUTE_TEMPLATE
+        .replace(/__DEFAULT_PROVIDER__/g, ctx.defaultProvider)
+        .replace(/__DEFAULT_MODEL__/g, ctx.defaultModelId)
+        .replace(/__FALLBACK_MODEL__/g, fallbackModel)
+    )
+  );
+};
+
+export const buildNextHealthRoute = (): string =>
+  ensureTrailingNewline(normalizeLineEndings(NEXT_HEALTH_ROUTE_TEMPLATE));
+
+export const buildNextModelsRoute = (ctx: QuickstartTemplateContext): string => {
+  const modelsDefinition = JSON.stringify(ctx.gatewayModels, null, 2);
+  return ensureTrailingNewline(
+    normalizeLineEndings(
+      NEXT_MODELS_ROUTE_TEMPLATE.replace('__GATEWAY_MODELS__', modelsDefinition)
+    )
+  );
+};
+
+export const buildNextGatewayReadme = (): string =>
+  ensureTrailingNewline(normalizeLineEndings(NEXT_GATEWAY_README_TEMPLATE));
+
 export const buildGatewayServer = (ctx: QuickstartTemplateContext): string => {
   const modelsDefinition = JSON.stringify(ctx.gatewayModels, null, 2);
 
@@ -608,6 +1276,8 @@ const ANTHROPIC_API_VERSION = process.env.ANTHROPIC_API_VERSION ?? "2023-06-01";
 const ANTHROPIC_MAX_TOKENS = Number.isFinite(Number(process.env.ANTHROPIC_MAX_TOKENS))
   ? Number(process.env.ANTHROPIC_MAX_TOKENS)
   : 1024;
+const XAI_API_KEY = process.env.XAI_API_KEY;
+const XAI_BASE_URL = (process.env.XAI_BASE_URL ?? "https://api.x.ai/v1").replace(/\\/$/, "");
 
 const toGatewayModels = () =>
   BASE_GATEWAY_MODELS.map((model) => ({
@@ -814,6 +1484,14 @@ const requireOpenAIKey = () => {
   return key;
 };
 
+const requireXAIKey = () => {
+  const key = XAI_API_KEY;
+  if (!key) {
+    throw new Error("Missing XAI_API_KEY. Add it to your .env file to route requests to xAI.");
+  }
+  return key;
+};
+
 // Utility function to handle streaming responses
 const handleStreamingResponse = async (upstreamResponse, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
@@ -948,6 +1626,37 @@ app.get("/api/health", async (_req, res) => {
       status: "unconfigured",
       provider: "anthropic",
       error: "API key not configured"
+    });
+  }
+
+  // Check xAI
+  if (XAI_API_KEY) {
+    try {
+      const response = await fetch(`${XAI_BASE_URL}/models`, {
+        headers: { "Authorization": `Bearer ${XAI_API_KEY}` }
+      });
+      providers.push({
+        name: "xai",
+        status: response.ok ? "healthy" : "unhealthy",
+        provider: "xai",
+        endpoint: XAI_BASE_URL
+      });
+    } catch (error) {
+      providers.push({
+        name: "xai",
+        status: "unhealthy",
+        provider: "xai",
+        error: error instanceof Error ? error.message : String(error),
+        endpoint: XAI_BASE_URL
+      });
+    }
+  } else {
+    providers.push({
+      name: "xai",
+      status: "unconfigured",
+      provider: "xai",
+      error: "API key not configured",
+      endpoint: XAI_BASE_URL
     });
   }
 
@@ -1478,6 +2187,201 @@ app.post("/api/azure/embed", async (req, res) => {
 });
 
 // ============================================================================
+// XAI ROUTES
+// ============================================================================
+
+// xAI Health Check
+app.get("/api/xai/health", async (_req, res) => {
+  try {
+    const xaiKey = requireXAIKey();
+    const response = await fetch(`${XAI_BASE_URL}/models`, {
+      headers: { "Authorization": `Bearer ${xaiKey}` }
+    });
+    const isHealthy = response.ok;
+    res.json({
+      status: isHealthy ? "healthy" : "unhealthy",
+      xai_status: isHealthy,
+      provider: "xai"
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "unhealthy",
+      xai_status: false,
+      error: error instanceof Error ? error.message : String(error),
+      provider: "xai"
+    });
+  }
+});
+
+// xAI Chat Completions
+app.post("/api/xai/chat/completions", async (req, res) => {
+  try {
+    const xaiKey = requireXAIKey();
+    const isStreaming = req.body?.stream === true;
+    const { provider, ...cleanBody } = req.body ?? {};
+    const requestBody = {
+      ...cleanBody,
+      model: req.body?.model?.replace(/^xai:/, "") || "grok-2-latest"
+    };
+
+    const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${xaiKey}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: `xAI chat failed: ${response.status}`,
+        details: errorText
+      });
+    }
+
+    if (isStreaming) {
+      await handleStreamingResponse(response, res);
+    } else {
+      const text = await response.text();
+      res.setHeader('Content-Type', 'application/json');
+      res.send(text);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post("/api/xai/chat", async (req, res) => {
+  req.url = "/api/xai/chat/completions";
+  return app._router.handle(req, res);
+});
+
+// xAI Completions
+app.post("/api/xai/completions", async (req, res) => {
+  try {
+    const xaiKey = requireXAIKey();
+    const isStreaming = req.body?.stream === true;
+    const { provider, ...cleanBody } = req.body ?? {};
+    const requestBody = {
+      ...cleanBody,
+      model: req.body?.model?.replace(/^xai:/, "") || "grok-2-mini"
+    };
+
+    const response = await fetch(`${XAI_BASE_URL}/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${xaiKey}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: `xAI completions failed: ${response.status}`,
+        details: errorText
+      });
+    }
+
+    if (isStreaming) {
+      await handleStreamingResponse(response, res);
+    } else {
+      const text = await response.text();
+      res.setHeader('Content-Type', 'application/json');
+      res.send(text);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// xAI Generate
+app.post("/api/xai/generate", async (req, res) => {
+  try {
+    const xaiKey = requireXAIKey();
+    const prompt = req.body?.prompt || "";
+    const model = req.body?.model?.replace(/^xai:/, "") || "grok-2-latest";
+    const isStreaming = req.body?.stream === true;
+
+    const chatBody = {
+      model,
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      stream: isStreaming,
+      max_tokens: req.body?.max_tokens || 150,
+      temperature: req.body?.temperature ?? 0.7
+    };
+
+    const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${xaiKey}`
+      },
+      body: JSON.stringify(chatBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: `xAI generate failed: ${response.status}`,
+        details: errorText
+      });
+    }
+
+    if (isStreaming) {
+      await handleStreamingResponse(response, res);
+    } else {
+      const data = await response.json();
+      const generateResponse = {
+        model,
+        created_at: new Date().toISOString(),
+        response: data.choices?.[0]?.message?.content || "",
+        done: true,
+        context: [],
+        total_duration: 0,
+        load_duration: 0,
+        prompt_eval_count: data.usage?.prompt_tokens || 0,
+        prompt_eval_duration: 0,
+        eval_count: data.usage?.completion_tokens || 0,
+        eval_duration: 0
+      };
+      res.json(generateResponse);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// xAI Models
+app.get("/api/xai/models", async (_req, res) => {
+  try {
+    const xaiKey = requireXAIKey();
+    const response = await fetch(`${XAI_BASE_URL}/models`, {
+      headers: { "Authorization": `Bearer ${xaiKey}` }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: `xAI models failed: ${response.status}`,
+        details: errorText
+      });
+    }
+
+    const text = await response.text();
+    res.setHeader('Content-Type', 'application/json');
+    res.send(text);
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// ============================================================================
 // OPENAI ROUTES
 // ============================================================================
 
@@ -1999,11 +2903,12 @@ app.all("/api/anthropic/*", (_req, res) => {
 const port = Number(process.env.PORT ?? ${ctx.gatewayPort});
 app.listen(port, () => {
   console.log("⚡ Bandit quickstart gateway ready on http://localhost:" + port);
-  console.log("📡 Supported providers: OpenAI, Azure OpenAI, Anthropic, Ollama");
+  console.log("📡 Supported providers: OpenAI, Azure OpenAI, Anthropic, XAI, Ollama");
   console.log("🔗 Provider-specific routes:");
   console.log("   • /api/openai/* - OpenAI endpoints");
   console.log("   • /api/azure/* - Azure OpenAI endpoints");
   console.log("   • /api/anthropic/* - Anthropic endpoints");
+  console.log("   • /api/xai/* - XAI endpoints");
   console.log("   • /api/ollama/* - Ollama endpoints");
   console.log("   • /api/health - Overall health check");
 });
@@ -2027,6 +2932,6 @@ export const buildNpmrc = (): string =>
 export const buildReadme = (ctx: QuickstartTemplateContext): string =>
   ensureTrailingNewline(
     normalizeLineEndings(
-      `# ${ctx.projectTitle} — Bandit Quickstart\n\nThis project was generated by the Bandit Engine CLI. It ships with a React + Vite frontend that consumes \`@burtson-labs/bandit-engine\` and a lightweight Express gateway you can adapt for production.\n\n## 🚀 Next steps\n- \`npm install\`\n- \`cp .env.example .env\`\n- Fill in your OpenAI, Azure OpenAI, or Anthropic credentials (or point \`OLLAMA_URL\` at your local server)\n- \`npm run dev\`\n\nThe command runs the gateway and the frontend together. Visit http://localhost:${ctx.frontendPort} to see the chat and modal in action.\n\n## 🔧 Customizing your assistant\n- **Branding & personas**: edit \`public/config.json\` to tweak logos, colors, and starter models.\n- **Provider defaults**: update \`.env\` to switch providers or change the default upstream model IDs.\n- **Gateway routes**: open \`server/gateway.js\` to add auth, logging, or connect additional providers.\n\n## 📦 What’s inside\n- React + Vite 5 with Material UI theming\n- Bandit chat surface + modal wired via \`ChatProvider\`\n- Express gateway proxying OpenAI, Azure OpenAI, Anthropic, or Ollama to keep API keys server-side\n- Friendly defaults you can evolve into your production stack\n\nNeed more? Run \`npx @burtson-labs/bandit-engine create --help\` to explore additional options.\n`
+      `# ${ctx.projectTitle} — Bandit Quickstart\n\nThis project was generated by the Bandit Engine CLI. It ships with a React + Vite frontend that consumes \`@burtson-labs/bandit-engine\`, a lightweight Express gateway you can adapt for production, and a Next.js App Router API scaffold in \`server/next-app/\`.\n\n## 🚀 Next steps\n- \`npm install\`\n- \`cp .env.example .env\`\n- Fill in your OpenAI, Azure OpenAI, Anthropic, or xAI credentials (or point \`OLLAMA_URL\` at your local server)\n- \`npm run dev\`\n\nThe command runs the gateway and the frontend together. Visit http://localhost:${ctx.frontendPort} to see the chat and modal in action.\n\n## 🔧 Customizing your assistant\n- **Branding & personas**: edit \`public/config.json\` to tweak logos, colors, and starter models.\n- **Provider defaults**: update \`.env\` to switch providers or change the default upstream model IDs.\n- **Gateway routes**: open \`server/gateway.js\` to add auth, logging, or connect additional providers.\n\n## 📦 What’s inside\n- React + Vite 5 with Material UI theming\n- Bandit chat surface + modal wired via \`ChatProvider\`\n- Express gateway proxying OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama to keep API keys server-side\n- Next.js App Router gateway scaffold in `server/next-app/` for projects that prefer Next\n- Friendly defaults you can evolve into your production stack\n\nNeed more? Run \`npx @burtson-labs/bandit-engine create --help\` to explore additional options.\n`
     )
   );

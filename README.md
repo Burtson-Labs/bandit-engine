@@ -20,7 +20,7 @@ An AI chat toolkit built for speed, design, and control. Power branded AI assist
 - 🔌 Plug-and-play React chat, modal, and management surfaces
 - 🧠 Memory, vector knowledge, and provider switching behind a secure gateway
 - 🎨 Full MUI theming, dark mode, and branding controls out of the box
-- 🌐 Multimodal support (voice, images, documents) with Ollama, OpenAI, Azure OpenAI, and Anthropic today — tell us which providers you need next so we can prioritize them
+- 🌐 Multimodal support (voice, images, documents) with Ollama, OpenAI, Azure OpenAI, Anthropic, and xAI today — tell us which providers you need next so we can prioritize them
 - 🛠️ CLI scaffolding, sample gateway, and docs to launch in minutes
 
 ## Quick Links
@@ -44,7 +44,8 @@ npx @burtson-labs/bandit-engine create my-bandit-app
 What you get out of the box:
 
 - Vite + React project wired with `Chat`, `ChatModal`, and `ChatProvider`
-- Express gateway that proxies OpenAI or Ollama behind `/api`
+- Express gateway that proxies OpenAI, Azure OpenAI, Anthropic, xAI, or Ollama behind `/api`
+- Next.js App Router gateway scaffold (in `server/next-app/`) ready to copy into a Next project
 - Branding + persona config in `public/config.json`, ready for your logo or prompts
 
 Customize the output with options such as:

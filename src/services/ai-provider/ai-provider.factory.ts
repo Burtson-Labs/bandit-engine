@@ -24,6 +24,7 @@ import { AzureOpenAIProvider } from './providers/azure-openai.provider';
 import { AnthropicProvider } from './providers/anthropic.provider';
 import { GatewayProvider } from './providers/gateway.provider';
 import { PlaygroundProvider } from './providers/playground.provider';
+import { XAIProvider } from './providers/xai.provider';
 
 /**
  * Factory for creating AI provider instances
@@ -42,7 +43,10 @@ export class AIProviderFactory {
       
       case AIProviderType.ANTHROPIC:
         return new AnthropicProvider(config);
-      
+
+      case AIProviderType.XAI:
+        return new XAIProvider(config);
+
       case AIProviderType.GATEWAY:
         return new GatewayProvider(config);
 
@@ -60,6 +64,7 @@ export class AIProviderFactory {
       AIProviderType.OPENAI,
       AIProviderType.AZURE_OPENAI,
       AIProviderType.ANTHROPIC,
+      AIProviderType.XAI,
       AIProviderType.GATEWAY,
       AIProviderType.PLAYGROUND
     ];
@@ -78,7 +83,10 @@ export class AIProviderFactory {
       
       case AIProviderType.ANTHROPIC:
         return !!config.apiKey;
-      
+
+      case AIProviderType.XAI:
+        return !!config.apiKey;
+
       case AIProviderType.GATEWAY:
         return !!(config.gatewayUrl && config.provider);
 

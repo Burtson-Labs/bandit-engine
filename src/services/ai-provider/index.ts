@@ -27,6 +27,7 @@ export * from './providers/ollama.provider';
 export * from './providers/openai.provider';
 export * from './providers/azure-openai.provider';
 export * from './providers/anthropic.provider';
+export * from './providers/xai.provider';
 export * from './providers/gateway.provider';
 
 // Deprecation utilities

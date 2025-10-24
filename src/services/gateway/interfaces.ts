@@ -41,7 +41,7 @@ export interface GatewayChatRequest {
   top_p?: number;
   frequency_penalty?: number;
   presence_penalty?: number;
-  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama';
+  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai';
   stop?: string | string[];
   images?: string[]; // Base64 images for Ollama-style providers
 }
@@ -76,7 +76,7 @@ export interface GatewayGenerateRequest {
   stream?: boolean;
   temperature?: number;
   max_tokens?: number;
-  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama';
+  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai';
   stop?: string | string[];
 }
 
