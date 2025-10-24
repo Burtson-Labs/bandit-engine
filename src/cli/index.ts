@@ -40,6 +40,10 @@ program
   .argument("[directory]", "Relative path for your new project", "bandit-quickstart")
   .option("-f, --force", "Overwrite the target directory if it already contains files", false)
   .option("--branding-text <text>", "Assistant display name shown in the UI")
+  .option(
+    "--provider <provider>",
+    "Default gateway provider (openai, azure, anthropic, ollama)"
+  )
   .option("--frontend-port <port>", "Frontend dev server port (default: 5183)", (value) =>
     parseInt(value, 10)
   )
@@ -57,6 +61,7 @@ program
         projectName,
         force: Boolean(cmdOptions.force),
         brandingText: cmdOptions.brandingText as string | undefined,
+        provider: typeof cmdOptions.provider === "string" ? (cmdOptions.provider as string) : undefined,
         frontendPort: Number.isFinite(cmdOptions.frontendPort as number)
           ? (cmdOptions.frontendPort as number)
           : undefined,

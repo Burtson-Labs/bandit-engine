@@ -45,7 +45,7 @@ import {
   QuickstartTemplateContext,
 } from "./templates";
 
-type SupportedProvider = "openai" | "ollama";
+type SupportedProvider = "openai" | "ollama" | "azure" | "anthropic";
 
 interface LogoResolution {
   dataUrl: string;
@@ -102,8 +102,15 @@ export const createQuickstartProject = async (
 
   await ensureWritableDirectory(resolvedDir, Boolean(options.force));
 
-  const provider = normalizeProvider(options.provider);
-  const promptAnswers = options.skipPrompts
+  const skipPrompts = Boolean(options.skipPrompts);
+
+  const provider = options.provider
+    ? normalizeProvider(options.provider)
+    : skipPrompts
+      ? "openai"
+      : await promptForProvider();
+
+  const promptAnswers = skipPrompts
     ? {}
     : await promptForMissingData({
         brandingText: options.brandingText,
@@ -187,18 +194,88 @@ const ensureWritableDirectory = async (dir: string, force: boolean) => {
 
 const normalizeProvider = (value?: string): SupportedProvider => {
   const normalized = (value ?? "openai").toLowerCase();
-  return normalized === "ollama" ? "ollama" : "openai";
+  if (normalized === "ollama") {
+    return "ollama";
+  }
+  if (normalized === "azure" || normalized === "azure-openai" || normalized === "azureopenai") {
+    return "azure";
+  }
+  if (normalized === "anthropic") {
+    return "anthropic";
+  }
+  return "openai";
 };
 
 const inferDefaultModelId = (provider: SupportedProvider): string => {
-  return provider === "ollama" ? "ollama:llama3.1" : "openai:gpt-4o-mini";
+  if (provider === "ollama") {
+    return "ollama:llama3.1";
+  }
+  if (provider === "azure") {
+    return "azure:gpt-4o";
+  }
+  if (provider === "anthropic") {
+    return "anthropic:claude-3-5-sonnet-latest";
+  }
+  return "openai:gpt-4o-mini";
 };
 
 const inferFallbackModelId = (provider: SupportedProvider, defaultId: string): string | undefined => {
   if (provider === "ollama") {
     return defaultId === "ollama:llama3" ? "ollama:llama2" : "ollama:llama3";
   }
+  if (provider === "azure") {
+    return defaultId === "azure:gpt-4o-mini" ? "azure:gpt-4o" : "azure:gpt-4o-mini";
+  }
+  if (provider === "anthropic") {
+    return defaultId === "anthropic:claude-3-5-haiku-latest"
+      ? "anthropic:claude-3-5-sonnet-latest"
+      : "anthropic:claude-3-5-haiku-latest";
+  }
   return defaultId === "openai:gpt-4.1-mini" ? "openai:gpt-4o-mini" : "openai:gpt-4.1-mini";
+};
+
+const promptForProvider = async (): Promise<SupportedProvider> => {
+  const providerOptions: { label: string; value: SupportedProvider; description?: string }[] = [
+    { label: "OpenAI (default)", value: "openai" },
+    { label: "Azure OpenAI", value: "azure" },
+    { label: "Anthropic", value: "anthropic" },
+    { label: "Ollama (self-hosted)", value: "ollama" },
+  ];
+
+  const messageLines = [
+    "Which provider should we configure for the gateway?",
+    ...providerOptions.map((option, index) => `  ${index + 1}. ${option.label}`),
+    "Enter a number:",
+  ];
+
+  const onCancel = () => {
+    throw new Error("Command cancelled.");
+  };
+
+  const answers = await prompts(
+    {
+      type: "number",
+      name: "providerIndex",
+      message: messageLines.join("\n"),
+      initial: 1,
+      validate: (input) => {
+        if (!Number.isInteger(input)) {
+          return "Enter a whole number.";
+        }
+        return input >= 1 && input <= providerOptions.length
+          ? true
+          : `Enter a number between 1 and ${providerOptions.length}.`;
+      },
+    },
+    { onCancel }
+  );
+
+  const selectedIndex =
+    typeof answers.providerIndex === "number" && answers.providerIndex >= 1
+      ? answers.providerIndex - 1
+      : 0;
+
+  return providerOptions[selectedIndex]?.value ?? "openai";
 };
 
 const sanitizePort = (value: number): number => {

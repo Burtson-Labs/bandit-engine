@@ -260,6 +260,43 @@ const ensureCustomScript = async (targetDir, scriptSource) => {
   }
 };
 
+const SOURCE_PREFIX =
+  'https://github.com/Burtson-Labs/bandit-engine/blob/main/packages/bandit-engine/';
+const SOURCE_REPLACEMENT = 'https://github.com/Burtson-Labs/bandit-engine/blob/main/';
+
+const rewriteSourceLinks = async (targetDir) => {
+  const exists = await fsExtra.pathExists(targetDir);
+  if (!exists) {
+    return;
+  }
+
+  const entries = await fsExtra.readdir(targetDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const entryPath = path.join(targetDir, entry.name);
+
+    if (entry.isDirectory()) {
+      // eslint-disable-next-line no-await-in-loop
+      await rewriteSourceLinks(entryPath);
+      continue;
+    }
+
+    if (!entry.isFile() || !entry.name.endsWith('.html')) {
+      continue;
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    let html = await fsExtra.readFile(entryPath, 'utf8');
+    if (!html.includes(SOURCE_PREFIX)) {
+      continue;
+    }
+
+    html = html.split(SOURCE_PREFIX).join(SOURCE_REPLACEMENT);
+    // eslint-disable-next-line no-await-in-loop
+    await fsExtra.writeFile(entryPath, html, 'utf8');
+  }
+};
+
 export const syncTypedocAssets = async () => {
   const docsExist = await fsExtra.pathExists(DOC_OUTPUT_DIR);
   if (!docsExist) {
@@ -276,6 +313,7 @@ export const syncTypedocAssets = async () => {
 
   await ensureCustomScript(DOC_OUTPUT_DIR, customScriptSource);
   await ensureStyleOverrides(DOC_OUTPUT_DIR);
+  await rewriteSourceLinks(DOC_OUTPUT_DIR);
 
   if (!repoRoot) {
     return;
@@ -291,6 +329,7 @@ export const syncTypedocAssets = async () => {
   await fsExtra.copy(DOC_OUTPUT_DIR, publicDocsDir, { overwrite: true });
   await ensureCustomScript(publicDocsDir, customScriptSource);
   await ensureStyleOverrides(publicDocsDir);
+  await rewriteSourceLinks(publicDocsDir);
 };
 
 const runDirectly =
