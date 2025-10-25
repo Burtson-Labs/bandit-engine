@@ -161,6 +161,13 @@ export const ProviderTab: React.FC = () => {
           apiKey: ''
         });
         break;
+      case AIProviderType.XAI:
+        setProviderConfig({
+          ...baseConfig,
+          baseUrl: 'https://api.x.ai/v1',
+          apiKey: ''
+        });
+        break;
       case AIProviderType.GATEWAY:
         setProviderConfig({
           ...baseConfig,
@@ -306,6 +313,7 @@ export const ProviderTab: React.FC = () => {
                 <MenuItem value="openai">OpenAI</MenuItem>
                 <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
                 <MenuItem value="anthropic">Anthropic</MenuItem>
+                <MenuItem value="xai">xAI</MenuItem>
                 <MenuItem value="playground">Playground (Mock Demo)</MenuItem>
               </TextField>
 
@@ -335,6 +343,7 @@ export const ProviderTab: React.FC = () => {
                     <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
                     <MenuItem value="anthropic">Anthropic</MenuItem>
                     <MenuItem value="ollama">Ollama</MenuItem>
+                    <MenuItem value="xai">xAI</MenuItem>
                   </TextField>
                 </Box>
               )}
@@ -405,6 +414,28 @@ export const ProviderTab: React.FC = () => {
                     onChange={(e) => setProviderConfig({...providerConfig, deploymentName: e.target.value})}
                     fullWidth
                     placeholder="gpt-4"
+                  />
+                </Box>
+              )}
+
+              {/* xAI Configuration */}
+              {providerConfig.type === 'xai' && (
+                <Box>
+                  <TextField
+                    label="API Base URL"
+                    value={providerConfig.baseUrl || ''}
+                    onChange={(e) => setProviderConfig({ ...providerConfig, baseUrl: e.target.value })}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    placeholder="https://api.x.ai/v1"
+                  />
+                  <TextField
+                    label="API Key"
+                    type="password"
+                    value={providerConfig.apiKey || ''}
+                    onChange={(e) => setProviderConfig({ ...providerConfig, apiKey: e.target.value })}
+                    fullWidth
+                    placeholder="xai-..."
                   />
                 </Box>
               )}

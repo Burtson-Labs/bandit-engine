@@ -85,6 +85,11 @@ program
       console.log("  cp .env.example .env");
       console.log("  npm run dev");
       console.log("");
+      console.log("🔍 Before you dive in:");
+      console.log("  • Open .env to confirm the provider credentials and URLs match your setup.");
+      console.log("  • server/gateway.js is a scaffold Express proxy that keeps API keys server-side—extend it with auth, logging, and your production logic.");
+      console.log("  • If you prefer Next.js App Router, check server/next-app/ for a starter route handler.");
+      console.log("");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to create Bandit quickstart project.";

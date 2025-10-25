@@ -82,12 +82,55 @@ export const buildPackageJson = (ctx: QuickstartTemplateContext): string =>
     }
   });
 
-export const buildEnvExample = (ctx: QuickstartTemplateContext): string =>
-  ensureTrailingNewline(
-    normalizeLineEndings(
-      `# Frontend configuration\nVITE_DEV_PORT=${ctx.frontendPort}\nVITE_GATEWAY_URL=${ctx.defaultGatewayUrl}\nVITE_DEFAULT_MODEL=${ctx.defaultModelId}\nVITE_FALLBACK_MODEL=${ctx.fallbackModelId ?? ""}\nVITE_GATEWAY_PROVIDER=${ctx.defaultProvider}\nVITE_BRANDING_TEXT=${ctx.brandingText}\n\n# Gateway configuration\n# OPENAI_API_KEY=sk-................................\n# AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com\n# AZURE_OPENAI_API_KEY=................................................................\n# AZURE_OPENAI_API_VERSION=2024-08-01-preview\n# AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o\n# AZURE_OPENAI_COMPLETIONS_DEPLOYMENT=gpt-35-turbo-instruct\n# AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-3-large\n# ANTHROPIC_API_KEY=sk-ant-................................\n# ANTHROPIC_BASE_URL=https://api.anthropic.com\n# ANTHROPIC_API_VERSION=2023-06-01\n# ANTHROPIC_MAX_TOKENS=1024\n# XAI_API_KEY=sk-xai-................................\n# XAI_BASE_URL=https://api.x.ai/v1\n# OLLAMA_URL=http://localhost:11434\n# PORT=${ctx.gatewayPort}\n`
-    )
+export const buildEnvExample = (ctx: QuickstartTemplateContext): string => {
+  const lines: string[] = [
+    "# Frontend configuration",
+    `VITE_DEV_PORT=${ctx.frontendPort}`,
+    `VITE_GATEWAY_URL=${ctx.defaultGatewayUrl}`,
+    `VITE_DEFAULT_MODEL=${ctx.defaultModelId}`,
+    `VITE_FALLBACK_MODEL=${ctx.fallbackModelId ?? ""}`,
+    `VITE_GATEWAY_PROVIDER=${ctx.defaultProvider}`,
+    `VITE_BRANDING_TEXT=${ctx.brandingText}`,
+    "",
+    "# Gateway configuration",
+    "# These values power server/gateway.js — update them before running in production.",
+  ];
+
+  switch (ctx.defaultProvider) {
+    case "openai":
+      lines.push("OPENAI_API_KEY=");
+      break;
+    case "azure":
+      lines.push("AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com");
+      lines.push("AZURE_OPENAI_API_KEY=");
+      lines.push("AZURE_OPENAI_API_VERSION=2024-08-01-preview");
+      lines.push("AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o");
+      lines.push("AZURE_OPENAI_COMPLETIONS_DEPLOYMENT=gpt-35-turbo-instruct");
+      lines.push("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-3-large");
+      break;
+    case "anthropic":
+      lines.push("ANTHROPIC_API_KEY=");
+      lines.push("ANTHROPIC_BASE_URL=https://api.anthropic.com");
+      lines.push("ANTHROPIC_API_VERSION=2023-06-01");
+      lines.push("ANTHROPIC_MAX_TOKENS=1024");
+      break;
+    case "xai":
+      lines.push("XAI_API_KEY=");
+      lines.push("XAI_BASE_URL=https://api.x.ai/v1");
+      break;
+    case "ollama":
+    default:
+      lines.push("OLLAMA_URL=http://localhost:11434");
+      break;
+  }
+
+  lines.push(`PORT=${ctx.gatewayPort}`);
+  lines.push(
+    "# If you switch providers later, copy the relevant block above and update the credentials."
   );
+
+  return ensureTrailingNewline(normalizeLineEndings(lines.join("\n")));
+};
 
 export const buildTsConfig = (): string =>
   formatJson({
@@ -839,24 +882,24 @@ export async function POST(request: NextRequest) {
           stream,
           model: stripPrefix(body.model ?? DEFAULT_MODEL, "xai", "grok-2-latest"),
         };
-        const response = await fetch(\`\${XAI_BASE_URL}/chat/completions\`, {
+        const response = await fetch(XAI_BASE_URL + "/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: \`Bearer \${xaiKey}\`,
+            Authorization: "Bearer " + xaiKey,
           },
           body: JSON.stringify(requestBody),
         });
         if (!response.ok) {
           const details = await response.text();
-          return NextResponse.json({ error: \`xAI chat failed: \${response.status}\`, details }, { status: response.status });
+          return NextResponse.json({ error: "xAI chat failed: " + response.status, details }, { status: response.status });
         }
         return stream ? passthroughResponse(response) : jsonResponse(response);
       }
 
       case "anthropic": {
         const anthropicKey = requireAnthropicKey();
-        const requestedModel = stripPrefix(body.model ?? DEFAULT_MODEL, "anthropic", "claude-3-5-sonnet-latest");
+        const requestedModel = stripPrefix(body.model ?? DEFAULT_MODEL, "anthropic", "claude-3-5-haiku-latest");
         const stopSequences = Array.isArray(body.stop)
           ? body.stop
           : Array.isArray(body.stop_sequences)
@@ -1111,8 +1154,8 @@ export async function GET() {
   // xAI
   if (XAI_API_KEY) {
     try {
-      const response = await fetch(\`\${XAI_BASE_URL}/models\`, {
-        headers: { Authorization: \`Bearer \${XAI_API_KEY}\` },
+      const response = await fetch(XAI_BASE_URL + "/models", {
+        headers: { Authorization: "Bearer " + XAI_API_KEY },
       });
       providers.push({
         name: "xai",
@@ -1520,6 +1563,93 @@ const handleStreamingResponse = async (upstreamResponse, res) => {
   }
 };
 
+const relayAnthropicStream = async (upstreamResponse, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  const reader = upstreamResponse.body?.getReader();
+  if (!reader) {
+    const fallback = await upstreamResponse.text();
+    res.write("data: " + JSON.stringify({ choices: [{ delta: { content: fallback } }] }) + "\\n\\n");
+    res.write("data: [DONE]\\n\\n");
+    return res.end();
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  const sendChunk = (payload) => {
+    res.write("data: " + JSON.stringify(payload) + "\\n\\n");
+  };
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let delimiterIndex;
+      while ((delimiterIndex = buffer.indexOf('\\n\\n')) >= 0) {
+        const rawEvent = buffer.slice(0, delimiterIndex).trim();
+        buffer = buffer.slice(delimiterIndex + 2);
+        if (!rawEvent) continue;
+
+        const lines = rawEvent.split('\\n');
+        const eventLine = lines.find((line) => line.startsWith('event:')) ?? '';
+        const dataLine = lines.find((line) => line.startsWith('data:')) ?? '';
+        const event = eventLine.replace('event:', '').trim();
+        const trimmedData = dataLine.replace('data:', '').trim();
+
+        if (!trimmedData) {
+          continue;
+        }
+
+        let parsed;
+        try {
+          parsed = JSON.parse(trimmedData);
+        } catch (error) {
+          console.error('Anthropic stream parse error', error, { rawEvent });
+          continue;
+        }
+
+        if (event === 'content_block_delta') {
+          const textChunk = parsed?.delta?.text ?? '';
+          if (textChunk) {
+            sendChunk({
+              choices: [
+                {
+                  delta: {
+                    content: textChunk,
+                  },
+                },
+              ],
+            });
+          }
+        } else if (event === 'message_stop') {
+          sendChunk({
+            choices: [
+              {
+                delta: {},
+                finish_reason: 'stop',
+              },
+            ],
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Anthropic streaming relay error', error);
+    sendChunk({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  } finally {
+    res.write("data: [DONE]\\n\\n");
+    res.end();
+  }
+};
+
 // ============================================================================
 // GENERAL HEALTH & MODELS
 // ============================================================================
@@ -1632,8 +1762,8 @@ app.get("/api/health", async (_req, res) => {
   // Check xAI
   if (XAI_API_KEY) {
     try {
-      const response = await fetch(`${XAI_BASE_URL}/models`, {
-        headers: { "Authorization": `Bearer ${XAI_API_KEY}` }
+      const response = await fetch(XAI_BASE_URL + "/models", {
+        headers: { "Authorization": "Bearer " + XAI_API_KEY }
       });
       providers.push({
         name: "xai",
@@ -1735,7 +1865,7 @@ app.post("/api/anthropic/chat/completions", async (req, res) => {
     const requestedModel =
       stripAnthropicModelPrefix(rawBody.model) ??
       stripAnthropicModelPrefix("${ctx.defaultModelId}") ??
-      "claude-3-5-sonnet-latest";
+      "claude-3-5-haiku-latest";
 
     const stopSequences = Array.isArray(rawBody.stop)
       ? rawBody.stop
@@ -1818,7 +1948,7 @@ app.post("/api/anthropic/chat/completions", async (req, res) => {
     }
 
     if (isStreaming) {
-      await handleStreamingResponse(response, res);
+      await relayAnthropicStream(response, res);
     } else {
       const data = await response.json();
       const normalized = convertAnthropicResponseToGateway(data, requestedModel);
@@ -1913,7 +2043,7 @@ app.post("/api/anthropic/completions", async (req, res) => {
     }
 
     if (isStreaming) {
-      await handleStreamingResponse(response, res);
+      await relayAnthropicStream(response, res);
     } else {
       const data = await response.json();
       const formatted = convertAnthropicResponseToGenerate(data, requestedModel);
@@ -2194,8 +2324,8 @@ app.post("/api/azure/embed", async (req, res) => {
 app.get("/api/xai/health", async (_req, res) => {
   try {
     const xaiKey = requireXAIKey();
-    const response = await fetch(`${XAI_BASE_URL}/models`, {
-      headers: { "Authorization": `Bearer ${xaiKey}` }
+    const response = await fetch(XAI_BASE_URL + "/models", {
+      headers: { "Authorization": "Bearer " + xaiKey }
     });
     const isHealthy = response.ok;
     res.json({
@@ -2224,11 +2354,11 @@ app.post("/api/xai/chat/completions", async (req, res) => {
       model: req.body?.model?.replace(/^xai:/, "") || "grok-2-latest"
     };
 
-    const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
+    const response = await fetch(XAI_BASE_URL + "/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${xaiKey}`
+        "Authorization": "Bearer " + xaiKey
       },
       body: JSON.stringify(requestBody)
     });
@@ -2236,7 +2366,7 @@ app.post("/api/xai/chat/completions", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       return res.status(response.status).json({
-        error: `xAI chat failed: ${response.status}`,
+        error: "xAI chat failed: " + response.status,
         details: errorText
       });
     }
@@ -2269,11 +2399,11 @@ app.post("/api/xai/completions", async (req, res) => {
       model: req.body?.model?.replace(/^xai:/, "") || "grok-2-mini"
     };
 
-    const response = await fetch(`${XAI_BASE_URL}/completions`, {
+    const response = await fetch(XAI_BASE_URL + "/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${xaiKey}`
+        "Authorization": "Bearer " + xaiKey
       },
       body: JSON.stringify(requestBody)
     });
@@ -2281,7 +2411,7 @@ app.post("/api/xai/completions", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       return res.status(response.status).json({
-        error: `xAI completions failed: ${response.status}`,
+        error: "xAI completions failed: " + response.status,
         details: errorText
       });
     }
@@ -2316,11 +2446,11 @@ app.post("/api/xai/generate", async (req, res) => {
       temperature: req.body?.temperature ?? 0.7
     };
 
-    const response = await fetch(`${XAI_BASE_URL}/chat/completions`, {
+    const response = await fetch(XAI_BASE_URL + "/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${xaiKey}`
+        "Authorization": "Bearer " + xaiKey
       },
       body: JSON.stringify(chatBody)
     });
@@ -2328,7 +2458,7 @@ app.post("/api/xai/generate", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       return res.status(response.status).json({
-        error: `xAI generate failed: ${response.status}`,
+        error: "xAI generate failed: " + response.status,
         details: errorText
       });
     }
@@ -2361,14 +2491,14 @@ app.post("/api/xai/generate", async (req, res) => {
 app.get("/api/xai/models", async (_req, res) => {
   try {
     const xaiKey = requireXAIKey();
-    const response = await fetch(`${XAI_BASE_URL}/models`, {
-      headers: { "Authorization": `Bearer ${xaiKey}` }
+    const response = await fetch(XAI_BASE_URL + "/models", {
+      headers: { "Authorization": "Bearer " + xaiKey }
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       return res.status(response.status).json({
-        error: `xAI models failed: ${response.status}`,
+        error: "xAI models failed: " + response.status,
         details: errorText
       });
     }
@@ -2924,14 +3054,9 @@ export const buildGitignore = (): string =>
     )
   );
 
-export const buildNpmrc = (): string =>
-  ensureTrailingNewline(
-    normalizeLineEndings(`registry=https://registry.npmjs.org/\n`)
-  );
-
 export const buildReadme = (ctx: QuickstartTemplateContext): string =>
   ensureTrailingNewline(
     normalizeLineEndings(
-      `# ${ctx.projectTitle} — Bandit Quickstart\n\nThis project was generated by the Bandit Engine CLI. It ships with a React + Vite frontend that consumes \`@burtson-labs/bandit-engine\`, a lightweight Express gateway you can adapt for production, and a Next.js App Router API scaffold in \`server/next-app/\`.\n\n## 🚀 Next steps\n- \`npm install\`\n- \`cp .env.example .env\`\n- Fill in your OpenAI, Azure OpenAI, Anthropic, or xAI credentials (or point \`OLLAMA_URL\` at your local server)\n- \`npm run dev\`\n\nThe command runs the gateway and the frontend together. Visit http://localhost:${ctx.frontendPort} to see the chat and modal in action.\n\n## 🔧 Customizing your assistant\n- **Branding & personas**: edit \`public/config.json\` to tweak logos, colors, and starter models.\n- **Provider defaults**: update \`.env\` to switch providers or change the default upstream model IDs.\n- **Gateway routes**: open \`server/gateway.js\` to add auth, logging, or connect additional providers.\n\n## 📦 What’s inside\n- React + Vite 5 with Material UI theming\n- Bandit chat surface + modal wired via \`ChatProvider\`\n- Express gateway proxying OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama to keep API keys server-side\n- Next.js App Router gateway scaffold in `server/next-app/` for projects that prefer Next\n- Friendly defaults you can evolve into your production stack\n\nNeed more? Run \`npx @burtson-labs/bandit-engine create --help\` to explore additional options.\n`
+      `# ${ctx.projectTitle} — Bandit Quickstart\n\nThis project was generated by the Bandit Engine CLI. It ships with a React + Vite frontend that consumes \`@burtson-labs/bandit-engine\`, a lightweight Express gateway you can adapt for production, and a Next.js App Router API scaffold in \`server/next-app/\`.\n\n## 🚀 Next steps\n- \`npm install\`\n- \`cp .env.example .env\`\n- Fill in your OpenAI, Azure OpenAI, Anthropic, or xAI credentials (or point \`OLLAMA_URL\` at your local server)\n- \`npm run dev\`\n\nThe command runs the gateway and the frontend together. Visit http://localhost:${ctx.frontendPort} to see the chat and modal in action.\n\n## 🔧 Customizing your assistant\n- **Branding & personas**: edit \`public/config.json\` to tweak logos, colors, and starter models.\n- **Provider defaults**: update \`.env\` to switch providers or change the default upstream model IDs.\n- **Gateway routes**: open \`server/gateway.js\` to add auth, logging, or connect additional providers.\n\n## 📦 What’s inside\n- React + Vite 5 with Material UI theming\n- Bandit chat surface + modal wired via \`ChatProvider\`\n- Express gateway proxying OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama to keep API keys server-side\n- Next.js App Router gateway scaffold in 'server/next-app/' for projects that prefer Next\n- Friendly defaults you can evolve into your production stack\n\nNeed more? Run \`npx @burtson-labs/bandit-engine create --help\` to explore additional options.\n`
     )
   );

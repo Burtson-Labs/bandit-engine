@@ -41,7 +41,6 @@ import {
   buildThemeTs,
   buildTsConfig,
   buildViteConfig,
-  buildNpmrc,
   buildNextChatRoute,
   buildNextHealthRoute,
   buildNextModelsRoute,
@@ -111,7 +110,7 @@ export const createQuickstartProject = async (
   const provider = options.provider
     ? normalizeProvider(options.provider)
     : skipPrompts
-      ? "openai"
+      ? "ollama"
       : await promptForProvider();
 
   const promptAnswers = skipPrompts
@@ -221,7 +220,7 @@ const inferDefaultModelId = (provider: SupportedProvider): string => {
     return "azure:gpt-4o";
   }
   if (provider === "anthropic") {
-    return "anthropic:claude-3-5-sonnet-latest";
+    return "anthropic:claude-3-5-haiku-latest";
   }
   if (provider === "xai") {
     return "xai:grok-2-latest";
@@ -238,7 +237,7 @@ const inferFallbackModelId = (provider: SupportedProvider, defaultId: string): s
   }
   if (provider === "anthropic") {
     return defaultId === "anthropic:claude-3-5-haiku-latest"
-      ? "anthropic:claude-3-5-sonnet-latest"
+      ? "anthropic:claude-3-haiku-20240307"
       : "anthropic:claude-3-5-haiku-latest";
   }
   if (provider === "xai") {
@@ -249,11 +248,11 @@ const inferFallbackModelId = (provider: SupportedProvider, defaultId: string): s
 
 const promptForProvider = async (): Promise<SupportedProvider> => {
   const providerOptions: { label: string; value: SupportedProvider; description?: string }[] = [
-    { label: "OpenAI (default)", value: "openai" },
+    { label: "Ollama (self-hosted) — default", value: "ollama" },
+    { label: "OpenAI", value: "openai" },
     { label: "Azure OpenAI", value: "azure" },
     { label: "Anthropic", value: "anthropic" },
     { label: "xAI (Grok)", value: "xai" },
-    { label: "Ollama (self-hosted)", value: "ollama" },
   ];
 
   const messageLines = [
@@ -289,7 +288,7 @@ const promptForProvider = async (): Promise<SupportedProvider> => {
       ? answers.providerIndex - 1
       : 0;
 
-  return providerOptions[selectedIndex]?.value ?? "openai";
+  return providerOptions[selectedIndex]?.value ?? "ollama";
 };
 
 const sanitizePort = (value: number): number => {
@@ -420,7 +419,6 @@ const writeProject = async (inputs: CreateQuickstartInputs): Promise<string[]> =
     "server/next-app/README.md": buildNextGatewayReadme(),
     ".env.example": buildEnvExample(context),
     ".gitignore": buildGitignore(),
-    ".npmrc": buildNpmrc(),
     "README.md": buildReadme(context),
   };
 
