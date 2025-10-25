@@ -69,17 +69,43 @@ export const detectMimeType = (fileNameOrExtension: string): string => {
 export const toDataUrl = (buffer: Buffer, mimeType: string): string =>
   `data:${mimeType};base64,${buffer.toString("base64")}`;
 
+const KNOWN_PROVIDERS = new Set(["openai", "azure", "azure-openai", "azureopenai", "anthropic", "xai", "ollama"]);
+
 export const sanitizeModelIdentifier = (value: string): string => {
   const trimmed = value.trim();
   if (!trimmed.includes(":")) {
     return trimmed.toLowerCase();
   }
-  const [provider, model] = trimmed.split(/:(.+)/).filter(Boolean);
-  const cleanModel = model
-    .replace(/[^a-zA-Z0-9_.-]/g, "-")
+
+  const segments = trimmed.split(/:(.+)/).filter(Boolean);
+  if (segments.length < 2) {
+    return trimmed.toLowerCase();
+  }
+
+  const [candidateProvider, rest] = segments as [string, string];
+  const provider = candidateProvider.toLowerCase();
+  const cleanRest = rest
+    .trim()
+    .replace(/[^a-zA-Z0-9_.:-]/g, "-")
     .replace(/-+/g, "-")
     .toLowerCase();
-  return `${provider.toLowerCase()}:${cleanModel}`;
+
+  if (KNOWN_PROVIDERS.has(provider)) {
+    if (provider === "azure-openai" || provider === "azureopenai") {
+      return `azure:${cleanRest}`;
+    }
+    if (provider === "ollama") {
+      return cleanRest;
+    }
+    return `${provider}:${cleanRest}`;
+  }
+
+  return [candidateProvider, rest]
+    .filter(Boolean)
+    .join(":")
+    .replace(/[^a-zA-Z0-9_.:-]/g, "-")
+    .replace(/-+/g, "-")
+    .toLowerCase();
 };
 
 export const normalizeLineEndings = (content: string): string =>

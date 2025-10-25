@@ -140,9 +140,12 @@ export const createQuickstartProject = async (
   const defaultModelId = sanitizeModelIdentifier(
     options.defaultModelId ?? inferDefaultModelId(provider)
   );
-  const fallbackModelId = options.fallbackModelId
-    ? sanitizeModelIdentifier(options.fallbackModelId)
+  const fallbackModelRaw = options.fallbackModelId
+    ? options.fallbackModelId
     : inferFallbackModelId(provider, defaultModelId);
+  const fallbackModelId = fallbackModelRaw
+    ? sanitizeModelIdentifier(fallbackModelRaw)
+    : undefined;
 
   const inputs: CreateQuickstartInputs = {
     targetDir: resolvedDir,
@@ -214,7 +217,7 @@ const normalizeProvider = (value?: string): SupportedProvider => {
 
 const inferDefaultModelId = (provider: SupportedProvider): string => {
   if (provider === "ollama") {
-    return "ollama:llama3.1";
+    return "llama3.1";
   }
   if (provider === "azure") {
     return "azure:gpt-4o";
@@ -230,7 +233,11 @@ const inferDefaultModelId = (provider: SupportedProvider): string => {
 
 const inferFallbackModelId = (provider: SupportedProvider, defaultId: string): string | undefined => {
   if (provider === "ollama") {
-    return defaultId === "ollama:llama3" ? "ollama:llama2" : "ollama:llama3";
+    const normalized = defaultId.toLowerCase();
+    if (normalized.startsWith("llama3")) {
+      return "llama2";
+    }
+    return "llama3";
   }
   if (provider === "azure") {
     return defaultId === "azure:gpt-4o-mini" ? "azure:gpt-4o" : "azure:gpt-4o-mini";
