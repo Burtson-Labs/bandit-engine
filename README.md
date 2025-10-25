@@ -58,7 +58,7 @@ Customize the output with options such as:
 
 > 📦 The generated project installs directly from `https://registry.npmjs.org/` — no GitHub npm token is required once the package is public.
 
-> ⚠️ The scaffolded gateway focuses on OpenAI/Ollama chat and model discovery. All advanced routes (file storage uploads, vector embedding, voice, MCP, etc.) are generated as `501` placeholders so you can wire them to your own infrastructure. Implement the contracts below before turning on those features in production.
+> ⚠️ The scaffolded gateway focuses on OpenAI/xAI/Ollama chat and model discovery. All advanced routes (file storage uploads, vector embedding, voice, MCP, etc.) are generated as `501` placeholders so you can wire them to your own infrastructure. Implement the contracts below before turning on those features in production.
 
 Check out the [CLI quick start guide](./docs/05_cli_quickstart.md) for the full walkthrough, option matrix, and project anatomy.
 
@@ -212,7 +212,7 @@ aiProvider: {
 
 > **⚠️ Important:** The Bandit Engine automatically routes to provider-specific endpoints:
 > - **Ollama** → `/api/ollama/chat` (native Ollama format)
-> - **OpenAI/Azure/Anthropic** → `/api/{provider}/chat/completions` (OpenAI format)
+> - **OpenAI/Azure/xAI/Anthropic** → `/api/{provider}/chat/completions` (OpenAI format)
 > - **TTS/STT** → Technology-agnostic endpoints that work with any backend implementation
 
 ### Ollama .env Setup
@@ -765,7 +765,7 @@ The Bandit Engine provides comprehensive image support across all AI providers t
 
 // The gateway provider automatically formats images correctly:
 // - Ollama: base64 arrays in message.images
-// - OpenAI/Azure/Anthropic: structured content with image_url objects
+// - OpenAI/Azure/xAI/Anthropic: structured content with image_url objects
 ```
 
 **Backend Requirements:**
