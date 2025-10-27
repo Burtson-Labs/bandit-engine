@@ -92,8 +92,10 @@ Do not:
 - Refer to yourself or use phrases like "As an AI..."
 - Include greetings, explanations, or personality
 - Include jokes, fiction, or quotes
+- Number, bullet, or otherwise prefix the questions with extra characters
+- Repeat the same idea phrased differently — each question must explore a distinct angle or subtopic
 
-Output only ${limit} questions — one per line.`;
+Output only ${limit} questions — one per line, with no leading numbers, bullets, or prefixes.`;
 
   return prompt.trim();
 }

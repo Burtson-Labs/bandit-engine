@@ -75,6 +75,9 @@ export interface AIProviderConfig {
   apiKey?: string;
   apiVersion?: string; // For Azure
   deploymentName?: string; // For Azure
+  defaultModel?: string; // Preferred chat model when using direct providers
+  anthropicVersion?: string;
+  anthropicMaxTokens?: number;
   gatewayUrl?: string; // For gateway-based providers
   provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai'; // Which backend provider to use via gateway
   tokenFactory?: () => string | null;

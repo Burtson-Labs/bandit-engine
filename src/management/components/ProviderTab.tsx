@@ -16,7 +16,7 @@ const __banditFingerprint_components_ProviderTabtsx = 'BL-FP-40A439-27B6';
 const __auditTrail_components_ProviderTabtsx = 'BL-AU-MGOIKVVK-2GRA';
 // File: ProviderTab.tsx | Path: src/management/components/ProviderTab.tsx | Hash: 842227b6
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -46,6 +46,58 @@ export const ProviderTab: React.FC = () => {
   const { settings: packageSettings } = usePackageSettingsStore();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const getSuggestedModel = useCallback((type: AIProviderType): string => {
+    const configuredDefault = packageSettings?.defaultModel?.trim();
+    if (configuredDefault) {
+      return configuredDefault;
+    }
+
+    switch (type) {
+      case AIProviderType.OPENAI:
+        return 'gpt-4o-mini';
+      case AIProviderType.XAI:
+        return 'grok-beta';
+      default:
+        return '';
+    }
+  }, [packageSettings?.defaultModel]);
+
+  const applyDefaultModel = useCallback((config: AIProviderConfig): AIProviderConfig => {
+    const normalized = { ...config } as AIProviderConfig & { defaultModel?: string };
+    const trimmed = typeof normalized.defaultModel === 'string' ? normalized.defaultModel.trim() : undefined;
+    const requiresModel =
+      normalized.type === AIProviderType.OPENAI ||
+      normalized.type === AIProviderType.XAI;
+
+    if (trimmed) {
+      normalized.defaultModel = trimmed;
+      return normalized;
+    }
+
+    if (!requiresModel) {
+      delete normalized.defaultModel;
+      return normalized;
+    }
+
+    const suggestion = getSuggestedModel(normalized.type);
+    if (suggestion) {
+      normalized.defaultModel = suggestion;
+    } else {
+      delete normalized.defaultModel;
+    }
+
+    return normalized;
+  }, [getSuggestedModel]);
+
+  const sanitizeConfigForSave = useCallback((config: AIProviderConfig): AIProviderConfig => {
+    const sanitized = { ...config } as AIProviderConfig & { defaultModel?: string };
+    if (typeof sanitized.defaultModel === 'string') {
+      const trimmed = sanitized.defaultModel.trim();
+      sanitized.defaultModel = trimmed || undefined;
+    }
+    return sanitized;
+  }, []);
 
   // AI Provider configuration state
   const [providerConfig, setProviderConfig] = useState<AIProviderConfig>({
@@ -103,6 +155,27 @@ export const ProviderTab: React.FC = () => {
     return null;
   };
 
+  const convertAnthropicConfig = useCallback((config: AIProviderConfig | null | undefined): AIProviderConfig | null => {
+    if (!config) return null;
+    if (config.type !== AIProviderType.ANTHROPIC) {
+      return config;
+    }
+
+    const gatewayUrl = config.gatewayUrl || packageSettings?.gatewayApiUrl || '';
+    const defaultModel = typeof config.defaultModel === 'string' && config.defaultModel.trim()
+      ? config.defaultModel.trim()
+      : 'claude-3-5-sonnet-latest';
+    const converted: AIProviderConfig = {
+      type: AIProviderType.GATEWAY,
+      gatewayUrl,
+      provider: 'anthropic',
+      defaultModel,
+      tokenFactory: config.tokenFactory
+    };
+
+    return converted;
+  }, [packageSettings?.gatewayApiUrl]);
+
   // Load current provider configuration
   useEffect(() => {
     const initializeProviderConfig = async () => {
@@ -110,16 +183,19 @@ export const ProviderTab: React.FC = () => {
       const savedConfig = await loadProviderConfigFromDB();
       
       if (savedConfig) {
-        setProviderConfig(savedConfig);
+        const normalized = convertAnthropicConfig(savedConfig) || savedConfig;
+        setProviderConfig(applyDefaultModel(normalized));
       } else if (currentProviderConfig) {
-        setProviderConfig(currentProviderConfig);
+        const normalized = convertAnthropicConfig(currentProviderConfig) || currentProviderConfig;
+        setProviderConfig(applyDefaultModel(normalized));
       } else if (packageSettings?.aiProvider) {
-        setProviderConfig(packageSettings.aiProvider);
+        const normalized = convertAnthropicConfig(packageSettings.aiProvider) || packageSettings.aiProvider;
+        setProviderConfig(applyDefaultModel(normalized));
       }
     };
 
     initializeProviderConfig();
-  }, [currentProviderConfig, packageSettings]);
+  }, [applyDefaultModel, convertAnthropicConfig, currentProviderConfig, packageSettings]);
 
   const showMessage = (message: string, severity: 'success' | 'error') => {
     setSnackbarMessage(message);
@@ -133,83 +209,100 @@ export const ProviderTab: React.FC = () => {
     
     switch (type) {
       case AIProviderType.OLLAMA:
-        setProviderConfig({
+        setProviderConfig(applyDefaultModel({
           ...baseConfig,
           baseUrl: 'http://localhost:11434'
-        });
+        }));
         break;
       case AIProviderType.OPENAI:
-        setProviderConfig({
+        setProviderConfig(applyDefaultModel({
           ...baseConfig,
           baseUrl: 'https://api.openai.com/v1',
           apiKey: ''
-        });
+        }));
         break;
       case AIProviderType.AZURE_OPENAI:
-        setProviderConfig({
+        setProviderConfig(applyDefaultModel({
           ...baseConfig,
           baseUrl: '',
           apiKey: '',
           apiVersion: '2024-02-01',
           deploymentName: ''
-        });
+        }));
         break;
       case AIProviderType.ANTHROPIC:
-        setProviderConfig({
-          ...baseConfig,
-          baseUrl: 'https://api.anthropic.com',
-          apiKey: ''
-        });
+        showMessage('Anthropic is only available via the Gateway provider. Please configure Gateway and choose Anthropic as the backend.', 'error');
+        setProviderConfig(applyDefaultModel({
+          type: AIProviderType.GATEWAY,
+          gatewayUrl: packageSettings?.gatewayApiUrl || '',
+          provider: 'anthropic',
+          defaultModel: 'claude-3-5-sonnet-latest'
+        }));
         break;
       case AIProviderType.XAI:
-        setProviderConfig({
+        setProviderConfig(applyDefaultModel({
           ...baseConfig,
           baseUrl: 'https://api.x.ai/v1',
           apiKey: ''
-        });
+        }));
         break;
       case AIProviderType.GATEWAY:
-        setProviderConfig({
+        setProviderConfig(applyDefaultModel({
           ...baseConfig,
           gatewayUrl: packageSettings?.gatewayApiUrl || '',
           provider: 'openai'
-        });
+        }));
         break;
       case AIProviderType.PLAYGROUND:
-        setProviderConfig({
+        setProviderConfig(applyDefaultModel({
           ...baseConfig
-        });
+        }));
         break;
     }
   };
 
   const handleSaveProviderConfig = async () => {
     try { 
+      const normalizedConfigIntermediate = sanitizeConfigForSave(providerConfig);
+      const normalizedConfig = convertAnthropicConfig(normalizedConfigIntermediate) || normalizedConfigIntermediate;
+      const requiresModel =
+        normalizedConfig.type === AIProviderType.OPENAI ||
+        normalizedConfig.type === AIProviderType.XAI;
+
+      if (requiresModel && !normalizedConfig.defaultModel) {
+        showMessage('Please provide a default model ID for the selected provider.', 'error');
+        return;
+      }
+
       // Validate the configuration
-      const isValid = AIProviderFactory.validateConfig(providerConfig);
+      const isValid = AIProviderFactory.validateConfig(normalizedConfig);
       if (!isValid) {
         showMessage('Invalid provider configuration. Please check all required fields.', 'error');
         return;
       }
 
       // Save to IndexedDB first
-      await saveProviderConfigToDB(providerConfig);
+      await saveProviderConfigToDB(normalizedConfig);
 
       // Switch to the new provider
-      await aiProviderInitService.switchProvider(providerConfig);
+      await aiProviderInitService.switchProvider(normalizedConfig);
       
       // Update package settings
       if (packageSettings) {
         const updatedSettings = {
           ...packageSettings,
-          aiProvider: providerConfig
+          aiProvider: normalizedConfig
         };
+        if (normalizedConfig.defaultModel) {
+          updatedSettings.defaultModel = normalizedConfig.defaultModel;
+        }
         usePackageSettingsStore.setState({ settings: updatedSettings });
       }
 
+      setProviderConfig(applyDefaultModel(normalizedConfig));
       setIsProviderConfigOpen(false);
       showMessage('Provider configuration saved and switched successfully!', 'success');
-      debugLogger.info('Provider configuration saved and switched', { type: providerConfig.type });
+      debugLogger.info('Provider configuration saved and switched', { type: normalizedConfig.type });
     } catch (error) {
       debugLogger.error('Failed to save provider configuration:', { error });
       showMessage(`Failed to save provider configuration: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
@@ -218,9 +311,10 @@ export const ProviderTab: React.FC = () => {
 
   const handleTestProviderConnection = async () => {
     try {
-      const testConfig = { ...providerConfig };
-      const testProvider = AIProviderFactory.createProvider(testConfig);
-      
+      const testConfig = sanitizeConfigForSave(providerConfig);
+      const normalizedTestConfig = convertAnthropicConfig(testConfig) || testConfig;
+      const testProvider = AIProviderFactory.createProvider(normalizedTestConfig);
+
       const result = await testProvider.validateServiceAvailability({ timeoutMs: 10000 });
       
       if (result.isAvailable) {
@@ -308,14 +402,13 @@ export const ProviderTab: React.FC = () => {
                 fullWidth
                 sx={{ mb: 3 }}
               >
-                <MenuItem value="gateway">Gateway (Recommended)</MenuItem>
-                <MenuItem value="ollama">Ollama</MenuItem>
-                <MenuItem value="openai">OpenAI</MenuItem>
-                <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
-                <MenuItem value="anthropic">Anthropic</MenuItem>
-                <MenuItem value="xai">xAI</MenuItem>
-                <MenuItem value="playground">Playground (Mock Demo)</MenuItem>
-              </TextField>
+              <MenuItem value="gateway">Gateway (Recommended)</MenuItem>
+              <MenuItem value="ollama">Ollama</MenuItem>
+              <MenuItem value="openai">OpenAI</MenuItem>
+              <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
+              <MenuItem value="xai">xAI</MenuItem>
+              <MenuItem value="playground">Playground (Mock Demo)</MenuItem>
+            </TextField>
 
               {/* Gateway Configuration */}
               {providerConfig.type === 'gateway' && (
@@ -365,7 +458,12 @@ export const ProviderTab: React.FC = () => {
                   <TextField
                     label="API Base URL"
                     value={providerConfig.baseUrl || ''}
-                    onChange={(e) => setProviderConfig({...providerConfig, baseUrl: e.target.value})}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        baseUrl: e.target.value
+                      }))
+                    }
                     fullWidth
                     sx={{ mb: 2 }}
                     placeholder="https://api.openai.com/v1"
@@ -374,9 +472,28 @@ export const ProviderTab: React.FC = () => {
                     label="API Key"
                     type="password"
                     value={providerConfig.apiKey || ''}
-                    onChange={(e) => setProviderConfig({...providerConfig, apiKey: e.target.value})}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        apiKey: e.target.value
+                      }))
+                    }
                     fullWidth
+                    sx={{ mb: 2 }}
                     placeholder="sk-..."
+                  />
+                  <TextField
+                    label="Default Model ID"
+                    value={providerConfig.defaultModel || ''}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        defaultModel: e.target.value
+                      }))
+                    }
+                    fullWidth
+                    placeholder="gpt-4o-mini"
+                    helperText="Example: gpt-4o-mini, gpt-4.1, gpt-3.5-turbo"
                   />
                 </Box>
               )}
@@ -424,7 +541,12 @@ export const ProviderTab: React.FC = () => {
                   <TextField
                     label="API Base URL"
                     value={providerConfig.baseUrl || ''}
-                    onChange={(e) => setProviderConfig({ ...providerConfig, baseUrl: e.target.value })}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        baseUrl: e.target.value
+                      }))
+                    }
                     fullWidth
                     sx={{ mb: 2 }}
                     placeholder="https://api.x.ai/v1"
@@ -433,33 +555,38 @@ export const ProviderTab: React.FC = () => {
                     label="API Key"
                     type="password"
                     value={providerConfig.apiKey || ''}
-                    onChange={(e) => setProviderConfig({ ...providerConfig, apiKey: e.target.value })}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        apiKey: e.target.value
+                      }))
+                    }
                     fullWidth
+                    sx={{ mb: 2 }}
                     placeholder="xai-..."
+                  />
+                  <TextField
+                    label="Default Model ID"
+                    value={providerConfig.defaultModel || ''}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        defaultModel: e.target.value
+                      }))
+                    }
+                    fullWidth
+                    placeholder="grok-beta"
+                    helperText="Example: grok-beta, grok-2, grok-vision-beta"
                   />
                 </Box>
               )}
 
-              {/* Anthropic Configuration */}
+              {/* Anthropic Configuration (deprecated direct support) */}
               {providerConfig.type === 'anthropic' && (
-                <Box>
-                  <TextField
-                    label="API Base URL"
-                    value={providerConfig.baseUrl || ''}
-                    onChange={(e) => setProviderConfig({...providerConfig, baseUrl: e.target.value})}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    placeholder="https://api.anthropic.com"
-                  />
-                  <TextField
-                    label="API Key"
-                    type="password"
-                    value={providerConfig.apiKey || ''}
-                    onChange={(e) => setProviderConfig({...providerConfig, apiKey: e.target.value})}
-                    fullWidth
-                    placeholder="sk-ant-..."
-                  />
-                </Box>
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  Anthropic is only supported through the Bandit Gateway provider. Please switch to Gateway and
+                  select Anthropic as the backend service.
+                </Alert>
               )}
 
               {/* Action Buttons */}

@@ -63,7 +63,6 @@ export class AIProviderFactory {
       AIProviderType.OLLAMA,
       AIProviderType.OPENAI,
       AIProviderType.AZURE_OPENAI,
-      AIProviderType.ANTHROPIC,
       AIProviderType.XAI,
       AIProviderType.GATEWAY,
       AIProviderType.PLAYGROUND

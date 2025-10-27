@@ -84,7 +84,10 @@ export class AIProviderInitService {
           // Filter out the 'id' property that was added for IndexedDB storage
           const { id: _id, ...configWithoutId } = savedConfig;
           providerConfig = { ...configWithoutId };
-          
+          if (providerConfig.type === AIProviderType.ANTHROPIC) {
+            providerConfig = this.convertAnthropicConfig(providerConfig, settings?.gatewayApiUrl);
+          }
+
           // Ensure tokenFactory is present for providers that need it
           if ((providerConfig.type === AIProviderType.OLLAMA || providerConfig.type === AIProviderType.GATEWAY) && !providerConfig.tokenFactory) {
             providerConfig.tokenFactory = () => {
@@ -143,6 +146,9 @@ export class AIProviderInitService {
     // Fallback to package settings if no saved config found
     if (settings.aiProvider) {
       providerConfig = { ...settings.aiProvider };
+      if (providerConfig.type === AIProviderType.ANTHROPIC) {
+        providerConfig = this.convertAnthropicConfig(providerConfig, settings.gatewayApiUrl);
+      }
       
       // Ensure tokenFactory is present for Ollama providers
       if (providerConfig.type === AIProviderType.OLLAMA && !providerConfig.tokenFactory) {
@@ -340,6 +346,27 @@ export class AIProviderInitService {
    */
   isProviderInitialized(): boolean {
     return useAIProviderStore.getState().provider !== null;
+  }
+
+  private convertAnthropicConfig(config: AIProviderConfig, gatewayUrl?: string | null): AIProviderConfig {
+    if (config.type !== AIProviderType.ANTHROPIC) {
+      return config;
+    }
+
+    const defaultModel = typeof config.defaultModel === 'string' && config.defaultModel.trim()
+      ? config.defaultModel.trim()
+      : 'claude-3-5-sonnet-latest';
+
+    const normalized: AIProviderConfig = {
+      type: AIProviderType.GATEWAY,
+      gatewayUrl: gatewayUrl || config.gatewayUrl || '',
+      provider: 'anthropic',
+      defaultModel,
+      tokenFactory: config.tokenFactory
+    };
+
+    debugLogger.info('AI Provider Init: Converted direct Anthropic provider to gateway configuration');
+    return normalized;
   }
 }
 

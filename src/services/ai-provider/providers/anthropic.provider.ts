@@ -66,11 +66,22 @@ interface AnthropicChatResponsePayload {
 export class AnthropicProvider implements IAIProvider {
   private config: AIProviderConfig;
   private baseUrl: string;
+  private version: string;
+  private defaultMaxTokens: number;
 
   constructor(config: AIProviderConfig) {
     deprecatedAnthropicProvider(); // Show deprecation warning
     this.config = config;
     this.baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
+    this.version = typeof config.anthropicVersion === 'string' && config.anthropicVersion.trim()
+      ? config.anthropicVersion.trim()
+      : '2023-06-01';
+    this.defaultMaxTokens =
+      typeof config.anthropicMaxTokens === 'number' && config.anthropicMaxTokens > 0
+        ? config.anthropicMaxTokens
+        : 1024;
+    this.config.anthropicVersion = this.version;
+    this.config.anthropicMaxTokens = this.defaultMaxTokens;
   }
 
   chat(request: AIChatRequest): Observable<AIChatResponse> {
@@ -89,7 +100,7 @@ export class AnthropicProvider implements IAIProvider {
       system: systemMessage?.content,
       stream: Boolean(request.stream),
       temperature: request.temperature,
-      max_tokens: request.maxTokens ?? 1000
+      max_tokens: request.maxTokens ?? this.defaultMaxTokens
     };
 
     if (request.stream) {
@@ -363,7 +374,7 @@ export class AnthropicProvider implements IAIProvider {
 
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
-      'anthropic-version': '2023-06-01'
+      'anthropic-version': this.version
     };
     
     if (this.config.apiKey) {

@@ -29,7 +29,7 @@ import { notificationService } from "../notification/notificationService";
  * 
  * @param parameters - Parameters for generating conversation starters
  * @param parameters.limit - Number of questions to generate (1-10)
- * @param parameters.topicOfInterest - Default topic e.g "sports, travel, being Mark Burtson, technology, coding, .NET, kite flying, etc."
+ * @param parameters.topicOfInterest - Default topic e.g "sports, travel, technology, coding, .NET, kite flying, etc."
  * @returns A promise that resolves to an array of conversation starters
  */
 export const generateConversationStarters = async (args: QuestionPromptArgs): Promise<string[]> => {
@@ -49,20 +49,47 @@ export const generateConversationStarters = async (args: QuestionPromptArgs): Pr
       options: { temperature: 1.5, num_predict: 250 },
     });
     const questions$ = data$.pipe(map((d) => {
+      const sanitizeLine = (line: string): string => {
+        const withoutNumbering = line
+          .replace(/^[0-9]+[.)\-\s:]+/, "")
+          .replace(/^[•*+-]\s+/, "");
+        const withoutQuotes = withoutNumbering.replace(/^[“"']+/, "").replace(/[”"']+$/, "");
+        const withoutEmoji = withoutQuotes.replace(/\p{Extended_Pictographic}/gu, "");
+        return withoutEmoji.trim().replace(/\s+/g, " ");
+      };
+
       // Split by newlines and filter out empty/meaningless responses
-      const lines = d.response.split("\n")
-        .map(line => line.trim())
-        .filter(line => {
-          // Filter out empty lines, very short responses, or common meaningless responses
-          return line.length > 10 && 
-                 !line.toLowerCase().includes('sorry') &&
-                 !line.toLowerCase().includes('i cannot') &&
-                 !line.toLowerCase().includes('i can\'t') &&
-                 !line.toLowerCase().includes('unable to') &&
-                 !line.toLowerCase().startsWith('as an ai') &&
-                 line.includes('?'); // Should be a question
-        });
-      return lines;
+      const sanitized = d.response
+        .split("\n")
+        .map((line) => sanitizeLine(line.trim()))
+        .filter((line) => {
+          const lower = line.toLowerCase();
+          return (
+            line.length > 10 &&
+            line.includes("?") &&
+            !lower.includes("sorry") &&
+            !lower.includes("i cannot") &&
+            !lower.includes("i can't") &&
+            !lower.includes("unable to") &&
+            !lower.startsWith("as an ai")
+          );
+        })
+        .filter((line) => line.length > 0);
+
+      // Deduplicate while preserving order
+      const unique: string[] = [];
+      const seen = new Set<string>();
+      sanitized.forEach((line) => {
+        const key = line
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}]+/gu, " ")
+          .trim();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          unique.push(line);
+        }
+      });
+      return unique;
     }));
     const starters = await lastValueFrom(questions$);
     
@@ -72,7 +99,7 @@ export const generateConversationStarters = async (args: QuestionPromptArgs): Pr
       return [];
     }
     
-    return starters;
+    return starters.slice(0, args.limit);
   } catch (err) {
     debugLogger.error("❌ Failed to generate conversation starters:", { error: err });
     
