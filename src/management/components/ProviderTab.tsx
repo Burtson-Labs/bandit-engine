@@ -80,7 +80,7 @@ export const ProviderTab: React.FC = () => {
       return normalized;
     }
 
-    const suggestion = getSuggestedModel(normalized.type);
+    const suggestion = getSuggestedModel(normalized.type as AIProviderType);
     if (suggestion) {
       normalized.defaultModel = suggestion;
     } else {
