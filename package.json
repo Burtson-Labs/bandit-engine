@@ -17,8 +17,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Burtson-Labs/bandit-engine.git",
-    "directory": "packages/bandit-engine"
+    "url": "https://github.com/Burtson-Labs/bandit-engine.git"
   },
   "homepage": "https://banditailabs.com/npm-package",
   "author": "Burtson Labs LLC <team@burtson.ai>",
