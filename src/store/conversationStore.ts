@@ -256,13 +256,22 @@ export const useConversationStore = create<ConversationStore>((set, get) => ({
       const updatedConversations = conversations.map((c) => {
         if (c.id === currentId && c.history.length > 0) {
           const updatedHistory = [...c.history];
+          const existingImages = updatedHistory[updatedHistory.length - 1].images;
+          const nextImages =
+            Array.isArray(images) && images.length > 0
+              ? [...images]
+              : Array.isArray(existingImages) && existingImages.length > 0
+                ? [...existingImages]
+                : existingImages;
           updatedHistory[updatedHistory.length - 1] = {
             ...updatedHistory[updatedHistory.length - 1],
             answer,
             memoryUpdated,
-            images: images ?? updatedHistory[updatedHistory.length - 1].images,
+            images: nextImages,
             sourceFiles: sourceFiles ?? updatedHistory[updatedHistory.length - 1].sourceFiles,
             cancelled: cancelled ?? updatedHistory[updatedHistory.length - 1].cancelled,
+            placeholder: false,
+            rawQuestion: undefined,
           };
           return normalizeConversation({ ...c, history: updatedHistory, updatedAt: new Date() });
         }
@@ -360,6 +369,37 @@ export const useConversationStore = create<ConversationStore>((set, get) => ({
               incomingUpdatedAt,
             });
             continue;
+          }
+
+          // Preserve local-only metadata (e.g., inline images) when remote payload omits it
+          if (Array.isArray(existing.history) && Array.isArray(conversation.history)) {
+            const mergedHistory = conversation.history.map((incomingEntry, index) => {
+              const existingEntry = existing.history[index];
+              if (!existingEntry) {
+                return incomingEntry;
+              }
+
+              const mergedImagesSource =
+                Array.isArray(incomingEntry.images) && incomingEntry.images.length > 0
+                  ? incomingEntry.images
+                  : existingEntry.images;
+              const mergedImages =
+                Array.isArray(mergedImagesSource) && mergedImagesSource.length > 0
+                  ? [...mergedImagesSource]
+                  : mergedImagesSource;
+
+              return {
+                ...existingEntry,
+                ...incomingEntry,
+                images: mergedImages,
+                placeholder:
+                  incomingEntry.placeholder ?? existingEntry.placeholder,
+                rawQuestion:
+                  incomingEntry.rawQuestion ?? existingEntry.rawQuestion,
+              };
+            });
+
+            conversation.history = mergedHistory;
           }
         }
 

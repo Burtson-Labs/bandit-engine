@@ -33,6 +33,7 @@ import { OpenAIGatewayService } from '../../gateway/openai-gateway.service';
 import { AzureOpenAIGatewayService } from '../../gateway/azure-openai-gateway.service';
 import { AnthropicGatewayService } from '../../gateway/anthropic-gateway.service';
 import { OllamaGatewayService } from '../../gateway/ollama-gateway.service';
+import { BanditAIGatewayService } from '../../gateway/bandit-gateway.service';
 import { 
   GatewayChatRequest,
   GatewayMessage,
@@ -46,7 +47,7 @@ import {
 export class GatewayProvider implements IAIProvider {
   private config: AIProviderConfig;
   private gatewayService: GatewayService;
-  private providerSpecificService: OpenAIGatewayService | AzureOpenAIGatewayService | AnthropicGatewayService | OllamaGatewayService | null = null;
+  private providerSpecificService: OpenAIGatewayService | AzureOpenAIGatewayService | AnthropicGatewayService | OllamaGatewayService | BanditAIGatewayService | null = null;
 
   constructor(config: AIProviderConfig) {
     this.config = config;
@@ -92,6 +93,9 @@ export class GatewayProvider implements IAIProvider {
       case 'anthropic':
         this.providerSpecificService = new AnthropicGatewayService(gatewayUrl, tokenFactory);
         break;
+      case 'bandit':
+        this.providerSpecificService = new BanditAIGatewayService(gatewayUrl, tokenFactory);
+        break;
       case 'ollama':
         this.providerSpecificService = new OllamaGatewayService(gatewayUrl, tokenFactory);
         break;
@@ -112,9 +116,20 @@ export class GatewayProvider implements IAIProvider {
     }));
     
     // Handle images based on provider type
+    const normalizeImageUrl = (value: string) => {
+      if (!value) {
+        return value;
+      }
+      const trimmed = value.trim();
+      if (/^data:/i.test(trimmed) || /^https?:\/\//i.test(trimmed)) {
+        return trimmed;
+      }
+      return `data:image/jpeg;base64,${trimmed}`;
+    };
+
     if (request.images && request.images.length > 0) {
       const lastUserMessageIndex = messages.map(m => m.role).lastIndexOf('user');
-      
+
       if (this.config.provider === 'ollama') {
         // Ollama: attach images directly to the last user message
         if (lastUserMessageIndex !== -1) {
@@ -123,7 +138,7 @@ export class GatewayProvider implements IAIProvider {
             images: request.images
           };
         }
-      } else if (['openai', 'azure-openai', 'anthropic'].includes(this.config.provider || '')) {
+      } else if (['openai', 'azure-openai', 'anthropic', 'bandit'].includes(this.config.provider || '')) {
         // OpenAI/Azure/Anthropic: convert to structured content format
         if (lastUserMessageIndex !== -1) {
           const currentMessage = messages[lastUserMessageIndex];
@@ -133,22 +148,27 @@ export class GatewayProvider implements IAIProvider {
               text: currentMessage.content as string
             }
           ];
-          
+
           // Add images as image_url content
-          request.images.forEach(base64Image => {
+          request.images.forEach(imageRef => {
             contentArray.push({
               type: 'image_url',
               image_url: {
-                url: base64Image.startsWith('data:') ? base64Image : `data:image/jpeg;base64,${base64Image}`,
+                url: normalizeImageUrl(imageRef),
                 detail: 'auto'
               }
             });
           });
-          
+
           messages[lastUserMessageIndex] = {
             ...messages[lastUserMessageIndex],
             content: contentArray
           };
+          debugLogger.debug('Gateway provider injected image attachments', {
+            provider: this.config.provider,
+            imageCount: request.images.length,
+            messageIndex: lastUserMessageIndex
+          });
         }
       }
     }
@@ -284,7 +304,7 @@ export class GatewayProvider implements IAIProvider {
   /**
    * Use provider-specific service if available for enhanced functionality
    */
-  getProviderSpecificService(): OpenAIGatewayService | AzureOpenAIGatewayService | AnthropicGatewayService | OllamaGatewayService | null {
+  getProviderSpecificService(): OpenAIGatewayService | AzureOpenAIGatewayService | AnthropicGatewayService | OllamaGatewayService | BanditAIGatewayService | null {
     return this.providerSpecificService;
   }
 }

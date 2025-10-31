@@ -223,16 +223,23 @@ export class GatewayService {
         ? `/api/${request.provider}/chat/completions` 
         : '/api/chat/completions';
     const url = `${this._baseUrl}${endpoint}`;
+    const normalizedModel =
+      request.provider === 'bandit'
+        ? (() => {
+            const trimmed = (request.model ?? '').replace(/^bandit:/, '').trim();
+            return trimmed !== '' ? trimmed : 'bandit-core-1';
+          })()
+        : request.model;
     
     debugLogger.debug(`Gateway chat request to ${url} with provider: ${request.provider || 'default'}`, {
-      model: request.model,
+      model: normalizedModel,
       messageCount: request.messages.length,
       hasImages: !!(request.images && request.images.length > 0),
       imageCount: request.images?.length || 0
     });
     
     
-    const requestBody = { ...request, stream: request.stream !== false };
+    const requestBody = { ...request, model: normalizedModel, stream: request.stream !== false };
     
     return new Observable<GatewayChatResponse>(observer => {
       const controller = new AbortController();
@@ -399,14 +406,23 @@ export class GatewayService {
     // Use provider-specific endpoint if provider is specified
     const endpoint = request.provider ? `/api/${request.provider}/generate` : '/api/generate';
     const url = `${this._baseUrl}${endpoint}`;
+    const normalizedModel =
+      request.provider === 'bandit'
+        ? (() => {
+            const trimmed = (request.model ?? '').replace(/^bandit:/, '').trim();
+            return trimmed !== '' ? trimmed : 'bandit-core-1';
+          })()
+        : request.model;
     
-    debugLogger.debug(`Gateway generate request to ${url} with provider: ${request.provider || 'default'}`);
+    debugLogger.debug(`Gateway generate request to ${url} with provider: ${request.provider || 'default'}`, {
+      model: normalizedModel
+    });
     
     return new Observable<GatewayGenerateResponse>(observer => {
       const task = fetch(url, {
         method: 'POST',
         headers: this._getHeaders(),
-        body: JSON.stringify({ ...request, stream: request.stream !== false }),
+        body: JSON.stringify({ ...request, model: normalizedModel, stream: request.stream !== false }),
       });
       
       task.then(async (response) => {

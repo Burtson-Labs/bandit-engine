@@ -34,7 +34,7 @@ export interface QuickstartTemplateContext {
   isDefaultLogo: boolean;
   gatewayPort: number;
   frontendPort: number;
-  defaultProvider: "openai" | "ollama" | "azure" | "anthropic" | "xai";
+  defaultProvider: "openai" | "ollama" | "azure" | "anthropic" | "xai" | "bandit";
   defaultGatewayUrl: string;
   defaultModelId: string;
   fallbackModelId?: string;
@@ -117,6 +117,10 @@ export const buildEnvExample = (ctx: QuickstartTemplateContext): string => {
     case "xai":
       lines.push("XAI_API_KEY=");
       lines.push("XAI_BASE_URL=https://api.x.ai/v1");
+      break;
+    case "bandit":
+      lines.push("BANDIT_API_KEY=");
+      lines.push("BANDIT_BASE_URL=https://api.burtson.ai");
       break;
     case "ollama":
     default:
@@ -225,7 +229,7 @@ const gatewayBaseUrl = (import.meta.env.VITE_GATEWAY_URL ?? "${ctx.defaultGatewa
 const defaultModelId = import.meta.env.VITE_DEFAULT_MODEL ?? "${ctx.defaultModelId}";
 const fallbackModelId = import.meta.env.VITE_FALLBACK_MODEL ?? ${ctx.fallbackModelId ? `${QUOTE}${ctx.fallbackModelId}${QUOTE}` : "undefined"};
 const brandingText = import.meta.env.VITE_BRANDING_TEXT ?? "${ctx.brandingText}";
-const provider = (import.meta.env.VITE_GATEWAY_PROVIDER ?? "${ctx.defaultProvider}") as "openai" | "ollama" | "azure" | "anthropic" | "xai";
+const provider = (import.meta.env.VITE_GATEWAY_PROVIDER ?? "${ctx.defaultProvider}") as "openai" | "ollama" | "azure" | "anthropic" | "xai" | "bandit";
 
 const gatewayApiUrl = gatewayBaseUrl.endsWith("/api") ? gatewayBaseUrl : gatewayBaseUrl + "/api";
 const banditHeadLogoUrl = "https://cdn.burtson.ai/images/bandit-head.png";
@@ -407,7 +411,7 @@ function App() {
               {brandingText}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Build, brand, and launch your assistant with a drop-in chat surface plus a secure gateway for OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama.
+              Build, brand, and launch your assistant with a drop-in chat surface plus a secure gateway for Bandit AI, OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama.
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button component={RouterLink} to="/chat" variant="contained" color="primary">
@@ -454,7 +458,7 @@ function App() {
                 Ship secure gateways
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Keep API keys server-side while proxying requests to OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama through the included Express gateway.
+                Keep API keys server-side while proxying requests to Bandit AI, OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama through the included Express gateway.
               </Typography>
             </CardContent>
           </Card>
@@ -645,6 +649,48 @@ const ANTHROPIC_MAX_TOKENS = Number.isFinite(Number(process.env.ANTHROPIC_MAX_TO
   : 1024;
 const XAI_API_KEY = process.env.XAI_API_KEY;
 const XAI_BASE_URL = (process.env.XAI_BASE_URL ?? "https://api.x.ai/v1").replace(/\\/$/, "");
+const BANDIT_API_KEY = process.env.BANDIT_API_KEY;
+const BANDIT_BASE_URL = (process.env.BANDIT_BASE_URL ?? "https://api.burtson.ai").replace(/\\/$/, "");
+
+const normalizeGatewayImageUrl = (value: unknown): string => {
+  if (!value) {
+    return "";
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return "";
+    }
+    if (/^data:/i.test(trimmed) || /^https?:/i.test(trimmed)) {
+      return trimmed;
+    }
+    return 'data:image/jpeg;base64,' + trimmed;
+  }
+  if (typeof value === "object") {
+    const possibleUrl =
+      typeof (value as { url?: string }).url === "string"
+        ? (value as { url: string }).url
+        : (value as { image_url?: { url?: string } }).image_url && typeof (value as { image_url?: { url?: string } }).image_url?.url === "string"
+          ? ((value as { image_url: { url: string } }).image_url.url)
+          : "";
+    return normalizeGatewayImageUrl(possibleUrl);
+  }
+  return "";
+};
+
+const extractGatewayImageDetail = (value: unknown): string | undefined => {
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.detail === "string" && record.detail.trim()) {
+      return record.detail;
+    }
+    const nested = record.image_url;
+    if (nested && typeof (nested as Record<string, unknown>).detail === "string" && (nested as Record<string, unknown>).detail.trim()) {
+      return (nested as Record<string, unknown>).detail as string;
+    }
+  }
+  return undefined;
+};
 
 interface GatewayChatBody {
   provider?: string;
@@ -665,12 +711,13 @@ interface GatewayChatBody {
   [key: string]: unknown;
 }
 
-const normalizeProvider = (input: string): "openai" | "azure" | "anthropic" | "ollama" | "xai" => {
+const normalizeProvider = (input: string): "openai" | "azure" | "anthropic" | "ollama" | "xai" | "bandit" => {
   const value = input.toLowerCase();
   if (value === "azure-openai" || value === "azureopenai" || value === "azure") return "azure";
   if (value === "anthropic" || value === "claude") return "anthropic";
   if (value === "ollama") return "ollama";
   if (value === "xai" || value === "grok") return "xai";
+  if (value === "bandit" || value === "banditai" || value === "bandit-ai") return "bandit";
   return "openai";
 };
 
@@ -686,6 +733,13 @@ const requireOpenAIKey = () => {
     throw new Error("Missing OPENAI_API_KEY. Add it to your .env file to route requests to OpenAI.");
   }
   return OPENAI_API_KEY;
+};
+
+const requireBanditKey = () => {
+  if (!BANDIT_API_KEY) {
+    throw new Error("Missing BANDIT_API_KEY. Add it to your .env file to route requests to Bandit AI.");
+  }
+  return BANDIT_API_KEY;
 };
 
 const requireXAIKey = () => {
@@ -870,6 +924,72 @@ export async function POST(request: NextRequest) {
         if (!response.ok) {
           const details = await response.text();
           return NextResponse.json({ error: \`OpenAI chat failed: \${response.status}\`, details }, { status: response.status });
+        }
+        return stream ? passthroughResponse(response) : jsonResponse(response);
+      }
+
+      case "bandit": {
+        const banditKey = requireBanditKey();
+        const { provider: _provider, ...cleanBody } = body;
+        const providerName = typeof body.provider === "string" ? body.provider : "bandit";
+        const requestBody = {
+          ...cleanBody,
+          stream,
+          model: stripPrefix(body.model ?? DEFAULT_MODEL, "bandit", "bandit-core-1"),
+        };
+
+        if (
+          providerName !== "ollama" &&
+          Array.isArray(requestBody.images) &&
+          requestBody.images.length > 0 &&
+          Array.isArray(requestBody.messages)
+        ) {
+          const lastUserIndex = requestBody.messages.map((message) => message?.role).lastIndexOf("user");
+          if (lastUserIndex !== -1) {
+            const targetMessage = requestBody.messages[lastUserIndex] ?? {};
+            const baseContent = Array.isArray(targetMessage.content)
+              ? targetMessage.content.filter(Boolean)
+              : typeof targetMessage.content === "string" && targetMessage.content.trim().length > 0
+                ? [{ type: "text", text: targetMessage.content }]
+                : [];
+
+            const imageContent = requestBody.images
+              .map((entry) => {
+                const url = normalizeGatewayImageUrl(entry);
+                if (!url) {
+                  return null;
+                }
+                return {
+                  type: "image_url",
+                  image_url: {
+                    url,
+                    detail: extractGatewayImageDetail(entry) ?? "auto"
+                  }
+                };
+              })
+              .filter(Boolean);
+
+            if (imageContent.length > 0) {
+              requestBody.messages[lastUserIndex] = {
+                ...targetMessage,
+                content: [...baseContent, ...imageContent]
+              };
+            }
+          }
+          delete requestBody.images;
+        }
+
+        const response = await fetch(BANDIT_BASE_URL + "/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: \`Bearer \${banditKey}\`,
+          },
+          body: JSON.stringify(requestBody),
+        });
+        if (!response.ok) {
+          const details = await response.text();
+          return NextResponse.json({ error: \`Bandit chat failed: \${response.status}\`, details }, { status: response.status });
         }
         return stream ? passthroughResponse(response) : jsonResponse(response);
       }
@@ -1248,14 +1368,14 @@ This directory contains a minimal Next.js App Router implementation of the Bandi
 ## Routes
 
 - \`app/api/health/route.ts\` – provider health and availability checks
-- \`app/api/chat/completions/route.ts\` – provider-aware chat completions endpoint (OpenAI, Azure OpenAI, Anthropic, xAI, Ollama)
+- \`app/api/chat/completions/route.ts\` – provider-aware chat completions endpoint (Bandit AI, OpenAI, Azure OpenAI, Anthropic, xAI, Ollama)
 - \`app/api/models/route.ts\` – exposes the scaffolded gateway model metadata used by the frontend
 
 ## Usage
 
 1. Copy the contents of \`server/next-app/\` into the \`app/\` directory of a Next.js project.
 2. Ensure the environment variables listed in \`.env.example\` are available to the Next.js runtime. At minimum you will want the
-   provider API keys you plan to use (OpenAI, Azure OpenAI, Anthropic, xAI, or Ollama).
+   provider API keys you plan to use (Bandit AI, OpenAI, Azure OpenAI, Anthropic, xAI, or Ollama).
 3. Start Next.js with \`npm run dev\` (or your project’s equivalent). The routes are server-only (\`export const dynamic = "force-dynamic"\`)
    and can coexist with any frontend pages.
 
@@ -1306,6 +1426,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const QUICKSTART_VERSION = "0.1.0";
 const DEFAULT_PROVIDER = "${ctx.defaultProvider}";
 const BASE_GATEWAY_MODELS = ${modelsDefinition};
+const BANDIT_API_KEY = process.env.BANDIT_API_KEY;
+const BANDIT_BASE_URL = (process.env.BANDIT_BASE_URL ?? "https://api.burtson.ai").replace(/\\/$/, "");
 const OLLAMA_BASE_URL = (process.env.OLLAMA_URL ?? "http://localhost:11434").replace(/\\/$/, "");
 const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT ? process.env.AZURE_OPENAI_ENDPOINT.replace(/\\/$/, "") : undefined;
 const AZURE_OPENAI_API_KEY = process.env.AZURE_OPENAI_API_KEY;
@@ -1340,6 +1462,13 @@ const toGatewayModels = () =>
 
 const stripAzureModelPrefix = (value) =>
   typeof value === "string" ? value.replace(/^azure:/, "") : undefined;
+
+const requireBanditKey = () => {
+  if (!BANDIT_API_KEY) {
+    throw new Error("Missing BANDIT_API_KEY. Add it to your .env file to route requests to Bandit AI.");
+  }
+  return BANDIT_API_KEY;
+};
 
 const isAzureConfigured = () => Boolean(AZURE_OPENAI_ENDPOINT && AZURE_OPENAI_API_KEY);
 
@@ -1429,6 +1558,45 @@ const flattenGatewayContent = (content) => {
     return JSON.stringify(content);
   }
   return "";
+};
+
+const normalizeGatewayImageUrl = (value) => {
+  if (!value) {
+    return "";
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return "";
+    }
+    if (/^data:/i.test(trimmed) || /^https?:/i.test(trimmed)) {
+      return trimmed;
+    }
+    return 'data:image/jpeg;base64,' + trimmed;
+  }
+  if (typeof value === "object") {
+    const possibleUrl =
+      typeof value.url === "string"
+        ? value.url
+        : value.image_url && typeof value.image_url.url === "string"
+          ? value.image_url.url
+          : "";
+    return normalizeGatewayImageUrl(possibleUrl);
+  }
+  return "";
+};
+
+const extractGatewayImageDetail = (value) => {
+  if (value && typeof value === "object") {
+    const record = value;
+    if (typeof record.detail === "string" && record.detail.trim()) {
+      return record.detail;
+    }
+    if (record.image_url && typeof record.image_url.detail === "string" && record.image_url.detail.trim()) {
+      return record.image_url.detail;
+    }
+  }
+  return undefined;
 };
 
 const toAnthropicMessages = (messages = []) => {
@@ -2512,6 +2680,240 @@ app.get("/api/xai/models", async (_req, res) => {
 });
 
 // ============================================================================
+// BANDIT AI ROUTES
+// ============================================================================
+
+app.get("/api/bandit/health", async (_req, res) => {
+  try {
+    const banditKey = requireBanditKey();
+    const response = await fetch(BANDIT_BASE_URL + "/models", {
+      headers: { "Authorization": \`Bearer \${banditKey}\` }
+    });
+    const isHealthy = response.ok;
+    res.json({
+      status: isHealthy ? "healthy" : "unhealthy",
+      bandit_status: isHealthy,
+      provider: "bandit",
+      endpoint: BANDIT_BASE_URL
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "unhealthy",
+      bandit_status: false,
+      error: error instanceof Error ? error.message : String(error),
+      provider: "bandit",
+      endpoint: BANDIT_BASE_URL
+    });
+  }
+});
+
+app.post("/api/bandit/chat/completions", async (req, res) => {
+  try {
+    const banditKey = requireBanditKey();
+    const isStreaming = req.body?.stream === true;
+    const { provider, ...cleanBody } = req.body ?? {};
+    const providerName = typeof provider === "string" ? provider : "bandit";
+    const requestBody = {
+      ...cleanBody,
+      model: req.body?.model?.replace(/^bandit:/, "") || "bandit-core-1"
+    };
+
+    if (
+      providerName !== "ollama" &&
+      Array.isArray(requestBody.images) &&
+      requestBody.images.length > 0 &&
+      Array.isArray(requestBody.messages)
+    ) {
+      const lastUserIndex = requestBody.messages.map((message) => message?.role).lastIndexOf("user");
+      if (lastUserIndex !== -1) {
+        const targetMessage = requestBody.messages[lastUserIndex] ?? {};
+        const baseContent = Array.isArray(targetMessage.content)
+          ? targetMessage.content.filter(Boolean)
+          : typeof targetMessage.content === "string" && targetMessage.content.trim().length > 0
+            ? [{ type: "text", text: targetMessage.content }]
+            : [];
+
+        const imageContent = requestBody.images
+          .map((entry) => {
+            const url = normalizeGatewayImageUrl(entry);
+            if (!url) {
+              return null;
+            }
+            return {
+              type: "image_url",
+              image_url: {
+                url,
+                detail: extractGatewayImageDetail(entry) ?? "auto"
+              }
+            };
+          })
+          .filter(Boolean);
+
+          if (imageContent.length > 0) {
+            requestBody.messages[lastUserIndex] = {
+              ...targetMessage,
+              content: [...baseContent, ...imageContent]
+            };
+          }
+        }
+        delete requestBody.images;
+      }
+
+    const response = await fetch(BANDIT_BASE_URL + "/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": \`Bearer \${banditKey}\`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: \`Bandit chat failed: \${response.status}\`,
+        details: errorText
+      });
+    }
+
+    if (isStreaming) {
+      await handleStreamingResponse(response, res);
+    } else {
+      const text = await response.text();
+      res.setHeader('Content-Type', 'application/json');
+      res.send(text);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post("/api/bandit/chat", async (req, res) => {
+  req.url = "/api/bandit/chat/completions";
+  return app._router.handle(req, res);
+});
+
+app.post("/api/bandit/completions", async (req, res) => {
+  try {
+    const banditKey = requireBanditKey();
+    const isStreaming = req.body?.stream === true;
+    const { provider, ...cleanBody } = req.body ?? {};
+    const requestBody = {
+      ...cleanBody,
+      model: req.body?.model?.replace(/^bandit:/, "") || "bandit-core-1"
+    };
+
+    const response = await fetch(BANDIT_BASE_URL + "/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": \`Bearer \${banditKey}\`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: \`Bandit completions failed: \${response.status}\`,
+        details: errorText
+      });
+    }
+
+    if (isStreaming) {
+      await handleStreamingResponse(response, res);
+    } else {
+      const text = await response.text();
+      res.setHeader('Content-Type', 'application/json');
+      res.send(text);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post("/api/bandit/generate", async (req, res) => {
+  try {
+    const banditKey = requireBanditKey();
+    const prompt = req.body?.prompt || "";
+    const model = req.body?.model?.replace(/^bandit:/, "") || "bandit-core-1";
+    const isStreaming = req.body?.stream === true;
+
+    const chatBody = {
+      model,
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      stream: isStreaming,
+      max_tokens: req.body?.max_tokens || 256,
+      temperature: req.body?.temperature ?? 0.7
+    };
+
+    const response = await fetch(BANDIT_BASE_URL + "/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": \`Bearer \${banditKey}\`
+      },
+      body: JSON.stringify(chatBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: \`Bandit generate failed: \${response.status}\`,
+        details: errorText
+      });
+    }
+
+    if (isStreaming) {
+      await handleStreamingResponse(response, res);
+    } else {
+      const data = await response.json();
+      const generateResponse = {
+        model,
+        created_at: new Date().toISOString(),
+        response: data.choices?.[0]?.message?.content || "",
+        done: true,
+        context: [],
+        total_duration: 0,
+        load_duration: 0,
+        prompt_eval_count: data.usage?.prompt_tokens || 0,
+        prompt_eval_duration: 0,
+        eval_count: data.usage?.completion_tokens || 0,
+        eval_duration: 0
+      };
+      res.json(generateResponse);
+    }
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.get("/api/bandit/models", async (_req, res) => {
+  try {
+    const banditKey = requireBanditKey();
+    const response = await fetch(BANDIT_BASE_URL + "/models", {
+      headers: { "Authorization": \`Bearer \${banditKey}\` }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        error: \`Bandit models failed: \${response.status}\`,
+        details: errorText
+      });
+    }
+
+    const text = await response.text();
+    res.setHeader('Content-Type', 'application/json');
+    res.send(text);
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// ============================================================================
 // OPENAI ROUTES
 // ============================================================================
 
@@ -3033,8 +3435,9 @@ app.all("/api/anthropic/*", (_req, res) => {
 const port = Number(process.env.PORT ?? ${ctx.gatewayPort});
 app.listen(port, () => {
   console.log("⚡ Bandit quickstart gateway ready on http://localhost:" + port);
-  console.log("📡 Supported providers: OpenAI, Azure OpenAI, Anthropic, XAI, Ollama");
+  console.log("📡 Supported providers: Bandit AI, OpenAI, Azure OpenAI, Anthropic, XAI, Ollama");
   console.log("🔗 Provider-specific routes:");
+  console.log("   • /api/bandit/* - Bandit AI endpoints");
   console.log("   • /api/openai/* - OpenAI endpoints");
   console.log("   • /api/azure/* - Azure OpenAI endpoints");
   console.log("   • /api/anthropic/* - Anthropic endpoints");
@@ -3057,6 +3460,6 @@ export const buildGitignore = (): string =>
 export const buildReadme = (ctx: QuickstartTemplateContext): string =>
   ensureTrailingNewline(
     normalizeLineEndings(
-      `# ${ctx.projectTitle} — Bandit Quickstart\n\nThis project was generated by the Bandit Engine CLI. It ships with a React + Vite frontend that consumes \`@burtson-labs/bandit-engine\`, a lightweight Express gateway you can adapt for production, and a Next.js App Router API scaffold in \`server/next-app/\`.\n\n## 🚀 Next steps\n- \`npm install\`\n- \`cp .env.example .env\`\n- Fill in your OpenAI, Azure OpenAI, Anthropic, or xAI credentials (or point \`OLLAMA_URL\` at your local server)\n- \`npm run dev\`\n\nThe command runs the gateway and the frontend together. Visit http://localhost:${ctx.frontendPort} to see the chat and modal in action.\n\n## 🔧 Customizing your assistant\n- **Branding & personas**: edit \`public/config.json\` to tweak logos, colors, and starter models.\n- **Provider defaults**: update \`.env\` to switch providers or change the default upstream model IDs.\n- **Gateway routes**: open \`server/gateway.js\` to add auth, logging, or connect additional providers.\n\n## 📦 What’s inside\n- React + Vite 5 with Material UI theming\n- Bandit chat surface + modal wired via \`ChatProvider\`\n- Express gateway proxying OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama to keep API keys server-side\n- Next.js App Router gateway scaffold in 'server/next-app/' for projects that prefer Next\n- Friendly defaults you can evolve into your production stack\n\nNeed more? Run \`npx @burtson-labs/bandit-engine create --help\` to explore additional options.\n`
+      `# ${ctx.projectTitle} — Bandit Quickstart\n\nThis project was generated by the Bandit Engine CLI. It ships with a React + Vite frontend that consumes \`@burtson-labs/bandit-engine\`, a lightweight Express gateway you can adapt for production, and a Next.js App Router API scaffold in \`server/next-app/\`.\n\n## 🚀 Next steps\n- \`npm install\`\n- \`cp .env.example .env\`\n- Fill in your Bandit AI, OpenAI, Azure OpenAI, Anthropic, or xAI credentials (or point \`OLLAMA_URL\` at your local server)\n- \`npm run dev\`\n\nThe command runs the gateway and the frontend together. Visit http://localhost:${ctx.frontendPort} to see the chat and modal in action.\n\n## 🔧 Customizing your assistant\n- **Branding & personas**: edit \`public/config.json\` to tweak logos, colors, and starter models.\n- **Provider defaults**: update \`.env\` to switch providers or change the default upstream model IDs.\n- **Gateway routes**: open \`server/gateway.js\` to add auth, logging, or connect additional providers.\n\n## 📦 What’s inside\n- React + Vite 5 with Material UI theming\n- Bandit chat surface + modal wired via \`ChatProvider\`\n- Express gateway proxying Bandit AI, OpenAI, Azure OpenAI, Anthropic, XAI, or Ollama to keep API keys server-side\n- Next.js App Router gateway scaffold in 'server/next-app/' for projects that prefer Next\n- Friendly defaults you can evolve into your production stack\n\nNeed more? Run \`npx @burtson-labs/bandit-engine create --help\` to explore additional options.\n`
     )
   );

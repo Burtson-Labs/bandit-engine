@@ -48,7 +48,7 @@ import {
   QuickstartTemplateContext,
 } from "./templates";
 
-type SupportedProvider = "openai" | "ollama" | "azure" | "anthropic" | "xai";
+type SupportedProvider = "openai" | "ollama" | "azure" | "anthropic" | "xai" | "bandit";
 
 interface LogoResolution {
   dataUrl: string;
@@ -212,6 +212,9 @@ const normalizeProvider = (value?: string): SupportedProvider => {
   if (normalized === "xai" || normalized === "grok") {
     return "xai";
   }
+  if (normalized === "bandit" || normalized === "banditai" || normalized === "bandit-ai") {
+    return "bandit";
+  }
   return "openai";
 };
 
@@ -227,6 +230,9 @@ const inferDefaultModelId = (provider: SupportedProvider): string => {
   }
   if (provider === "xai") {
     return "xai:grok-2-latest";
+  }
+  if (provider === "bandit") {
+    return "bandit-core-1";
   }
   return "openai:gpt-4o-mini";
 };
@@ -250,6 +256,9 @@ const inferFallbackModelId = (provider: SupportedProvider, defaultId: string): s
   if (provider === "xai") {
     return defaultId === "xai:grok-2-mini" ? "xai:grok-2-latest" : "xai:grok-2-mini";
   }
+  if (provider === "bandit") {
+    return undefined;
+  }
   return defaultId === "openai:gpt-4.1-mini" ? "openai:gpt-4o-mini" : "openai:gpt-4.1-mini";
 };
 
@@ -257,6 +266,7 @@ const promptForProvider = async (): Promise<SupportedProvider> => {
   const providerOptions: { label: string; value: SupportedProvider; description?: string }[] = [
     { label: "Ollama (self-hosted) — default", value: "ollama" },
     { label: "OpenAI", value: "openai" },
+    { label: "Bandit AI (Bandit Core)", value: "bandit" },
     { label: "Azure OpenAI", value: "azure" },
     { label: "Anthropic", value: "anthropic" },
     { label: "xAI (Grok)", value: "xai" },

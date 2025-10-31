@@ -58,6 +58,8 @@ export const ProviderTab: React.FC = () => {
         return 'gpt-4o-mini';
       case AIProviderType.XAI:
         return 'grok-beta';
+      case AIProviderType.BANDIT:
+        return 'bandit-core-1';
       default:
         return '';
     }
@@ -68,7 +70,8 @@ export const ProviderTab: React.FC = () => {
     const trimmed = typeof normalized.defaultModel === 'string' ? normalized.defaultModel.trim() : undefined;
     const requiresModel =
       normalized.type === AIProviderType.OPENAI ||
-      normalized.type === AIProviderType.XAI;
+      normalized.type === AIProviderType.XAI ||
+      normalized.type === AIProviderType.BANDIT;
 
     if (trimmed) {
       normalized.defaultModel = trimmed;
@@ -246,6 +249,14 @@ export const ProviderTab: React.FC = () => {
           apiKey: ''
         }));
         break;
+      case AIProviderType.BANDIT:
+        setProviderConfig(applyDefaultModel({
+          ...baseConfig,
+          baseUrl: 'https://api.burtson.ai',
+          apiKey: '',
+          defaultModel: 'bandit-core-1'
+        }));
+        break;
       case AIProviderType.GATEWAY:
         setProviderConfig(applyDefaultModel({
           ...baseConfig,
@@ -267,7 +278,8 @@ export const ProviderTab: React.FC = () => {
       const normalizedConfig = convertAnthropicConfig(normalizedConfigIntermediate) || normalizedConfigIntermediate;
       const requiresModel =
         normalizedConfig.type === AIProviderType.OPENAI ||
-        normalizedConfig.type === AIProviderType.XAI;
+        normalizedConfig.type === AIProviderType.XAI ||
+        normalizedConfig.type === AIProviderType.BANDIT;
 
       if (requiresModel && !normalizedConfig.defaultModel) {
         showMessage('Please provide a default model ID for the selected provider.', 'error');
@@ -406,6 +418,7 @@ export const ProviderTab: React.FC = () => {
               <MenuItem value="ollama">Ollama</MenuItem>
               <MenuItem value="openai">OpenAI</MenuItem>
               <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
+              <MenuItem value="bandit">Bandit AI</MenuItem>
               <MenuItem value="xai">xAI</MenuItem>
               <MenuItem value="playground">Playground (Mock Demo)</MenuItem>
             </TextField>
@@ -436,6 +449,7 @@ export const ProviderTab: React.FC = () => {
                     <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
                     <MenuItem value="anthropic">Anthropic</MenuItem>
                     <MenuItem value="ollama">Ollama</MenuItem>
+                    <MenuItem value="bandit">Bandit AI</MenuItem>
                     <MenuItem value="xai">xAI</MenuItem>
                   </TextField>
                 </Box>
@@ -450,6 +464,53 @@ export const ProviderTab: React.FC = () => {
                   fullWidth
                   placeholder="http://localhost:11434"
                 />
+              )}
+
+              {/* Bandit AI Configuration */}
+              {providerConfig.type === 'bandit' && (
+                <Box>
+                  <TextField
+                    label="API Base URL"
+                    value={providerConfig.baseUrl || ''}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        baseUrl: e.target.value
+                      }))
+                    }
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    placeholder="https://api.burtson.ai"
+                    helperText="Defaults to https://api.burtson.ai"
+                  />
+                  <TextField
+                    label="API Key"
+                    type="password"
+                    value={providerConfig.apiKey || ''}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        apiKey: e.target.value
+                      }))
+                    }
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    placeholder="bai_..."
+                  />
+                  <TextField
+                    label="Default Model ID"
+                    value={providerConfig.defaultModel || ''}
+                    onChange={(e) =>
+                      setProviderConfig((prev) => ({
+                        ...prev,
+                        defaultModel: e.target.value
+                      }))
+                    }
+                    fullWidth
+                    placeholder="bandit-core-1"
+                    helperText="Example: bandit-core-1 (Bandit Core canonical alias)."
+                  />
+                </Box>
               )}
 
               {/* OpenAI Configuration */}

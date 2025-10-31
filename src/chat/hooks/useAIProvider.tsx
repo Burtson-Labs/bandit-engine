@@ -638,14 +638,38 @@ export const useAIProvider = ({
       setResponse("");
       setStreamBuffer("");
       clearFlushTimer();
-  // Show loading indicator (bouncing ellipsis) until we can stream or finalize
-  setPendingMessage({ question, images });
+      const imageList = Array.isArray(images) ? [...images] : [];
+      const conversationStoreState = useConversationStore.getState();
+      const { addToCurrent, replaceLastAnswer, conversations, currentId } = conversationStoreState;
+      const currentConv = conversations.find((c) => c.id === currentId);
+      const lastEntry = currentConv?.history.at(-1);
+      const lastWasPlaceholder =
+        !!lastEntry &&
+        lastEntry.answer === "..." &&
+        (lastEntry.placeholder === true ||
+          lastEntry.rawQuestion === question ||
+          lastEntry.question === question);
+
+      // Keep the pending message in sync with the visible placeholder card
+      const pendingQuestion = lastWasPlaceholder ? lastEntry?.question ?? question : question;
+      const pendingImagesRaw =
+        lastWasPlaceholder && Array.isArray(lastEntry?.images) && lastEntry.images.length > 0
+          ? lastEntry.images
+          : imageList;
+      const pendingImages =
+        Array.isArray(pendingImagesRaw) && pendingImagesRaw.length > 0
+          ? [...pendingImagesRaw]
+          : undefined;
+      setPendingMessage({
+        question: pendingQuestion,
+        images: pendingImages,
+      });
 
       // Get current model and config
       const modelName = usePackageSettingsStore.getState().settings?.defaultModel || "bandit-core:4b-it-qat";
       const CONFIG = modelConfigs[modelName] ?? modelConfigs["bandit-core:4b-it-qat"];
 
-      const base64Images = images.map((img) => img.split(",")[1]);
+      const base64Images = imageList.map((img) => img.split(",")[1]);
 
       const latestEntries = history.slice(-CONFIG.historyMessages);
       const contextMessages: AIMessage[] = latestEntries.flatMap((entry) => [
@@ -1075,16 +1099,10 @@ export const useAIProvider = ({
       };
 
       const stream = provider.chat(request);
-
-      const { addToCurrent, conversations, currentId, replaceLastAnswer } =
-        useConversationStore.getState();
-      const currentConv = conversations.find((c) => c.id === currentId);
-      const lastEntry = currentConv?.history.at(-1);
-      const isPlaceholder =
-        lastEntry?.question === question && lastEntry?.answer === "...";
+      const initialPlaceholderQuestion = lastEntry?.question;
 
   // Initialize last-partial tracking for graceful cancel
-  lastPartialRef.current = { text: "", images, usedDocs, question };
+  lastPartialRef.current = { text: "", images: [...imageList], usedDocs, question };
 
       // If a previous stream is still active, cancel it first
       if (currentSubRef.current) {
@@ -1401,16 +1419,40 @@ export const useAIProvider = ({
               debugLogger.info("Memory scan skipped - disabled in preferences");
             }
             // Update history, then smoothly transition UI state
-            const { addToCurrent, replaceLastAnswer } = useConversationStore.getState();
-            const current = useConversationStore.getState();
-            const conv = current.conversations.find(c => c.id === current.currentId);
+            const currentState = useConversationStore.getState();
+            const conv = currentState.conversations.find((c) => c.id === currentState.currentId);
             const last = conv?.history.at(-1);
-            if (!last || last.answer !== "..." || last.question !== question) {
-              // Add a single entry now that we have the final text
-              addToCurrent({ question, answer: enhancedMessage, images, memoryUpdated, sourceFiles: usedDocs });
-            } else {
+            const lastIsPlaceholder =
+              !!last && last.answer === "..." && last.placeholder !== false;
+
+            const preservedImagesSource =
+              imageList.length > 0
+                ? imageList
+                : lastPartialRef.current.images.length > 0
+                  ? lastPartialRef.current.images
+                  : last?.images;
+            const preservedImages =
+              Array.isArray(preservedImagesSource) && preservedImagesSource.length > 0
+                ? [...preservedImagesSource]
+                : undefined;
+
+            if (lastIsPlaceholder) {
               // Replace the temporary entry (if any)
-              replaceLastAnswer(enhancedMessage, images, memoryUpdated, usedDocs);
+              replaceLastAnswer(enhancedMessage, preservedImages, memoryUpdated, usedDocs);
+            } else {
+              // Fallback: record a fresh entry and preserve any display question if available
+              const historyQuestion =
+                (last && last.answer === "..." && last.question) ||
+                initialPlaceholderQuestion ||
+                question;
+              addToCurrent({
+                question: historyQuestion,
+                answer: enhancedMessage,
+                images: preservedImages,
+                memoryUpdated,
+                sourceFiles: usedDocs,
+                rawQuestion: question,
+              });
             }
 
             setInputValue("");

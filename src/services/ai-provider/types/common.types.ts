@@ -70,7 +70,7 @@ export interface AIModel {
 }
 
 export interface AIProviderConfig {
-  type: 'ollama' | 'openai' | 'azure-openai' | 'anthropic' | 'xai' | 'gateway' | 'playground';
+  type: 'ollama' | 'openai' | 'azure-openai' | 'anthropic' | 'xai' | 'bandit' | 'gateway' | 'playground';
   baseUrl?: string;
   apiKey?: string;
   apiVersion?: string; // For Azure
@@ -79,7 +79,7 @@ export interface AIProviderConfig {
   anthropicVersion?: string;
   anthropicMaxTokens?: number;
   gatewayUrl?: string; // For gateway-based providers
-  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai'; // Which backend provider to use via gateway
+  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai' | 'bandit'; // Which backend provider to use via gateway
   tokenFactory?: () => string | null;
 }
 
@@ -89,6 +89,7 @@ export enum AIProviderType {
   AZURE_OPENAI = 'azure-openai',
   ANTHROPIC = 'anthropic',
   XAI = 'xai',
+  BANDIT = 'bandit',
   GATEWAY = 'gateway',
   PLAYGROUND = 'playground'
 }

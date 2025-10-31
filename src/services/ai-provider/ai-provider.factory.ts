@@ -25,6 +25,7 @@ import { AnthropicProvider } from './providers/anthropic.provider';
 import { GatewayProvider } from './providers/gateway.provider';
 import { PlaygroundProvider } from './providers/playground.provider';
 import { XAIProvider } from './providers/xai.provider';
+import { BanditAIProvider } from './providers/bandit-ai.provider';
 
 /**
  * Factory for creating AI provider instances
@@ -47,6 +48,9 @@ export class AIProviderFactory {
       case AIProviderType.XAI:
         return new XAIProvider(config);
 
+      case AIProviderType.BANDIT:
+        return new BanditAIProvider(config);
+
       case AIProviderType.GATEWAY:
         return new GatewayProvider(config);
 
@@ -64,6 +68,7 @@ export class AIProviderFactory {
       AIProviderType.OPENAI,
       AIProviderType.AZURE_OPENAI,
       AIProviderType.XAI,
+      AIProviderType.BANDIT,
       AIProviderType.GATEWAY,
       AIProviderType.PLAYGROUND
     ];
@@ -84,6 +89,9 @@ export class AIProviderFactory {
         return !!config.apiKey;
 
       case AIProviderType.XAI:
+        return !!config.apiKey;
+
+      case AIProviderType.BANDIT:
         return !!config.apiKey;
 
       case AIProviderType.GATEWAY:

@@ -29,6 +29,14 @@ export type HistoryEntry = {
   sourceFiles?: KnowledgeDoc[];
   memoryUpdated?: boolean;
   cancelled?: boolean;
+  /**
+   * Internal metadata so streaming can replace placeholders even when the display question differs
+   */
+  placeholder?: boolean;
+  /**
+   * Raw prompt text sent to the model (used when the display question is formatted differently)
+   */
+  rawQuestion?: string;
 };
 
 export type ComponentStatus = "Idle" | "Loading" | "Error";

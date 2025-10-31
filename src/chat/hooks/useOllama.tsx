@@ -198,7 +198,8 @@ export const useOllama = ({
       const modelName = usePackageSettingsStore.getState().settings?.defaultModel || "bandit-core:4b-it-qat";
       const CONFIG = modelConfigs[modelName] ?? modelConfigs["bandit-core:4b-it-qat"];
 
-      const base64Images = images.map((img) => img.split(",")[1]);
+      const imageList = Array.isArray(images) ? [...images] : [];
+      const base64Images = imageList.map((img) => img.split(",")[1]);
 
       const latestEntries = history.slice(-CONFIG.historyMessages);
       const contextMessages: AIMessage[] = latestEntries.flatMap((entry) => [
@@ -361,15 +362,23 @@ export const useOllama = ({
       let fullMessage = "";
       const stream = provider.chat(request);
 
-      const { addToCurrent, conversations, currentId, replaceLastAnswer } =
-        useConversationStore.getState();
+      const conversationStoreState = useConversationStore.getState();
+      const { addToCurrent, replaceLastAnswer, conversations, currentId } = conversationStoreState;
       const currentConv = conversations.find((c) => c.id === currentId);
       const lastEntry = currentConv?.history.at(-1);
-      const isPlaceholder =
-        lastEntry?.question === question && lastEntry?.answer === "...";
-      if (!isPlaceholder) {
-        addHistory({ question, answer: "...", images });
-        addToCurrent({ question, answer: "...", images, sourceFiles: usedDocs });
+      const lastWasPlaceholder =
+        !!lastEntry && lastEntry.answer === "..." && lastEntry.placeholder !== false;
+
+      if (!lastWasPlaceholder) {
+        addHistory({ question, answer: "...", images: imageList.length > 0 ? [...imageList] : undefined });
+        addToCurrent({
+          question,
+          answer: "...",
+          images: imageList.length > 0 ? [...imageList] : undefined,
+          sourceFiles: usedDocs,
+          placeholder: true,
+          rawQuestion: question,
+        });
       }
 
       stream.subscribe({
@@ -395,8 +404,40 @@ export const useOllama = ({
           }
 
           const memoryUpdated = await runMemoryScan(question, fullMessage);
-          addHistory({ question, answer: fullMessage, images, memoryUpdated });
-          replaceLastAnswer(fullMessage, images, memoryUpdated, usedDocs);
+          addHistory({
+            question,
+            answer: fullMessage,
+            images: imageList.length > 0 ? [...imageList] : undefined,
+            memoryUpdated,
+          });
+          const currentState = useConversationStore.getState();
+          const conv = currentState.conversations.find((c) => c.id === currentState.currentId);
+          const latest = conv?.history.at(-1);
+          const latestIsPlaceholder =
+            !!latest && latest.answer === "..." && latest.placeholder !== false;
+          const preservedImagesSource =
+            imageList.length > 0
+              ? imageList
+              : (latest && Array.isArray(latest.images) && latest.images.length > 0)
+                ? latest.images
+                : undefined;
+          const preservedImages =
+            Array.isArray(preservedImagesSource) && preservedImagesSource.length > 0
+              ? [...preservedImagesSource]
+              : undefined;
+
+          if (latestIsPlaceholder) {
+            replaceLastAnswer(fullMessage, preservedImages, memoryUpdated, usedDocs);
+          } else {
+            addToCurrent({
+              question: latest?.question || question,
+              answer: fullMessage,
+              images: preservedImages,
+              memoryUpdated,
+              sourceFiles: usedDocs,
+              rawQuestion: question,
+            });
+          }
 
           setInputValue("");
           setPastedImages([]);

@@ -840,14 +840,22 @@ const ChatContent = () => {
       
       // Immediate feedback - set pending message and loading state right away
       const questionForDisplay = displayQuestion || question;
-      setPendingMessage({ question: questionForDisplay, images });
+      const pendingImages = images.length > 0 ? [...images] : undefined;
+      setPendingMessage({ question: questionForDisplay, images: pendingImages });
     setIsStreaming(true); // Show skeleton immediately
     setResponseStarted(true); // Show loading feedback
     setStreamBuffer(""); // Clear any previous buffer
     
     // Immediately add placeholder entry to history for smooth UX
     const { addToCurrent } = useConversationStore.getState();
-    addToCurrent({ question: questionForDisplay, answer: "...", images });
+    const placeholderImages = pendingImages ? [...pendingImages] : undefined;
+    addToCurrent({
+      question: questionForDisplay,
+      answer: "...",
+      images: placeholderImages,
+      placeholder: true,
+      rawQuestion: question,
+    });
     
     const getCurrentModel = useModelStore.getState().getCurrentModel;
     const systemPrompt =
@@ -871,9 +879,17 @@ const ChatContent = () => {
           
           // Add placeholder entry for new conversation too
           const { addToCurrent: addToNew } = useConversationStore.getState();
-          addToNew({ question: questionForDisplay, answer: "...", images });
+          const newPlaceholderImages = pendingImages ? [...pendingImages] : undefined;
+          addToNew({
+            question: questionForDisplay,
+            answer: "...",
+            images: newPlaceholderImages,
+            placeholder: true,
+            rawQuestion: question,
+          });
           
-          aiProvider(systemPrompt, question, images);
+          const providerImages = pendingImages ? [...pendingImages] : [];
+          aiProvider(systemPrompt, question, providerImages);
         }, 0);
       });
       return;
@@ -944,8 +960,9 @@ const ChatContent = () => {
     }
     
     setResponse("");
-    
-    aiProvider(systemPrompt, question, images);
+
+    const providerImages = pendingImages ? [...pendingImages] : [];
+    aiProvider(systemPrompt, question, providerImages);
   },
   [
     aiProvider,

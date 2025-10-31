@@ -33,7 +33,9 @@ const ChatScrollToBottomButton: React.FC<Props> = ({
   drawerOpen = false, 
   isMobile = false 
 }) => {
-  
+  const verticalBuffer = isMobile ? 36 : 56;
+  const bottomOffset = Math.max(inputHeight + verticalBuffer, verticalBuffer + 72);
+
   return (
     <IconButton
       onClick={onClick}
@@ -41,12 +43,12 @@ const ChatScrollToBottomButton: React.FC<Props> = ({
         position: "fixed",
         left: drawerOpen && !isMobile ? "calc(50% + 170px)" : "50%",
         transform: "translateX(-50%)",
-        bottom: inputHeight + 10,
+        bottom: bottomOffset,
         bgcolor: (theme) => theme.palette.background.paper,
         color: (theme) => theme.palette.text.primary,
         border: "1px solid",
         borderColor: (theme) => theme.palette.divider,
-        zIndex: 999,
+        zIndex: (theme) => Math.max(theme.zIndex.modal + 1, 1400),
         boxShadow: 3,
         transition: "bottom 0.3s ease, left 0.3s ease-in-out",
         "&:hover": {

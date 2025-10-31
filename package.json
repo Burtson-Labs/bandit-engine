@@ -1,6 +1,6 @@
 {
   "name": "@burtson-labs/bandit-engine",
-  "version": "2.0.39",
+  "version": "2.0.40",
   "license": "BUSL-1.1",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
