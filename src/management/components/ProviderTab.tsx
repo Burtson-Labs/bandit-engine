@@ -99,13 +99,18 @@ export const ProviderTab: React.FC = () => {
       const trimmed = sanitized.defaultModel.trim();
       sanitized.defaultModel = trimmed || undefined;
     }
+    if (typeof sanitized.apiKey === 'string') {
+      const trimmedKey = sanitized.apiKey.trim();
+      sanitized.apiKey = trimmedKey || undefined;
+    }
     return sanitized;
   }, []);
 
   // AI Provider configuration state
   const [providerConfig, setProviderConfig] = useState<AIProviderConfig>({
-    type: 'ollama' as const,
-    baseUrl: 'http://localhost:11434'
+    type: 'gateway' as const,
+    gatewayUrl: packageSettings?.gatewayApiUrl || '',
+    provider: 'bandit'
   });
   const [isProviderConfigOpen, setIsProviderConfigOpen] = useState(false);
 
@@ -261,7 +266,7 @@ export const ProviderTab: React.FC = () => {
         setProviderConfig(applyDefaultModel({
           ...baseConfig,
           gatewayUrl: packageSettings?.gatewayApiUrl || '',
-          provider: 'openai'
+          provider: 'bandit'
         }));
         break;
       case AIProviderType.PLAYGROUND:
@@ -447,11 +452,11 @@ export const ProviderTab: React.FC = () => {
                   >
                     <MenuItem value="openai">OpenAI</MenuItem>
                     <MenuItem value="azure-openai">Azure OpenAI</MenuItem>
-                    <MenuItem value="anthropic">Anthropic</MenuItem>
-                    <MenuItem value="ollama">Ollama</MenuItem>
-                    <MenuItem value="bandit">Bandit AI</MenuItem>
-                    <MenuItem value="xai">xAI</MenuItem>
-                  </TextField>
+                  <MenuItem value="anthropic">Anthropic</MenuItem>
+                  <MenuItem value="ollama">Ollama</MenuItem>
+                  <MenuItem value="bandit">Bandit AI</MenuItem>
+                  <MenuItem value="xai">xAI</MenuItem>
+                </TextField>
                 </Box>
               )}
 

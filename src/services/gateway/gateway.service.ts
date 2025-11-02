@@ -217,12 +217,14 @@ export class GatewayService {
   chat(request: GatewayChatRequest): Observable<GatewayChatResponse> {
     // Use provider-specific endpoint if provider is specified
     // For Ollama specifically, use /chat instead of /chat/completions
-    const endpoint = request.provider === 'ollama' 
-      ? `/api/${request.provider}/chat`
-      : request.provider 
-        ? `/api/${request.provider}/chat/completions` 
-        : '/api/chat/completions';
-    const url = `${this._baseUrl}${endpoint}`;
+    const endpoint =
+      request.provider === 'ollama'
+        ? `/api/${request.provider}/chat`
+        : request.provider
+          ? `/api/${request.provider}/chat/completions`
+          : '/api/chat/completions';
+    const fallbackEndpoint =
+      request.provider === 'bandit' ? '/completions' : null;
     const normalizedModel =
       request.provider === 'bandit'
         ? (() => {
@@ -231,75 +233,15 @@ export class GatewayService {
           })()
         : request.model;
     
-    debugLogger.debug(`Gateway chat request to ${url} with provider: ${request.provider || 'default'}`, {
-      model: normalizedModel,
-      messageCount: request.messages.length,
-      hasImages: !!(request.images && request.images.length > 0),
-      imageCount: request.images?.length || 0
-    });
-    
-    
     const requestBody = { ...request, model: normalizedModel, stream: request.stream !== false };
     
     return new Observable<GatewayChatResponse>(observer => {
       const controller = new AbortController();
-      const task = fetch(url, {
-        method: 'POST',
-        headers: this._getHeaders(),
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
-      
-      task.then(async (response) => {
-        
-        debugLogger.debug(`Gateway chat response status: ${response.status} for provider: ${request.provider || 'default'}`);
-        
-        if (!response.ok) {
-          // Handle error response properly with body parsing
-          let errorText = '';
-          let errorData: unknown = null;
-          
-          try {
-            // First, try to read the response body
-            errorText = await response.text();
-            debugLogger.error('GatewayService chat error response body', {
-              status: response.status,
-              statusText: response.statusText,
-              url: response.url,
-              body: errorText
-            });
-          } catch (readError) {
-            debugLogger.error('GatewayService chat failed to read error response body', { error: readError });
-            errorText = `Request failed with status ${response.status}`;
-          }
-          
-          // Then, try to parse as JSON for better error info
-          try {
-            errorData = JSON.parse(errorText);
-            debugLogger.error('GatewayService chat parsed error payload', errorData);
-          } catch (parseError) {
-            debugLogger.error('GatewayService chat error payload was not valid JSON');
-            errorData = { message: errorText };
-          }
-          
-          // Create an error object that mimics an HTTP response error for the notification service
-          const error = this._createHttpError(
-            `POST ${url} failed: ${response.status} ${response.statusText ?? ""}`,
-            {
-              status: response.status,
-              statusText: response.statusText ?? "",
-              data: errorData,
-              url
-            }
-          );
-          
-          throw error;
-        }
-
-  const reader = response.body?.getReader();
+      const handleStreamingResponse = async (response: Response) => {
+        const reader = response.body?.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-        
+
         const read = () => {
           reader?.read().then(({ done, value }) => {
             if (done) {
@@ -382,15 +324,92 @@ export class GatewayService {
           }).catch(err => observer.error(err));
         };
         read();
-      })
-      .catch(err => {
-        debugLogger.error('GatewayService chat fetch error', {
-          error: err,
-          url,
-          provider: request.provider
+      };
+
+      const sendRequest = (targetEndpoint: string, allowFallback: boolean) => {
+        const url = `${this._baseUrl}${targetEndpoint}`;
+
+        debugLogger.debug(`Gateway chat request to ${url} with provider: ${request.provider || 'default'}`, {
+          model: normalizedModel,
+          messageCount: request.messages.length,
+          hasImages: !!(request.images && request.images.length > 0),
+          imageCount: request.images?.length || 0
         });
-        observer.error(err);
-      });
+
+        fetch(url, {
+          method: 'POST',
+          headers: this._getHeaders(),
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        })
+          .then(async (response) => {
+            debugLogger.debug(`Gateway chat response status: ${response.status} for provider: ${request.provider || 'default'}`);
+
+            if (response.status === 404 && allowFallback && fallbackEndpoint) {
+              debugLogger.warn('GatewayService chat endpoint returned 404, attempting fallback route', {
+                provider: request.provider,
+                attemptedEndpoint: targetEndpoint,
+                fallbackEndpoint
+              });
+              sendRequest(fallbackEndpoint, false);
+              return;
+            }
+
+            if (!response.ok) {
+              // Handle error response properly with body parsing
+              let errorText = '';
+              let errorData: unknown = null;
+              
+              try {
+                // First, try to read the response body
+                errorText = await response.text();
+                debugLogger.error('GatewayService chat error response body', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  url: response.url,
+                  body: errorText
+                });
+              } catch (readError) {
+                debugLogger.error('GatewayService chat failed to read error response body', { error: readError });
+                errorText = `Request failed with status ${response.status}`;
+              }
+              
+              // Then, try to parse as JSON for better error info
+              try {
+                errorData = JSON.parse(errorText);
+                debugLogger.error('GatewayService chat parsed error payload', errorData);
+              } catch (parseError) {
+                debugLogger.error('GatewayService chat error payload was not valid JSON');
+                errorData = { message: errorText };
+              }
+              
+              // Create an error object that mimics an HTTP response error for the notification service
+              const error = this._createHttpError(
+                `POST ${url} failed: ${response.status} ${response.statusText ?? ""}`,
+                {
+                  status: response.status,
+                  statusText: response.statusText ?? "",
+                  data: errorData,
+                  url
+                }
+              );
+              
+              throw error;
+            }
+
+            await handleStreamingResponse(response);
+          })
+          .catch(err => {
+            debugLogger.error('GatewayService chat fetch error', {
+              error: err,
+              url,
+              provider: request.provider
+            });
+            observer.error(err);
+          });
+      };
+
+      sendRequest(endpoint, true);
 
       // Teardown: abort the request/stream on unsubscribe
       return () => {
@@ -550,21 +569,54 @@ export class GatewayService {
   }
 
   private _getHeaders() {
-    const token = this._tokenFactory();
-    
+    const rawToken = this._tokenFactory();
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json'
     };
-    
-    // Only include Authorization header if we have a real token
-    if (token && token.trim() !== '') {
-      headers['Authorization'] = `Bearer ${token}`;
-      debugLogger.debug("Authorization header set with token");
-    } else {
+
+    if (!rawToken) {
       debugLogger.warn('GatewayService: No token found, skipping Authorization header');
+      return headers;
     }
-    
+
+    const token = rawToken.trim();
+    if (token === '') {
+      debugLogger.warn('GatewayService: Token factory returned empty string');
+      return headers;
+    }
+
+    if (/^(Bearer|ApiKey)\s+/i.test(token)) {
+      headers['Authorization'] = token;
+      debugLogger.debug('GatewayService: Authorization header set with explicit scheme');
+      return headers;
+    }
+
+    if (this._isLikelyBanditApiKey(token)) {
+      headers['Authorization'] = `ApiKey ${token}`;
+      headers['X-Burtson-Api-Key'] = token;
+      debugLogger.debug('GatewayService: Authorization header set using API key');
+      return headers;
+    }
+
+    if (this._isLikelyJwt(token)) {
+      headers['Authorization'] = `Bearer ${token}`;
+      debugLogger.debug('GatewayService: Authorization header set using bearer token');
+      return headers;
+    }
+
+    // Default to bearer scheme to avoid breaking other providers
+    headers['Authorization'] = `Bearer ${token}`;
+    debugLogger.debug('GatewayService: Authorization header defaulted to bearer scheme');
     return headers;
+  }
+
+  private _isLikelyJwt(token: string): boolean {
+    const segments = token.split('.');
+    return segments.length === 3 && segments.every((segment) => segment.length > 0);
+  }
+
+  private _isLikelyBanditApiKey(value: string): boolean {
+    return /^bai_[a-z0-9]{10,}$/i.test(value);
   }
 
   /**

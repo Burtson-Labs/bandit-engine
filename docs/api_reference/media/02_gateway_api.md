@@ -18,16 +18,18 @@ Every request must include `Authorization: Bearer <token>`. Tokens are injected 
 | `/api/tts`, `/api/stt`, `/api/tts/available-models` | POST/GET | Optional voice endpoints for advanced deployments. |
 
 ### Provider-specific chat/generation routes
-When the UI specifies a provider (OpenAI, Azure OpenAI, Anthropic, Ollama), Bandit Engine switches to provider-scoped endpoints automatically. Implement these routes alongside the core ones above:
+When the UI specifies a provider (Bandit AI, OpenAI, Azure OpenAI, Anthropic, Ollama), Bandit Engine switches to provider-scoped endpoints automatically. Implement these routes alongside the core ones above:
 
 | Provider | Chat endpoint | Generation endpoint |
 | --- | --- | --- |
+| Bandit AI | `POST /api/bandit/chat/completions` | `POST /api/bandit/generate`* |
 | OpenAI | `POST /api/openai/chat/completions` | `POST /api/openai/generate` |
 | Azure OpenAI | `POST /api/azure-openai/chat/completions` | `POST /api/azure-openai/generate` |
 | Anthropic | `POST /api/anthropic/chat/completions` | `POST /api/anthropic/generate` |
 | Ollama | `POST /api/ollama/chat` | `POST /api/ollama/generate` |
 
-> ℹ️ Bandit still includes the `provider` field in the request body for convenience, but the URL itself determines which upstream integration should run. Ollama uses `/chat` (not `/chat/completions`) to match its native API.
+> ℹ️ Bandit still includes the `provider` field in the request body for convenience, but the URL itself determines which upstream integration should run. Ollama uses `/chat` (not `/chat/completions`) to match its native API.  
+> \* `POST /api/bandit/generate` is optional today but mirrors the shape of `/api/chat/completions` for parity with other providers.
 
 If you only support a single upstream provider you may implement the matching provider-specific endpoints and omit the others. The `/api/chat/completions` and `/api/generate` routes remain useful as a “default” path when the frontend has no explicit provider preference.
 
@@ -42,9 +44,23 @@ app.use(express.json());
 app.get("/api/health", (req, res) => {
   res.json({
     status: "healthy",
-    providers: ["openai", "ollama"],
+    providers: ["bandit", "openai", "ollama"],
     version: "1.0.0"
   });
+});
+
+app.post("/api/bandit/chat/completions", async (req, res) => {
+  const response = await fetch(`${process.env.GATEWAY_URL}/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.BANDIT_API_KEY}`
+    },
+    body: JSON.stringify(req.body)
+  });
+
+  res.status(response.status);
+  response.body?.pipe(res);
 });
 
 app.post("/api/openai/chat/completions", async (req, res) => {

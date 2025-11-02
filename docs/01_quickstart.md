@@ -7,6 +7,7 @@ The quickstart gateway exposes the contract Bandit expects out of the box:
 - `GET /api/health` — confirm connectivity and list configured providers.
 - `GET /api/models` and `GET /api/models/:provider` — populate the model switcher and provider tabs.
 - `POST /api/chat/completions` and `POST /api/generate` — default OpenAI-style chat/generation when no provider override is supplied.
+- `POST /api/bandit/chat/completions` — Bandit AI chat completions (OpenAI-compatible).
 - `POST /api/openai|azure-openai|anthropic/chat/completions` — provider-scoped chat completions.
 - `POST /api/openai|azure-openai|anthropic/generate` — provider-scoped text generation.
 - `POST /api/ollama/chat` and `POST /api/ollama/generate` — native Ollama streaming routes.
@@ -23,16 +24,21 @@ The quickstart gateway exposes the contract Bandit expects out of the box:
    npm install
    npm run dev
    ```
-   The example server listens on `http://localhost:8080` and proxies to OpenAI, Azure OpenAI, Anthropic, or Ollama using provider-scoped endpoints. Providers without credentials respond with `501` until you wire them up.
+   The example server listens on `http://localhost:8080` and proxies to Bandit AI, OpenAI, Azure OpenAI, Anthropic, or Ollama using provider-scoped endpoints. Providers without credentials respond with `501` until you wire them up.
 3. **Wrap your app with `ChatProvider`**:
    ```tsx
    import { ChatProvider } from "@burtson-labs/bandit-engine";
 
    <ChatProvider
      packageSettings={{
-       gatewayApiUrl: "http://localhost:8080",
-       defaultModel: "gpt-4.1-mini",
-       brandingConfigUrl: "/config.json"
+       gatewayApiUrl: "http://localhost:8080/api",
+       defaultModel: "bandit-core-1",
+       brandingConfigUrl: "/config.json",
+       aiProvider: {
+         type: "gateway",
+         gatewayUrl: "http://localhost:8080/api",
+         provider: "bandit"
+       }
      }}
    >
      {/* your routes */}

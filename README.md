@@ -20,7 +20,7 @@ An AI chat toolkit built for speed, design, and control. Power branded AI assist
 - 🔌 Plug-and-play React chat, modal, and management surfaces
 - 🧠 Memory, vector knowledge, and provider switching behind a secure gateway
 - 🎨 Full MUI theming, dark mode, and branding controls out of the box
-- 🌐 Multimodal support (voice, images, documents) with Ollama, OpenAI, Azure OpenAI, Anthropic, and xAI today — tell us which providers you need next so we can prioritize them
+- 🌐 Multimodal support (voice, images, documents) with Bandit AI, Ollama, OpenAI, Azure OpenAI, Anthropic, and xAI today — tell us which providers you need next so we can prioritize them
 - 🛠️ CLI scaffolding, sample gateway, and docs to launch in minutes
 
 ## Quick Links
@@ -44,7 +44,7 @@ npx @burtson-labs/bandit-engine create my-bandit-app
 What you get out of the box:
 
 - Vite + React project wired with `Chat`, `ChatModal`, and `ChatProvider`
-- Express gateway that proxies OpenAI, Azure OpenAI, Anthropic, xAI, or Ollama behind `/api`
+- Express gateway that proxies Bandit AI, OpenAI, Azure OpenAI, Anthropic, xAI, or Ollama behind `/api`
 - Next.js App Router gateway scaffold (in `server/next-app/`) ready to copy into a Next project
 - Branding + persona config in `public/config.json`, ready for your logo or prompts
 
@@ -58,7 +58,7 @@ Customize the output with options such as:
 
 > 📦 The generated project installs directly from `https://registry.npmjs.org/` — no GitHub npm token is required once the package is public.
 
-> ⚠️ The scaffolded gateway focuses on OpenAI/xAI/Ollama chat and model discovery. All advanced routes (file storage uploads, vector embedding, voice, MCP, etc.) are generated as `501` placeholders so you can wire them to your own infrastructure. Implement the contracts below before turning on those features in production.
+> ⚠️ The scaffolded gateway focuses on Bandit AI/OpenAI/xAI/Ollama chat and model discovery. All advanced routes (file storage uploads, vector embedding, voice, MCP, etc.) are generated as `501` placeholders so you can wire them to your own infrastructure. Implement the contracts below before turning on those features in production.
 
 Check out the [CLI quick start guide](./docs/05_cli_quickstart.md) for the full walkthrough, option matrix, and project anatomy.
 
@@ -125,7 +125,7 @@ const chatPackageSettings = {
   aiProvider: {
     type: "gateway" as const,
     gatewayUrl: import.meta.env.VITE_GATEWAY_API_URL!,
-    provider: "openai" // Backend: openai, azure-openai, anthropic, ollama
+    provider: "bandit" // Backend: bandit, openai, azure-openai, anthropic, xai, ollama
   },
   
   // Direct Ollama configuration (development only)
@@ -168,7 +168,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 aiProvider: {
   type: "gateway",
   gatewayUrl: "https://your-api-gateway.com", // Your backend API
-  provider: "openai" // Specify which AI provider to use
+  provider: "bandit" // Specify which AI provider to use (bandit, openai, azure-openai, anthropic, xai, ollama)
 }
 ```
 
@@ -189,10 +189,10 @@ aiProvider: {
   - `GET /api/memory` — hydrate personal memory when the feature is enabled
 - **Chat & text generation**
   - `POST /api/chat/completions` — default provider routing
-  - `POST /api/{provider}/chat/completions` — provider-specific routing (e.g. `openai`, `azure-openai`, `anthropic`)
+  - `POST /api/{provider}/chat/completions` — provider-specific routing (e.g. `bandit`, `openai`, `azure-openai`, `anthropic`, `xai`)
   - `POST /api/ollama/chat` — native Ollama chat format
   - `POST /api/generate` — non-chat generation (conversation starters, summaries, etc.)
-  - `POST /api/{provider}/generate` — same contract, but scoped per provider (required for conversation starters to respect OpenAI vs. Ollama routing)
+  - `POST /api/{provider}/generate` — same contract, but scoped per provider (required for conversation starters to respect Bandit/OpenAI/Azure routing)
 - **Knowledge & vector search** (required for memories, knowledge management, and MCP document tools)
   - `POST /api/embedding/embed-memory`
   - `POST /api/embedding/batch-embed-memories`
@@ -211,6 +211,7 @@ aiProvider: {
   - `GET /subscription/{userId}` and `PUT /subscription/{userId}` — synchronize subscription tiers used by the feature-flag system
 
 > **⚠️ Important:** The Bandit Engine automatically routes to provider-specific endpoints:
+> - **Bandit AI** → `/api/bandit/chat/completions` (OpenAI format, token or API key)
 > - **Ollama** → `/api/ollama/chat` (native Ollama format)
 > - **OpenAI/Azure/xAI/Anthropic** → `/api/{provider}/chat/completions` (OpenAI format)
 > - **TTS/STT** → Technology-agnostic endpoints that work with any backend implementation
@@ -674,10 +675,12 @@ Bandit Engine features a unified, gateway-based AI provider architecture that su
 ### Supported Providers
 
 - **🌟 Gateway Provider** (Recommended): Routes all requests through your secure backend
+- **Bandit AI**: Bandit Core models served through the secure gateway
 - **Ollama**: Self-hosted models and Ollama-compatible endpoints
 - **OpenAI**: GPT models via OpenAI API
 - **Azure OpenAI**: Azure-hosted OpenAI models
 - **Anthropic**: Claude models via Anthropic API
+- **xAI**: Grok models via xAI API
 
 > We do not support every AI provider yet. Let us know which services you rely on—community interest directly shapes the integration roadmap.
 
@@ -691,7 +694,7 @@ const chatPackageSettings = {
   aiProvider: {
     type: "gateway" as const,
     gatewayUrl: "https://your-gateway-api.example.com", 
-    provider: "openai" // Backend provider: openai, azure-openai, anthropic, ollama
+    provider: "bandit" // Backend provider: bandit, openai, azure-openai, anthropic, xai, ollama
   },
   // ... other settings
 };
@@ -709,7 +712,7 @@ Your gateway API can be built with any technology (Node.js, Python, .NET, Java, 
 - `GET /api/health` — Health check endpoint that lists available providers.
 - `GET /api/models` and `GET /api/models/{provider}` — Model discovery for the management UI.
 - `POST /api/chat/completions` and `POST /api/generate` — Default OpenAI-style routes when no provider override is present.
-- `POST /api/{provider}/chat/completions` and `POST /api/{provider}/generate` — Provider-specific routing for `openai`, `azure-openai`, and `anthropic`.
+- `POST /api/{provider}/chat/completions` and `POST /api/{provider}/generate` — Provider-specific routing for `bandit`, `openai`, `azure-openai`, `anthropic`, and `xai`.
 - `POST /api/ollama/chat` and `POST /api/ollama/generate` — Native Ollama routes (no `/chat/completions` suffix).
 
 ### Legacy Direct Providers
@@ -1135,7 +1138,7 @@ const chatPackageSettings = {
   aiProvider: {
     type: "gateway",
     gatewayUrl: "https://your-api-gateway.com",
-    provider: "openai" // or "anthropic", "azure-openai", "ollama"
+    provider: "bandit" // or "openai", "anthropic", "azure-openai", "xai", "ollama"
   },
   gatewayApiUrl: "https://your-api-gateway.com", // Same URL for TTS/STT services
   // No API keys in frontend code
@@ -1157,7 +1160,7 @@ const oldSettings = {
 
 // ✅ Recommended (unified gateway approach)
 const newSettings = {
-  aiProvider: { type: "gateway", gatewayUrl: "https://your-gateway.com", provider: "openai" },
+  aiProvider: { type: "gateway", gatewayUrl: "https://your-gateway.com", provider: "bandit" },
   gatewayApiUrl: "https://your-gateway.com", // Handles TTS, STT, and MCP
 };
 ```

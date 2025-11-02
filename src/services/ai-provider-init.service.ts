@@ -89,33 +89,7 @@ export class AIProviderInitService {
           }
 
           // Ensure tokenFactory is present for providers that need it
-          if ((providerConfig.type === AIProviderType.OLLAMA || providerConfig.type === AIProviderType.GATEWAY) && !providerConfig.tokenFactory) {
-            providerConfig.tokenFactory = () => {
-              // Try multiple sources for the token
-              let token = authenticationService.getToken();
-              
-              // If the bandit-engine's service doesn't have a token, try direct localStorage access
-              if (!token) {
-                token = localStorage.getItem("authToken");
-              }
-              
-              // Also try the authentication store if available
-              if (!token) {
-                try {
-                  const { useAuthenticationStore } = require("../../store/authenticationStore");
-                  const authStore = useAuthenticationStore.getState();
-                  token = authStore.token;
-                } catch (e) {
-                  // Store might not be available, that's ok
-                }
-              }
-              
-              debugLogger.info("AI Provider Init: IndexedDB config token factory", { 
-                hasToken: !!token
-              });
-              return token;
-            };
-          }
+          providerConfig = this.ensureTokenFactory(providerConfig);
           
           // Initialize the provider with saved config
           try {
@@ -150,35 +124,7 @@ export class AIProviderInitService {
         providerConfig = this.convertAnthropicConfig(providerConfig, settings.gatewayApiUrl);
       }
       
-      // Ensure tokenFactory is present for Ollama providers
-      if (providerConfig.type === AIProviderType.OLLAMA && !providerConfig.tokenFactory) {
-        providerConfig.tokenFactory = () => {
-          // Try multiple sources for the token
-          let token = authenticationService.getToken();
-          
-          // If the bandit-engine's service doesn't have a token, try direct localStorage access
-          if (!token) {
-            token = localStorage.getItem("authToken");
-          }
-          
-          // Also try the authentication store if available
-          if (!token) {
-            try {
-              const { useAuthenticationStore } = require("../../store/authenticationStore");
-              const authStore = useAuthenticationStore.getState();
-              token = authStore.token;
-            } catch (e) {
-              // Store might not be available, that's ok
-            }
-          }
-          
-          debugLogger.info("AIProviderInit: Explicit config tokenFactory", { 
-            hasToken: !!token,
-            localStorage: !!localStorage.getItem("authToken")
-          });
-          return token;
-        };
-      }
+      providerConfig = this.ensureTokenFactory(providerConfig);
       
       debugLogger.info("Using explicit AI provider config", providerConfig);
     } else {
@@ -324,9 +270,10 @@ export class AIProviderInitService {
    */
   switchProvider(config: AIProviderConfig): void {
     try {
+      const normalizedConfig = this.ensureTokenFactory({ ...config });
       const { switchProvider } = useAIProviderStore.getState();
-      switchProvider(config);
-      debugLogger.info(`Switched to AI provider: ${config.type}`);
+      switchProvider(normalizedConfig);
+      debugLogger.info(`Switched to AI provider: ${normalizedConfig.type}`);
     } catch (error) {
       debugLogger.error("Failed to switch AI provider:", { error });
       throw error;
@@ -367,6 +314,61 @@ export class AIProviderInitService {
 
     debugLogger.info('AI Provider Init: Converted direct Anthropic provider to gateway configuration');
     return normalized;
+  }
+
+  /**
+   * Ensure providers that require auth have a token factory configured.
+   * Handles both UI auth tokens and API key scenarios.
+   */
+  private ensureTokenFactory(config: AIProviderConfig): AIProviderConfig {
+    if (config.type === AIProviderType.OLLAMA || config.type === AIProviderType.GATEWAY) {
+      const existingFactory = config.tokenFactory;
+      if (existingFactory) {
+        return config;
+      }
+
+      // Prefer explicit API key if provided
+      if (typeof config.apiKey === 'string' && config.apiKey.trim() !== '') {
+        const key = config.apiKey.trim();
+        config.tokenFactory = () => key;
+        debugLogger.info("AIProviderInit: Using API key for token factory", {
+          type: config.type,
+          hasKey: true
+        });
+        return config;
+      }
+
+      // Fallback to stored auth tokens (UI sessions)
+      config.tokenFactory = () => {
+        // Try multiple sources for the token
+        let token = authenticationService.getToken();
+
+        if (!token && typeof localStorage !== 'undefined') {
+          try {
+            token = localStorage.getItem("authToken");
+          } catch {
+            // ignore storage errors
+          }
+        }
+
+        if (!token) {
+          try {
+            const { useAuthenticationStore } = require("../../store/authenticationStore");
+            const authStore = useAuthenticationStore.getState();
+            token = authStore.token;
+          } catch {
+            // Store might not be available, that's ok
+          }
+        }
+
+        debugLogger.info("AIProviderInit: Token factory resolved auth token", { 
+          hasToken: !!token,
+        });
+        return token;
+      };
+    }
+
+    return config;
   }
 }
 
