@@ -182,10 +182,12 @@ export const useVectorStore = () => {
         return false;
       }
 
-      // Check if provider type is ollama or gateway with ollama backend
-      const isOllama = config.type === 'ollama';
-      const isGatewayWithOllama = config.type === 'gateway' && config.provider === 'ollama';
-      const isCompatible = isOllama || isGatewayWithOllama;
+      // Allow both native Ollama and Bandit gateway providers to access vector storage
+      const vectorCapableProviders = new Set(['ollama', 'bandit']);
+      const isNativeOllama = config.type === 'ollama';
+      const hasVectorCapableProvider = typeof config.provider === 'string' && vectorCapableProviders.has(config.provider);
+      const isGatewayWithVectorSupport = config.type === 'gateway' && hasVectorCapableProvider;
+      const isCompatible = isNativeOllama || isGatewayWithVectorSupport;
       
       setHasCompatibleProvider(isCompatible);
       return isCompatible;
