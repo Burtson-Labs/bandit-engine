@@ -22,6 +22,7 @@ import {
   Box,
   Typography,
   IconButton,
+  Tooltip,
   TextField,
   InputAdornment,
   useMediaQuery,
@@ -60,6 +61,7 @@ import MoveConversationModal from "./move-conversation-modal";
 import SimpleConversationItem from "./simple-conversation-item";
 import ProjectHeader from "./project-header";
 import { debugLogger } from "../services/logging/debugLogger";
+import { tooltip } from "../config/tooltips";
 
 interface Props {
   open: boolean;
@@ -409,52 +411,61 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             gap: 1,
           }}
         >
-          <IconButton
-            onClick={() => setProjectManagementOpen(true)}
-            size="small"
-            sx={{
-              color: theme.palette.text.secondary,
-              "&:hover": {
-                color: theme.palette.primary.main,
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-              },
-            }}
-          >
-            <FolderIcon />
-          </IconButton>
-
-          <IconButton
-            onClick={handleMenuOpen}
-            size="small"
-            sx={{
-              color: theme.palette.text.secondary,
-              "&:hover": {
-                color: theme.palette.text.primary,
-                bgcolor: alpha(theme.palette.text.primary, 0.1),
-              },
-            }}
-          >
-            <MoreVertIcon />
-          </IconButton>
-          
-          {isMobile && (
+          <Tooltip title={tooltip("manageProjects")} arrow>
             <IconButton
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
+              onClick={() => setProjectManagementOpen(true)}
               size="small"
-              sx={{ 
+              aria-label={tooltip("manageProjects")}
+              sx={{
                 color: theme.palette.text.secondary,
                 "&:hover": {
-                  color: theme.palette.error.main,
-                  bgcolor: alpha(theme.palette.error.main, 0.1),
+                  color: theme.palette.primary.main,
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
                 },
               }}
             >
-              <CloseIcon />
+              <FolderIcon />
             </IconButton>
+          </Tooltip>
+
+          <Tooltip title={tooltip("conversationOptions")} arrow>
+            <IconButton
+              onClick={handleMenuOpen}
+              size="small"
+              aria-label={tooltip("conversationOptions")}
+              sx={{
+                color: theme.palette.text.secondary,
+                "&:hover": {
+                  color: theme.palette.text.primary,
+                  bgcolor: alpha(theme.palette.text.primary, 0.1),
+                },
+              }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Tooltip>
+          
+          {isMobile && (
+            <Tooltip title={tooltip("closeConversationsPanel")}>
+              <IconButton
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
+                size="small"
+                aria-label={tooltip("closeConversationsPanel")}
+                sx={{ 
+                  color: theme.palette.text.secondary,
+                  "&:hover": {
+                    color: theme.palette.error.main,
+                    bgcolor: alpha(theme.palette.error.main, 0.1),
+                  },
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Tooltip>
           )}
         </Box>
 
@@ -475,14 +486,17 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
               ),
               endAdornment: searchQuery && (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={handleSearchClear}
-                    size="small"
-                    edge="end"
-                    sx={{ color: theme.palette.text.secondary }}
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
+                  <Tooltip title={tooltip("clearSearch")}>
+                    <IconButton
+                      onClick={handleSearchClear}
+                      size="small"
+                      edge="end"
+                      aria-label={tooltip("clearSearch")}
+                      sx={{ color: theme.palette.text.secondary }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </InputAdornment>
               ),
             }}
@@ -553,9 +567,15 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             >
               New Project
             </Typography>
-            <IconButton size="small" sx={{ color: theme.palette.success.main }}>
-              <AddIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title={tooltip("addProject")} arrow>
+              <IconButton
+                size="small"
+                aria-label={tooltip("addProject")}
+                sx={{ color: theme.palette.success.main }}
+              >
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
           <Divider sx={{ opacity: 0.3 }} />
 

@@ -37,6 +37,7 @@ import {
   DialogActions,
   Button,
   alpha,
+  Tooltip,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -57,6 +58,7 @@ import MoveConversationModal from "./move-conversation-modal";
 import SimpleConversationItem from "./simple-conversation-item";
 import ProjectHeader from "./project-header";
 import { debugLogger } from "../services/logging/debugLogger";
+import { tooltip } from "../config/tooltips";
 
 interface Props {
   open: boolean;
@@ -294,33 +296,39 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             gap: 1,
           }}
         >
-          <IconButton
-            onClick={() => setProjectManagementOpen(true)}
-            size="small"
-            sx={{
-              color: theme.palette.text.secondary,
-              "&:hover": {
-                color: theme.palette.primary.main,
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-              },
-            }}
-          >
-            <FolderIcon />
-          </IconButton>
+          <Tooltip title={tooltip("manageProjects")} arrow>
+            <IconButton
+              onClick={() => setProjectManagementOpen(true)}
+              size="small"
+              aria-label={tooltip("manageProjects")}
+              sx={{
+                color: theme.palette.text.secondary,
+                "&:hover": {
+                  color: theme.palette.primary.main,
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <FolderIcon />
+            </IconButton>
+          </Tooltip>
 
-          <IconButton
-            onClick={handleMenuOpen}
-            size="small"
-            sx={{
-              color: theme.palette.text.secondary,
-              "&:hover": {
-                color: theme.palette.text.primary,
-                bgcolor: alpha(theme.palette.text.primary, 0.1),
-              },
-            }}
-          >
-            <MoreVertIcon />
-          </IconButton>
+          <Tooltip title={tooltip("conversationOptions")} arrow>
+            <IconButton
+              onClick={handleMenuOpen}
+              size="small"
+              aria-label={tooltip("conversationOptions")}
+              sx={{
+                color: theme.palette.text.secondary,
+                "&:hover": {
+                  color: theme.palette.text.primary,
+                  bgcolor: alpha(theme.palette.text.primary, 0.1),
+                },
+              }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Tooltip>
           
           {isMobile && (
             <IconButton
@@ -438,9 +446,15 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             >
               New Project
             </Typography>
-            <IconButton size="small" sx={{ color: theme.palette.success.main }}>
-              <AddIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title={tooltip("addProject")} arrow>
+              <IconButton
+                size="small"
+                aria-label={tooltip("addProject")}
+                sx={{ color: theme.palette.success.main }}
+              >
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
           <Divider sx={{ opacity: 0.3 }} />
 
