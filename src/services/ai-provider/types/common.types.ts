@@ -79,7 +79,7 @@ export interface AIProviderConfig {
   anthropicVersion?: string;
   anthropicMaxTokens?: number;
   gatewayUrl?: string; // For gateway-based providers
-  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai' | 'bandit'; // Which backend provider to use via gateway
+  provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai' | 'bandit' | 'playground'; // Which backend provider to use via gateway
   tokenFactory?: () => string | null;
 }
 

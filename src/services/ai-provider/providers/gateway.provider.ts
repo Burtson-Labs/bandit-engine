@@ -99,6 +99,10 @@ export class GatewayProvider implements IAIProvider {
       case 'ollama':
         this.providerSpecificService = new OllamaGatewayService(gatewayUrl, tokenFactory);
         break;
+      case 'playground':
+        // Preview gateway uses custom routing; no provider-specific service
+        this.providerSpecificService = null;
+        break;
       default:
         debugLogger.warn('Unknown provider for gateway, using generic gateway service', { 
           provider: this.config.provider 
@@ -138,7 +142,7 @@ export class GatewayProvider implements IAIProvider {
             images: request.images
           };
         }
-      } else if (['openai', 'azure-openai', 'anthropic', 'bandit'].includes(this.config.provider || '')) {
+      } else if (['openai', 'azure-openai', 'anthropic', 'bandit', 'playground'].includes(this.config.provider || '')) {
         // OpenAI/Azure/Anthropic: convert to structured content format
         if (lastUserMessageIndex !== -1) {
           const currentMessage = messages[lastUserMessageIndex];
@@ -193,7 +197,7 @@ export class GatewayProvider implements IAIProvider {
       imageCount: request.images?.length || 0,
       imageStrategy: this.config.provider === 'ollama' 
         ? 'message-level-array' 
-        : ['openai', 'azure-openai', 'anthropic'].includes(this.config.provider || '')
+        : ['openai', 'azure-openai', 'anthropic', 'playground'].includes(this.config.provider || '')
           ? 'structured-content'
           : 'top-level-fallback',
       finalMessages: messages.map(m => ({ 

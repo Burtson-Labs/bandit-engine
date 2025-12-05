@@ -220,9 +220,11 @@ export class GatewayService {
     const endpoint =
       request.provider === 'ollama'
         ? `/api/${request.provider}/chat`
-        : request.provider
-          ? `/api/${request.provider}/chat/completions`
-          : '/api/chat/completions';
+        : request.provider === 'playground'
+          ? '/api/playground/chat/completions'
+          : request.provider
+            ? `/api/${request.provider}/chat/completions`
+            : '/api/chat/completions';
     const fallbackEndpoint =
       request.provider === 'bandit' ? '/completions' : null;
     const normalizedModel =
