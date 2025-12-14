@@ -852,7 +852,7 @@ const Management = () => {
                   typeof parsedModel.avatarBase64 === "string"
                     ? parsedModel.avatarBase64
                     : parsedModel.avatarBase64 === null
-                      ? null
+                      ? undefined
                       : undefined,
               };
 
