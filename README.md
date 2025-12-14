@@ -18,10 +18,12 @@ An AI chat toolkit built for speed, design, and control. Power branded AI assist
 
 ## Features
 - 🔌 Plug-and-play React chat, modal, and management surfaces
-- 🧠 Memory, vector knowledge, and provider switching behind a secure gateway
+- 🧠 Memory, searchable knowledge, and provider switching behind a secure gateway
 - 🎨 Full MUI theming, dark mode, and branding controls out of the box
 - 🌐 Multimodal support (voice, images, documents) with Bandit AI, Ollama, OpenAI, Azure OpenAI, Anthropic, and xAI today — tell us which providers you need next so we can prioritize them
 - 🛠️ CLI scaffolding, sample gateway, and docs to launch in minutes
+
+Bandit keeps confidentiality, integrity, and availability front and center: data stays within your routes, answers stay auditable, and the UI falls back gracefully when a provider is unavailable.
 
 ## Quick Links
 - 📚 Full docs: [banditailabs.com/npm-package](https://banditailabs.com/npm-package) (mirrors `/docs` in this repo)
@@ -163,7 +165,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 **Option 1: Gateway Provider (Recommended)**
 ```tsx
-// Most secure - API keys stay on your backend
+// Most controlled - all traffic flows through your gateway
 // Your gateway can be built in ANY language: Node.js, Python, .NET, Java, PHP, Go, etc.
 aiProvider: {
   type: "gateway",
@@ -701,11 +703,11 @@ const chatPackageSettings = {
 ```
 
 **Benefits:**
-- 🔒 **Security**: API keys stay on your server
+- 🔒 **Control**: Your gateway owns credentials, routing, and policy enforcement
 - 📊 **Monitoring**: Request logging and usage analytics  
 - 🚦 **Rate Limiting**: Built-in throttling and quotas
 - 🔄 **Provider Switching**: Change backends without frontend updates
-- 🛡️ **Authentication**: Unified auth across all AI services
+- 🛡️ **Authentication**: Unified auth and request validation across services
 
 **Gateway Requirements:**  
 Your gateway API can be built with any technology (Node.js, Python, .NET, Java, etc.) as long as it implements:
@@ -1120,7 +1122,7 @@ While Bandit Engine supports direct API key configuration for development and te
 
 1. **Use an API Gateway/Wrapper**: Deploy the OllamaGateway (soon to be renamed AiGateway) or similar backend service
 2. **Proxy AI Requests**: Route all AI requests through your secure backend
-3. **Environment Isolation**: Keep API keys and sensitive configuration on the server side
+3. **Environment Isolation**: Keep credentials and sensitive configuration in backend services (not the browser bundle)
 4. **Authentication**: Implement proper user authentication and request validation
 
 ### Gateway Setup

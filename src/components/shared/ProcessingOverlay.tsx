@@ -96,31 +96,30 @@ const defaultSteps: ProcessingStep[] = [
   },
   {
     id: 'embed',
-    title: 'Creating Vectors',
-    description: 'Neural networks are encoding knowledge into searchable vectors...',
+    title: 'Making It Searchable',
+    description: 'We turn the content into a private, searchable index...',
     icon: <Memory />,
     duration: 10
   },
   {
     id: 'optimize',
     title: 'Optimizing Search',
-    description: 'AI algorithms are organizing data for lightning-fast retrieval...',
+    description: 'Organizing everything for quick, reliable answers...',
     icon: <AutoAwesome />,
     duration: 8
   }
 ];
 
 const cleverMessages = [
-  "🥷 Digital ninjas are working their magic...",
-  "🤖 AI robots are crunching your data...",
-  "⚡ Neural networks firing at maximum capacity...",
-  "🧠 Machine learning models deep in thought...",
-  "🔮 AI wizards casting knowledge spells...",
-  "⚙️ Quantum processors spinning up...",
-  "🚀 Algorithms achieving warp speed...",
-  "💫 Creating digital memories from your content...",
-  "🎯 Precision-targeting knowledge patterns...",
-  "🌟 Transforming text into searchable stardust..."
+  "🥷 Keeping your content safe while we set things up...",
+  "🤖 Getting everything ready for fast answers...",
+  "⚡ Tidying the data so responses stay consistent...",
+  "🧠 Remembering the important parts for you...",
+  "🔒 Locking in privacy before we share results...",
+  "🚀 Optimizing for quick, reliable lookups...",
+  "💫 Turning this into searchable knowledge...",
+  "🎯 Focusing on the details that matter to you...",
+  "🌟 Making sure it stays available when you need it..."
 ];
 
 export const ProcessingOverlay: React.FC<ProcessingOverlayProps> = ({

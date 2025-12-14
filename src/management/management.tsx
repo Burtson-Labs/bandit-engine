@@ -424,6 +424,7 @@ const Management = () => {
           name: modelToSave.name,
           tagline: modelToSave.tagline,
           systemPrompt: modelToSave.systemPrompt,
+          avatarBase64: modelToSave.avatarBase64 || undefined,
           selectedModel: modelToSave.name,
         },
       };
@@ -500,6 +501,21 @@ const Management = () => {
 
       debugLogger.info("Saving branding data to IndexedDB");
 
+       // Re-evaluate transparency at save time to avoid stale flags
+      let finalHasTransparentLogo = hasTransparentLogo;
+      if (logoBase64) {
+        try {
+          const detected = await detectTransparency(logoBase64);
+          const isPng = logoBase64.startsWith("data:image/png");
+          finalHasTransparentLogo = detected || isPng;
+          debugLogger.debug("SaveBranding transparency check", { detected, isPng, finalHasTransparentLogo });
+        } catch (err) {
+          const isPng = logoBase64.startsWith("data:image/png");
+          finalHasTransparentLogo = finalHasTransparentLogo ?? isPng ?? true;
+          debugLogger.warn("SaveBranding transparency check failed, using fallback", { error: err, finalHasTransparentLogo });
+        }
+      }
+
       // Get current config to preserve other data
       const current = await indexedDBService.get<StoredBanditConfigRecord>(
         "banditConfig",
@@ -517,7 +533,7 @@ const Management = () => {
           logoBase64,
           brandingText,
           theme,
-          hasTransparentLogo,
+          hasTransparentLogo: finalHasTransparentLogo,
           userSaved: true, // Mark as user-saved to protect from CDN overrides
         },
       }, storeConfigs);
@@ -568,9 +584,12 @@ const Management = () => {
         setLogoBase64(base64);
         debugLogger.debug("Starting transparency detection for uploaded image");
         try {
+          const isPng = base64.startsWith("data:image/png");
           const isTransparent = await detectTransparency(base64);
-          setHasTransparentLogo(isTransparent);
-          debugLogger.debug("Transparency detection result saved", { isTransparent });
+          // If detection fails to find alpha on PNGs, err on the side of transparency
+          const finalTransparent = isTransparent || isPng;
+          setHasTransparentLogo(finalTransparent);
+          debugLogger.debug("Transparency detection result saved", { isTransparent, finalTransparent });
         } catch (err) {
           debugLogger.error("Failed to detect transparency", { error: err });
         }
@@ -829,6 +848,12 @@ const Management = () => {
                 tagline: typeof parsedModel.tagline === "string" ? parsedModel.tagline : undefined,
                 systemPrompt: typeof parsedModel.systemPrompt === "string" ? parsedModel.systemPrompt : undefined,
                 selectedModel: typeof parsedModel.selectedModel === "string" ? parsedModel.selectedModel : undefined,
+                avatarBase64:
+                  typeof parsedModel.avatarBase64 === "string"
+                    ? parsedModel.avatarBase64
+                    : parsedModel.avatarBase64 === null
+                      ? null
+                      : undefined,
               };
 
               const entry: StoredBanditConfigRecord = {
@@ -837,7 +862,12 @@ const Management = () => {
                 name: modelName,
                 tagline: sanitizedModel.tagline,
                 systemPrompt: sanitizedModel.systemPrompt,
-                avatarBase64: typeof parsedModel.avatarBase64 === "string" ? parsedModel.avatarBase64 : undefined,
+                avatarBase64:
+                  typeof parsedModel.avatarBase64 === "string"
+                    ? parsedModel.avatarBase64
+                    : parsedModel.avatarBase64 === null
+                      ? null
+                      : undefined,
               };
 
               await indexedDBService.put<StoredBanditConfigRecord>("banditConfig", 1, "config", entry, storeConfigs);

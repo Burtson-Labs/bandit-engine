@@ -624,7 +624,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                 Memory
               </Typography>
               {shouldUseVectorForMemories && (
-                <Tooltip title="Memories are stored in an AI vector database with semantic search capabilities">
+                <Tooltip title="Memories stay in your private knowledge space for faster, more accurate answers.">
                   <Typography
                     variant="caption"
                     sx={{
@@ -639,7 +639,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                       cursor: "help",
                     }}
                   >
-                    Vector
+                    Synced
                   </Typography>
                 </Tooltip>
               )}
@@ -721,7 +721,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                         startIcon={<CloudSyncIcon />}
                         sx={{ textTransform: "none", borderRadius: 2, fontSize: "0.75rem" }}
                       >
-                        Import to Vector
+                        Import to workspace
                       </Button>
                     )}
                     <Button
@@ -965,10 +965,10 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
               }}>
                 {selectedTab === "user" 
                   ? shouldUseVectorForMemories 
-                    ? "Start by adding something you'd like me to remember. Your memories will be stored in the AI vector database for intelligent retrieval."
+                    ? "Start by adding something you'd like me to remember. Your memories will be kept in a private workspace for quick recall."
                     : "Start by adding something you'd like me to remember about you or your preferences."
                   : shouldUseVectorForMemories
-                    ? "Auto memories are created automatically based on our conversations and stored in the vector database for semantic search."
+                    ? "Auto memories are created automatically based on our conversations and kept in your private workspace for better answers."
                     : "Auto memories are created automatically based on our conversations."
                 }
               </Typography>
@@ -1262,7 +1262,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
             value={newMemory}
             onChange={(e) => setNewMemory(e.target.value)}
             placeholder={shouldUseVectorForMemories 
-              ? `Add a new ${selectedTab} memory to vector database...` 
+              ? `Add a new ${selectedTab} memory to your workspace...` 
               : `Add a new ${selectedTab} memory...`
             }
             onKeyDown={(e) => {
@@ -1472,31 +1472,31 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
             sx: { borderRadius: 3 }
           }}
         >
-          <DialogTitle sx={{ 
-            fontWeight: 600, 
-            pb: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1
-          }}>
-            <CloudSyncIcon color="primary" />
-            Import Memories to Vector Database
-          </DialogTitle>
-          <DialogContent sx={{ py: 2 }}>
-            {!importProgress.isImporting ? (
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  This will import all your local memories ({entries.length} memories) to the vector database for enhanced semantic search capabilities.
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  • Memories will be added to your vector storage
+        <DialogTitle sx={{ 
+          fontWeight: 600, 
+          pb: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <CloudSyncIcon color="primary" />
+          Import Memories to Secure Workspace
+        </DialogTitle>
+        <DialogContent sx={{ py: 2 }}>
+          {!importProgress.isImporting ? (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  This will import all your local memories ({entries.length} memories) to your secure workspace for faster, more reliable answers.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  • Memories will be added to your synced workspace
                   • Local memories will remain unchanged
-                  • You can switch between local and vector storage anytime
-                </Typography>
-                <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
-                  Ready to import {entries.length} memories?
-                </Typography>
-              </Box>
+                  • You can switch between synced and local storage anytime
+              </Typography>
+              <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
+                Ready to import {entries.length} memories?
+              </Typography>
+            </Box>
             ) : (
               <Box sx={{ textAlign: 'center', py: 2 }}>
                 <CloudSyncIcon 

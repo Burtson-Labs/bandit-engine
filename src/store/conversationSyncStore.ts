@@ -727,7 +727,7 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
         await get().runSync({ force: true });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update advanced vector setting";
+      const message = error instanceof Error ? error.message : "Failed to update advanced knowledge setting";
       debugLogger.error("conversationSyncStore: setAdvancedVectorFeaturesEnabled failed", { error: message });
       set({ status: "error", lastError: message });
       throw error;

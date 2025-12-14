@@ -33,8 +33,8 @@ const ChatScrollToBottomButton: React.FC<Props> = ({
   drawerOpen = false, 
   isMobile = false 
 }) => {
-  const verticalBuffer = isMobile ? 36 : 56;
-  const bottomOffset = Math.max(inputHeight + verticalBuffer, verticalBuffer + 72);
+  const verticalBuffer = isMobile ? 28 : 48;
+  const bottomOffset = Math.max(inputHeight + verticalBuffer, verticalBuffer + 64);
 
   return (
     <IconButton
@@ -50,10 +50,13 @@ const ChatScrollToBottomButton: React.FC<Props> = ({
         borderColor: (theme) => theme.palette.divider,
         zIndex: (theme) => Math.max(theme.zIndex.modal + 1, 1400),
         boxShadow: 3,
-        transition: "bottom 0.3s ease, left 0.3s ease-in-out",
+        transition: "bottom 0.25s ease, left 0.3s ease-in-out, transform 0.2s ease",
         "&:hover": {
           bgcolor: (theme) => theme.palette.action.hover,
         },
+        "&:active": {
+          transform: "translateX(-50%) translateY(1px)"
+        }
       }}
     >
       <ArrowDownwardIcon sx={{ color: "inherit" }} />

@@ -37,9 +37,18 @@ export interface BanditPersonality {
   tagline: string;
   systemPrompt: string;
   commands: string[];
-  avatarBase64?: string;
+  avatarBase64?: string | null;
   avatarPreset?: string;
 }
+
+type BanditConfigEntry = {
+  id?: string;
+  model?: (BanditPersonality & { selectedModel?: string }) | { selectedModel?: string };
+  branding?: { userSaved?: boolean; hasTransparentLogo?: boolean };
+  deleted?: string[];
+  avatarBase64?: string | null;
+  [key: string]: unknown;
+};
 
 interface ModelState {
   name: string;
@@ -114,6 +123,31 @@ export const useModelStore = create<ModelState>((set, get) => ({
         });
       }
     }
+
+    // Persist selection for reloads
+    (async () => {
+      const storeConfigs = [{ name: "config", keyPath: "id" }];
+      try {
+        const existing = (await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs)) as
+          | BanditConfigEntry
+          | undefined;
+        await indexedDBService.put(
+          "banditConfig",
+          1,
+          "config",
+          {
+            ...existing,
+            id: "main",
+            model: { ...(existing?.model ?? {}), selectedModel: modelName },
+          },
+          storeConfigs
+        );
+      } catch (err) {
+        debugLogger.warn("setSelectedModel: failed to persist selected model", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    })();
   },
   saveModel: async () => {
     const state = get();
@@ -124,7 +158,8 @@ export const useModelStore = create<ModelState>((set, get) => ({
       tagline: state.tagline,
       systemPrompt: state.systemPrompt,
       commands: state.commands,
-      avatarBase64: state.avatarBase64 ?? undefined,
+      // Ensure avatar changes are persisted even when cleared
+      avatarBase64: state.avatarBase64 ?? null,
     };
 
     // Update IndexedDB under id = model name
@@ -160,12 +195,19 @@ export const useModelStore = create<ModelState>((set, get) => ({
     set({ isLoading: true, isInitializing: true });
     
     const storeConfigs = [{ name: "config", keyPath: "id" }];
-    const entries = await indexedDBService.getAll("banditConfig", 1, "config", storeConfigs);
+    const entries: BanditConfigEntry[] = (await indexedDBService.getAll(
+      "banditConfig",
+      1,
+      "config",
+      storeConfigs
+    )) as BanditConfigEntry[];
 
-    const mainEntry = entries.find(entry => entry.id === "main");
-    const modelEntries = entries.filter(entry => entry.id !== "main" && entry.id !== "deletedModels");
+    const mainEntry = entries.find((entry) => entry.id === "main");
+    const modelEntries = entries.filter((entry) => entry.id !== "main" && entry.id !== "deletedModels");
 
-    const deletedEntry = await indexedDBService.get("banditConfig", 1, "config", "deletedModels", storeConfigs);
+    const deletedEntry = (await indexedDBService.get("banditConfig", 1, "config", "deletedModels", storeConfigs)) as
+      | BanditConfigEntry
+      | undefined;
     const deletedModelNames = deletedEntry?.deleted ?? [];
 
     let allModels: BanditPersonality[] = [];
@@ -174,14 +216,15 @@ export const useModelStore = create<ModelState>((set, get) => ({
     // STEP 1: Try to load from IndexedDB first
     if (modelEntries.length > 0) {
       debugLogger.info("Loading models from IndexedDB");
-      allModels = modelEntries.map(entry => {
-        const modelData = entry.model?.name ? entry.model : entry;
+      allModels = modelEntries.map((entry) => {
+        const modelData = (entry.model as BanditPersonality | undefined) ?? (entry as unknown as BanditPersonality);
         return {
           name: modelData.name,
           tagline: modelData.tagline || "",
           systemPrompt: modelData.systemPrompt || "",
           commands: modelData.commands ?? [],
-          avatarBase64: modelData.avatarBase64 ?? null,
+          // Fall back to legacy top-level avatar when the nested model config omitted it
+          avatarBase64: modelData.avatarBase64 ?? entry.avatarBase64 ?? null,
         };
       }).filter(m => m.name && !deletedModelNames.includes(m.name));
 
@@ -247,7 +290,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
         selectedModel = allModels.length > 0 ? allModels[0].name : "";
         
         // Only set hasTransparentLogo from CDN if no user branding exists
-        const existingConfig = await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs);
+        const existingConfig = (await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs)) as BanditConfigEntry | undefined;
         const hasUserBranding = existingConfig?.branding?.userSaved;
         if (!hasUserBranding) {
           set({ hasTransparentLogo: configModels?.branding?.hasTransparentLogo ?? true });
@@ -351,7 +394,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
       
       // Only set hasTransparentLogo from CDN if no user branding exists
       try {
-        const existingConfig = await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs);
+        const existingConfig = (await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs)) as BanditConfigEntry | undefined;
         const hasUserBranding = existingConfig?.branding?.userSaved;
         if (!hasUserBranding) {
           set({ hasTransparentLogo: configModels?.branding?.hasTransparentLogo ?? true });
@@ -405,7 +448,9 @@ export const useModelStore = create<ModelState>((set, get) => ({
     
     try {
       // Get current deleted models list
-      const deletedEntry = await indexedDBService.get("banditConfig", 1, "config", "deletedModels", storeConfigs);
+      const deletedEntry = (await indexedDBService.get("banditConfig", 1, "config", "deletedModels", storeConfigs)) as
+        | BanditConfigEntry
+        | undefined;
       const deletedModelNames = deletedEntry?.deleted ?? [];
       
       debugLogger.info("Current deleted models:", { deletedModelNames });
@@ -523,7 +568,9 @@ export const useModelStore = create<ModelState>((set, get) => ({
       const storeConfigs = [{ name: "config", keyPath: "id" }];
       
       // Get deleted models to avoid adding them back
-      const deletedEntry = await indexedDBService.get("banditConfig", 1, "config", "deletedModels", storeConfigs);
+      const deletedEntry = (await indexedDBService.get("banditConfig", 1, "config", "deletedModels", storeConfigs)) as
+        | BanditConfigEntry
+        | undefined;
       const deletedModelNames = deletedEntry?.deleted ?? [];
       
       const modelsToAdd = defaultModels.filter(banditModel => 

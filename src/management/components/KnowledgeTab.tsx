@@ -504,16 +504,16 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
     if (shouldUseVector) {
       // Show processing overlay for vector uploads
       showProcessing(
-        'Uploading to Vector Database',
+        'Uploading to Secure Workspace',
         [
-          "🥷 Digital ninjas securing your documents...",
-          "🤖 AI robots reading and understanding content...", 
-          "⚡ Neural networks encoding knowledge vectors...",
-          "🧠 Machine learning creating searchable memories...",
-          "🔮 AI wizards optimizing semantic search...",
-          "🚀 Vector embeddings achieving light speed...",
-          "💫 Transforming documents into intelligent data...",
-          "🎯 Precision-targeting knowledge patterns..."
+          "🥷 Keeping your documents private while we prepare them...",
+          "🤖 Reading the content so answers stay accurate...", 
+          "⚡ Turning pages into a searchable index...",
+          "🧠 Remembering highlights for quick recall...",
+          "🔮 Organizing everything so search feels instant...",
+          "🚀 Optimizing for fast, consistent responses...",
+          "💫 Transforming documents into trusted knowledge...",
+          "🎯 Focusing on the details that matter most..."
         ]
       );
       
@@ -617,7 +617,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
 
         // Show appropriate success message based on upload method
         const message = result.usedVector 
-          ? `Successfully uploaded ${files.length} document(s) to vector database`
+          ? `Successfully uploaded ${files.length} document(s) to your secure workspace`
           : result.error 
             ? `Upload completed with warnings: ${result.error}`
             : `Successfully uploaded ${files.length} document(s)`;
@@ -705,7 +705,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
 
         // Show appropriate success message based on upload method
         const message = result.usedVector 
-          ? `Successfully uploaded ${files.length} document(s) to vector database`
+          ? `Successfully uploaded ${files.length} document(s) to your secure workspace`
           : result.error 
             ? `Upload completed with warnings: ${result.error}`
             : `Successfully uploaded ${files.length} document(s)`;
@@ -936,7 +936,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                 Document Knowledge Base
                 {shouldUseVector && (
                   <Chip 
-                    label="Vector DB" 
+                    label="Synced" 
                     color="primary" 
                     size="small" 
                     sx={{ ml: 1 }} 
@@ -948,7 +948,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.95rem', sm: '1rem' }, lineHeight: 1.5 }}
               >
-                Add documents to your private knowledge base. Files are securely stored {shouldUseVector ? 'in the vector database' : 'locally in your browser'}.
+                Add documents to your private knowledge base. Files are securely stored {shouldUseVector ? 'in your private workspace' : 'locally in your browser'}.
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
@@ -1359,7 +1359,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {shouldUseVector ? 
-                  'Upload and embed your first document to get started with advanced vector search' :
+                  'Upload and embed your first document to get started with advanced search' :
                   'Upload your first document to get started'
                 }
               </Typography>
@@ -1371,7 +1371,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Showing {filteredAndSortedDocuments.length} of {shouldUseVector ? vectorDocuments.length : documents.length} documents
               {searchQuery && ` for "${searchQuery}"`}
-              {shouldUseVector && ` (Vector Database)`}
+              {shouldUseVector && ` (Synced workspace)`}
             </Typography>
 
             {/* Document Grid/List View */}

@@ -278,8 +278,8 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
       if (showSnackbar) {
         showSnackbar(
           enabled
-            ? 'Advanced vector features enabled for this account.'
-            : 'Advanced vector features disabled.',
+            ? 'Advanced knowledge sync enabled for this account.'
+            : 'Advanced knowledge sync disabled.',
           'success'
         );
       }
@@ -616,10 +616,10 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
                 label={
                   <Box textAlign="left">
                     <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }}>
-                      Advanced vector features
+                      Advanced knowledge sync
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Keep semantic search, vector memories, and related context in sync across devices
+                      Keep richer search, saved memories, and context in sync across devices
                     </Typography>
                   </Box>
                 }

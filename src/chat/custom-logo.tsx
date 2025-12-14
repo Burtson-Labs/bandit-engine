@@ -22,6 +22,7 @@ import { useTheme } from "@mui/material/styles";
 import "./chat.css";
 import brandingService from "../services/branding/brandingService";
 import { debugLogger } from "../services/logging/debugLogger";
+import { detectTransparency } from "../util";
 
 interface BanditLogoProps {
   visible: boolean;
@@ -42,7 +43,22 @@ const Logo: React.FC<BanditLogoProps> = ({ visible, atTop = false }) => {
         const brandingData = await brandingService.getBranding();
         if (brandingData) {
           setLogoBase64(brandingData.logoBase64 || null);
-          setHasTransparentLogo(brandingData.hasTransparentLogo ?? true);
+          // If transparency was not detected earlier, re-check to avoid forcing circle framing
+          if (brandingData.logoBase64) {
+            try {
+              const detected = await detectTransparency(brandingData.logoBase64);
+              const isPng = brandingData.logoBase64.startsWith("data:image/png");
+              // Prefer detection/PNG, even if stored flag was false
+              const finalTransparent = detected || isPng || brandingData.hasTransparentLogo === true;
+              setHasTransparentLogo(finalTransparent);
+            } catch {
+              const isPng = brandingData.logoBase64.startsWith("data:image/png");
+              const finalTransparent = brandingData.hasTransparentLogo === true || isPng;
+              setHasTransparentLogo(finalTransparent);
+            }
+          } else {
+            setHasTransparentLogo(brandingData.hasTransparentLogo ?? true);
+          }
         }
       } catch (e) {
         debugLogger.error("Failed to load branding from service", { error: e });
@@ -56,7 +72,7 @@ const Logo: React.FC<BanditLogoProps> = ({ visible, atTop = false }) => {
   return (
     logoBase64 &&
     <>
-      {loading ? null : hasTransparentLogo ? (
+      {loading ? null : hasTransparentLogo !== false ? (
         <Box
           component="img"
           src={logoBase64}
@@ -68,6 +84,7 @@ const Logo: React.FC<BanditLogoProps> = ({ visible, atTop = false }) => {
             aspectRatio: "1 / 1",
             margin: "0 auto",
             mt: atTop ? 2 : 6,
+            display: "block"
           }}
         />
       ) : (

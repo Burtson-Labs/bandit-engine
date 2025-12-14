@@ -345,6 +345,9 @@ const LogoCropper: React.FC<LogoCropperProps> = ({
     // Save context
     ctx.save();
 
+    // Ensure fully transparent canvas before drawing
+    ctx.clearRect(0, 0, outputWidth, outputHeight);
+
     // Apply transformations (scaled for output size)
     const scaleX = outputWidth / cropDims.width;
     const scaleY = outputHeight / cropDims.height;

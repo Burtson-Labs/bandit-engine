@@ -270,54 +270,54 @@ const packageSettings = {
   },
 };
 
+const seedQuickstartAuth = () => {
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return;
+  }
+
+  const applyAuthToken = (token: string) => {
+    localStorage.setItem("authToken", token);
+    const maybeService = (BanditEngine as { authenticationService?: { setToken: (token: string) => void } }).authenticationService;
+    try {
+      maybeService?.setToken(token);
+    } catch (error) {
+      console.warn("Bandit quickstart: failed to seed authentication service token", error);
+    }
+  };
+
+  const existing = localStorage.getItem("authToken");
+  if (existing) {
+    applyAuthToken(existing);
+    return;
+  }
+
+  const header = {
+    alg: "HS256",
+    typ: "JWT",
+  };
+  const payload = {
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
+    roles: ["admin"],
+    iat: Math.floor(Date.now() / 1000),
+    email: "quickstart@burtson.ai",
+    sub: "123456789012345678901",
+  };
+  const encodeSegment = (value: unknown) =>
+    btoa(JSON.stringify(value))
+      .replace(/=+$/g, "")
+      .replace(/\\+/g, "-")
+      .replace(/\\//g, "_");
+  const mockToken = \`${"${"}encodeSegment(header)}.${"${"}encodeSegment(payload)}.quickstart\`;
+  applyAuthToken(mockToken);
+};
+
+seedQuickstartAuth();
+
 function App() {
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<"checking" | "healthy" | "error">("checking");
   const [gatewayError, setGatewayError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const applyAuthToken = (token: string) => {
-        localStorage.setItem("authToken", token);
-        const maybeService = (BanditEngine as { authenticationService?: { setToken: (token: string) => void } }).authenticationService;
-        try {
-          maybeService?.setToken(token);
-        } catch (error) {
-          console.warn("Bandit quickstart: failed to seed authentication service token", error);
-        }
-      };
-
-      const ensureAuthToken = () => {
-        const existing = localStorage.getItem("authToken");
-        if (existing) {
-          applyAuthToken(existing);
-          return;
-        }
-
-        const header = {
-          alg: "HS256",
-          typ: "JWT",
-        };
-        const payload = {
-          exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
-          roles: ["admin"],
-          iat: Math.floor(Date.now() / 1000),
-          email: "quickstart@burtson.ai",
-          sub: "123456789012345678901",
-        };
-        const encodeSegment = (value: unknown) =>
-          btoa(JSON.stringify(value))
-            .replace(/=+$/g, "")
-            .replace(/\\+/g, "-")
-            .replace(/\\//g, "_");
-        const mockToken = \`${"${"}encodeSegment(header)}.${"${"}encodeSegment(payload)}.quickstart\`;
-        applyAuthToken(mockToken);
-      };
-
-      ensureAuthToken();
-    }
-  }, []);
 
   // Separate effect for health checking to avoid re-renders
   useEffect(() => {

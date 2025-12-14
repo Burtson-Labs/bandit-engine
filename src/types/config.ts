@@ -30,6 +30,7 @@ export interface StoredModelConfig {
   tagline?: string;
   systemPrompt?: string;
   selectedModel?: string;
+  avatarBase64?: string | null;
   [key: string]: unknown;
 }
 
