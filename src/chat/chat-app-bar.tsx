@@ -62,6 +62,7 @@ import ConversationDrawer from "./conversation-drawer";
 import MobileConversationsModal from "./enhanced-mobile-conversations-modal";
 import { useConversationStore } from "../store/conversationStore";
 import indexedDBService from "../services/indexedDB/indexedDBService";
+import { StoredBanditConfigRecord } from "../types/config";
 import { debugLogger } from "../services/logging/debugLogger";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
@@ -679,10 +680,16 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
                     useModelStore.getState().setSelectedModel(model.name);
                     (async () => {
                       try {
-                        const storeConfigs = [{ name: "config", keyPath: "id" }];
-                        const current = await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs);
-                        const updated = {
-                          ...current,
+                        const storeConfigs = [{ name: "config", keyPath: "id" }] as const;
+                        const current: StoredBanditConfigRecord | undefined = await indexedDBService.get<StoredBanditConfigRecord>(
+                          "banditConfig",
+                          1,
+                          "config",
+                          "main",
+                          storeConfigs
+                        );
+                        const updated: StoredBanditConfigRecord = {
+                          ...(current ?? {}),
                           id: "main",
                           model: {
                             ...(current?.model || {}),
@@ -879,10 +886,16 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
                 useModelStore.getState().setSelectedModel(pendingModel);
                 (async () => {
                   try {
-                    const storeConfigs = [{ name: "config", keyPath: "id" }];
-                    const current = await indexedDBService.get("banditConfig", 1, "config", "main", storeConfigs);
-                    const updated = {
-                      ...current,
+                    const storeConfigs = [{ name: "config", keyPath: "id" }] as const;
+                    const current: StoredBanditConfigRecord | undefined = await indexedDBService.get<StoredBanditConfigRecord>(
+                      "banditConfig",
+                      1,
+                      "config",
+                      "main",
+                      storeConfigs
+                    );
+                    const updated: StoredBanditConfigRecord = {
+                      ...(current ?? {}),
                       id: "main",
                       model: {
                         ...(current?.model || {}),
