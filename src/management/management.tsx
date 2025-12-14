@@ -862,12 +862,8 @@ const Management = () => {
                 name: modelName,
                 tagline: sanitizedModel.tagline,
                 systemPrompt: sanitizedModel.systemPrompt,
-                avatarBase64:
-                  typeof parsedModel.avatarBase64 === "string"
-                    ? parsedModel.avatarBase64
-                    : parsedModel.avatarBase64 === null
-                      ? null
-                      : undefined,
+                // Normalize to match StoredBanditConfigRecord (string | undefined)
+                avatarBase64: sanitizedModel.avatarBase64 ?? undefined,
               };
 
               await indexedDBService.put<StoredBanditConfigRecord>("banditConfig", 1, "config", entry, storeConfigs);
