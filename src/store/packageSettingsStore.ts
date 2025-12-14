@@ -38,6 +38,9 @@ export interface PackageSettings {
   homeUrl?: string | null;
   playgroundMode?: boolean;
   playgroundBypassAuth?: boolean;
+
+  // Sync defaults
+  advancedKnowledgeSyncDefaultEnabled?: boolean;
   
   // Feedback settings
   feedbackEmail?: string;

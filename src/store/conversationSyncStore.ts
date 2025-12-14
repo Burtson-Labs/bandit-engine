@@ -125,6 +125,10 @@ function ensureDeviceId(): string {
   }
 }
 
+function getPackageDefaultAdvancedKnowledgeSync(): boolean | undefined {
+  return usePackageSettingsStore.getState().settings?.advancedKnowledgeSyncDefaultEnabled;
+}
+
 function mapConversationToDTO(conversation: Conversation): ConversationRecordDTO {
   const updatedAtIso = (conversation.updatedAt ?? new Date()).toISOString();
   const createdAtIso = conversation.createdAt ? conversation.createdAt.toISOString() : null;
@@ -589,7 +593,7 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
   cursor: null,
   lastError: null,
   keepLocalOnly: false,
-  isAdvancedVectorFeaturesEnabled: false,
+  isAdvancedVectorFeaturesEnabled: getPackageDefaultAdvancedKnowledgeSync() ?? false,
   conflicts: null,
   deviceId: ensureDeviceId(),
   pendingConversationUpserts: new Set<string>(),
@@ -986,12 +990,15 @@ function applyPreference(
 
   const preferenceVectorFlag = preference.isAdvancedVectorFeaturesEnabled;
   const overrideVectorFlag = override.isAdvancedVectorFeaturesEnabled;
+  const packageDefaultVectorFlag = getPackageDefaultAdvancedKnowledgeSync();
   const resolvedVectorFlag =
     preferenceVectorFlag !== undefined
       ? preferenceVectorFlag
       : overrideVectorFlag !== undefined
-      ? overrideVectorFlag
-      : current.isAdvancedVectorFeaturesEnabled ?? false;
+        ? overrideVectorFlag
+        : packageDefaultVectorFlag !== undefined
+          ? packageDefaultVectorFlag
+          : current.isAdvancedVectorFeaturesEnabled ?? false;
 
   set({
     syncEnabled: preference.syncEnabled,

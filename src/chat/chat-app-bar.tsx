@@ -287,10 +287,20 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
     modelAvatars[pendingModel || ""] ||
     banditHead;
 
+  const resolvedHomeUrl = preferences.homeUrl?.trim() || packageSettings?.homeUrl?.trim() || "";
+  const homeTooltip = (() => {
+    if (!resolvedHomeUrl) return "Home";
+    try {
+      return `Home (${new URL(resolvedHomeUrl).hostname})`;
+    } catch {
+      return "Home";
+    }
+  })();
+
   function goToHome() {
     // Check if user has configured a custom home URL
-    if (preferences.homeUrl && preferences.homeUrl.trim()) {
-      window.location.href = preferences.homeUrl;
+    if (resolvedHomeUrl) {
+      window.location.href = resolvedHomeUrl;
       return;
     }
 
@@ -361,7 +371,7 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
             },
           }}
         >
-          <Tooltip title={preferences.homeUrl && preferences.homeUrl.trim() ? `Home (${new URL(preferences.homeUrl).hostname})` : "Home"} arrow>
+          <Tooltip title={homeTooltip} arrow>
             <IconButton
               onClick={goToHome}
               sx={pillButtonStyles}

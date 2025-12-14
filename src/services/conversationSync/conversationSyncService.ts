@@ -95,7 +95,7 @@ export interface ConversationSyncPreferenceDTO {
   cursor?: string | null;
   lastDeviceId?: string | null;
   keepLocalOnly?: boolean;
-  isAdvancedVectorFeaturesEnabled: boolean;
+  isAdvancedVectorFeaturesEnabled?: boolean;
 }
 
 export interface ConversationSyncRequest {
