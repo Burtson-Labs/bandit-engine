@@ -20,11 +20,11 @@
     "url": "https://github.com/Burtson-Labs/bandit-engine.git"
   },
   "homepage": "https://banditailabs.com/npm-package",
-  "author": "Burtson Labs LLC <team@burtson.ai>",
+  "author": "Burtson Labs LLC <team@banditai.ai>",
   "maintainers": [
     {
       "name": "Burtson Labs LLC",
-      "email": "team@burtson.ai"
+      "email": "team@banditai.ai"
     }
   ],
   "keywords": [
