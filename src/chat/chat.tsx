@@ -16,10 +16,11 @@ const __banditFingerprint_chat_chattsx = 'BL-FP-CFC9B2-7718';
 const __auditTrail_chat_chattsx = 'BL-AU-MGOIKVUY-9KCZ';
 // File: chat.tsx | Path: src/chat/chat.tsx | Hash: ada17718
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import CustomLogo from "./custom-logo";
 import indexedDBService from "../services/indexedDB/indexedDBService";
 import { Box, ThemeProvider, CssBaseline } from "@mui/material";
+import { createTheme } from "@mui/material/styles";
 import { useAIQueryStore } from "../store/aiQueryStore";
 import { useModelStore } from "../store/modelStore";
 import { Navigate } from "react-router-dom";
@@ -70,7 +71,33 @@ const ChatContent = () => {
   // Check for super-admin role
   const token = authenticationService.getToken();
   const claims = token ? authenticationService.parseJwtClaims(token) : null;
-  const banditTheme = themeMap[selectedTheme ?? "bandit-dark"] || banditDarkTheme;
+  const baseTheme = themeMap[selectedTheme ?? "bandit-dark"] || banditDarkTheme;
+  const banditTheme = useMemo(() => {
+    return createTheme(baseTheme, {
+      components: {
+        MuiInputBase: {
+          styleOverrides: {
+            input: {
+              outline: "none",
+              boxShadow: "none",
+              "&:focus, &:focus-visible": {
+                outline: "none",
+                boxShadow: "none",
+              },
+            },
+            inputMultiline: {
+              outline: "none",
+              boxShadow: "none",
+              "&:focus, &:focus-visible": {
+                outline: "none",
+                boxShadow: "none",
+              },
+            },
+          },
+        },
+      },
+    });
+  }, [baseTheme]);
 
   const {
     inputValue,

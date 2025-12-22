@@ -18,9 +18,9 @@ const __auditTrail_management_managementtsx = 'BL-AU-MGOIKVVL-LFF9';
 
 const preloadChatPage = () => import("../chat/chat");
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { alpha } from "@mui/material/styles";
+import { alpha, createTheme } from "@mui/material/styles";
 import { useKnowledgeStore } from "../chat/hooks/useKnowledgeStore";
 import indexedDBService from "../services/indexedDB/indexedDBService";
 import {
@@ -50,7 +50,7 @@ import ChatModal from "../modals/chat-modal/chat-modal";
 import PersonalitiesTab, { LocalModelState } from './components/PersonalitiesTab';
 import PreferencesTab from './components/PreferencesTab';
 import BrandingTab from './components/BrandingTab';
-import KnowledgeTab from './components/KnowledgeTab';
+import KnowledgeHubTab from './components/KnowledgeHubTab';
 import StorageTab from './components/StorageTab';
 import { ProviderTab } from './components/ProviderTab';
 import MCPToolsTabV2 from './components/MCPToolsTabV2';
@@ -60,13 +60,23 @@ import { banditDarkTheme } from "../theme/banditTheme";
 import { predefinedThemes } from "../theme/themeMap";
 import { detectTransparency, fetchAndConvertToBase64 } from "../util";
 import brandingService from "../services/branding/brandingService";
+import { authenticationService } from "../services/auth/authenticationService";
 import { debugLogger } from "../services/logging/debugLogger";
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { useAIProviderStore } from "../store/aiProviderStore";
+import { useAuthenticationStore } from "../store/authenticationStore";
 import { useNotificationService } from "../hooks/useNotificationService";
 import { useFeatures, useFeatureVisibility } from "../hooks/useFeatures";
 import { StoredBanditConfigRecord, StoredModelConfig } from "../types/config";
+
+const buildCapabilitiesUrl = (gatewayApiUrl: string): string => {
+  const trimmed = gatewayApiUrl.replace(/\/$/, "");
+  if (trimmed.endsWith("/api")) {
+    return `${trimmed}/capabilities`;
+  }
+  return `${trimmed}/api/capabilities`;
+};
 
 const Management = () => {
   const navigate = useNavigate();
@@ -152,10 +162,13 @@ const Management = () => {
 
   const { initModels } = useModelStore();
   const { settings: packageSettings } = usePackageSettingsStore();
+  const authToken = useAuthenticationStore((state) => state.token);
   const { preferences, updatePreference } = usePreferencesStore();
   const { hasAdminDashboard, hasLimitedAdminDashboard, getCurrentTier, hasAdvancedSearch } = useFeatures();
   const { showAdminPanel, showLimitedAdminPanel } = useFeatureVisibility();
   const { provider: currentProvider, config: currentProviderConfig } = useAIProviderStore();
+
+  const [seedPacksEnabled, setSeedPacksEnabled] = useState(false);
 
   const [localSelectedModel, setLocalSelectedModel] = useState<LocalModelState>({
     name: "",
@@ -936,8 +949,81 @@ const Management = () => {
     loadDocuments();
   }, [loadDocuments]);
 
+  useEffect(() => {
+    const gatewayApiUrl = packageSettings?.gatewayApiUrl;
+    if (!gatewayApiUrl || gatewayApiUrl.toLowerCase().startsWith("playground://")) {
+      setSeedPacksEnabled(false);
+      return;
+    }
+
+    let isActive = true;
+    const loadCapabilities = async () => {
+      try {
+        const token = authToken ?? authenticationService.getToken();
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const response = await fetch(buildCapabilitiesUrl(gatewayApiUrl), {
+          method: "GET",
+          headers,
+        });
+        if (!response.ok) {
+          throw new Error(`Capabilities request failed: ${response.status}`);
+        }
+        const payload = (await response.json()) as Record<string, unknown> | null;
+        if (!isActive) {
+          return;
+        }
+        setSeedPacksEnabled(Boolean(payload?.seedPacksEnabled));
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+        setSeedPacksEnabled(false);
+        debugLogger.warn("Management: failed to load capabilities", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    };
+
+    loadCapabilities();
+    return () => {
+      isActive = false;
+    };
+  }, [packageSettings?.gatewayApiUrl, authToken]);
+
   // AI Provider configuration handlers
-  const currentTheme = predefinedThemes[theme] || banditDarkTheme;
+  const currentTheme = useMemo(() => {
+    const baseTheme = predefinedThemes[theme] || banditDarkTheme;
+    return createTheme(baseTheme, {
+      components: {
+        MuiInputBase: {
+          styleOverrides: {
+            input: {
+              outline: "none",
+              boxShadow: "none",
+              "&:focus, &:focus-visible": {
+                outline: "none",
+                boxShadow: "none",
+              },
+            },
+            inputMultiline: {
+              outline: "none",
+              boxShadow: "none",
+              "&:focus, &:focus-visible": {
+                outline: "none",
+                boxShadow: "none",
+              },
+            },
+          },
+        },
+      },
+    });
+  }, [theme]);
   if (!brandingLoaded) return null;
   // Side navigation tab config
   const allNavTabs = [
@@ -1395,7 +1481,7 @@ const Management = () => {
             />
           )}
           {navTabs[tabIndex]?.label === "Knowledge" && (
-            <KnowledgeTab
+            <KnowledgeHubTab
               documents={documents}
               addDocuments={addDocuments}
               removeDocument={removeDocument}
@@ -1403,6 +1489,7 @@ const Management = () => {
               clearAllDocuments={clearAllDocuments}
               currentTheme={currentTheme}
               isLimitedAdmin={hasLimitedAdminDashboard() && !hasAdminDashboard()}
+              seedPacksEnabled={seedPacksEnabled}
             />
           )}
           {navTabs[tabIndex]?.label === "Storage" && (
