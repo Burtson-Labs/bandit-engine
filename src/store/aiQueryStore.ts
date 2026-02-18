@@ -76,7 +76,22 @@ async function saveStateToDB(state: Partial<AIQueryState>) {
 }
 
 async function loadStateFromDB(): Promise<Partial<AIQueryState> | undefined> {
-  return indexedDBService.get(DB_NAME, DB_VERSION, STORE_NAME, STORAGE_KEY, storeConfigs);
+  let timeoutId: number | undefined;
+  const timeoutPromise = new Promise<undefined>((resolve) => {
+    timeoutId = window.setTimeout(() => resolve(undefined), 1200);
+  });
+
+  try {
+    const getPromise = indexedDBService
+      .get<Partial<AIQueryState>>(DB_NAME, DB_VERSION, STORE_NAME, STORAGE_KEY, storeConfigs)
+      .catch(() => undefined);
+
+    return await Promise.race([getPromise, timeoutPromise]);
+  } finally {
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId);
+    }
+  }
 }
 
 export const useAIQueryStore = create<AIQueryState>((set, get) => ({
@@ -136,19 +151,23 @@ export const useAIQueryStore = create<AIQueryState>((set, get) => ({
   },
 
   hydrate: async () => {
-    const storedState = await loadStateFromDB();
-    if (storedState) {
-      set({
-        inputValue: storedState.inputValue ?? "",
-        response: storedState.response ?? "",
-        previousQuestion: storedState.previousQuestion ?? "",
-        position: storedState.position ?? { x: window.innerWidth / 2 - 300, y: window.innerHeight - 350 },
-        componentStatus: "Idle",
-        history: storedState.history ?? [],
-        apiKey: storedState.apiKey ?? "",
-        hydrated: true,
-      });
-    } else {
+    try {
+      const storedState = await loadStateFromDB();
+      if (storedState) {
+        set({
+          inputValue: storedState.inputValue ?? "",
+          response: storedState.response ?? "",
+          previousQuestion: storedState.previousQuestion ?? "",
+          position: storedState.position ?? { x: window.innerWidth / 2 - 300, y: window.innerHeight - 350 },
+          componentStatus: "Idle",
+          history: storedState.history ?? [],
+          apiKey: storedState.apiKey ?? "",
+          hydrated: true,
+        });
+      } else {
+        set({ hydrated: true });
+      }
+    } catch {
       set({ hydrated: true });
     }
   },

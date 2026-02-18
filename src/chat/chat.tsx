@@ -19,7 +19,7 @@ const __auditTrail_chat_chattsx = 'BL-AU-MGOIKVUY-9KCZ';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import CustomLogo from "./custom-logo";
 import indexedDBService from "../services/indexedDB/indexedDBService";
-import { Box, ThemeProvider, CssBaseline } from "@mui/material";
+import { Box, ThemeProvider, CssBaseline, CircularProgress, Typography } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { useAIQueryStore } from "../store/aiQueryStore";
 import { useModelStore } from "../store/modelStore";
@@ -257,6 +257,25 @@ const ChatContent = () => {
       }, 500);
     }
   }, [history, pendingMessage]);
+
+  useEffect(() => {
+    if (!brandingLoading && !themeLoading) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      if (brandingLoading || themeLoading) {
+        debugLogger.warn("Chat: branding/theme load timed out, falling back to defaults");
+        setBrandingLoading(false);
+        setThemeLoading(false);
+        if (!selectedTheme) {
+          setSelectedTheme("bandit-dark");
+        }
+      }
+    }, 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [brandingLoading, themeLoading, selectedTheme]);
 
   useEffect(() => () => {
     if (logoFadeTimeoutRef.current) {
@@ -1190,7 +1209,30 @@ const ChatContent = () => {
 
 
 
-  if (!hydrated || brandingLoading || themeLoading) return null;
+  if (!hydrated || brandingLoading || themeLoading) {
+    return (
+      <ThemeProvider theme={banditTheme}>
+        <CssBaseline />
+        <Box
+          sx={(theme) => ({
+            minHeight: "100dvh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 1.5,
+            bgcolor: theme.palette.chat.shell,
+            color: theme.palette.text.primary
+          })}
+        >
+          <CircularProgress size={32} thickness={4} />
+          <Typography variant="body2" color="text.secondary">
+            Preparing your workspace...
+          </Typography>
+        </Box>
+      </ThemeProvider>
+    );
+  }
 
   const userHasAccess =
     playgroundBypassAccess ||
