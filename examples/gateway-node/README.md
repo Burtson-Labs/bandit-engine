@@ -16,6 +16,7 @@ The server listens on `http://localhost:8080`. Configure the following environme
 - `AZURE_OPENAI_CHAT_URL` / `AZURE_OPENAI_RESPONSES_URL` – Optional; set to your Azure deployment REST URLs when using Azure OpenAI.
 - `AZURE_OPENAI_KEY` – Optional; required for Azure requests.
 - `ANTHROPIC_API_KEY` – Optional; required for Anthropic requests.
+- `SEED_PACK_SCOPE_TYPE` – Optional; `team` (default) or `user` for seed-pack scope metadata.
 - `PORT` – Optional; defaults to `8080`.
 
 ## Endpoints
@@ -35,5 +36,15 @@ The server listens on `http://localhost:8080`. Configure the following environme
 | `POST /api/ollama/chat` | Native Ollama chat streaming proxy. |
 | `POST /api/ollama/generate` | Native Ollama generate proxy. |
 | `POST /api/bandit/chat/completions` | Bandit AI chat completions proxy. |
+| `GET /seed-packs` | List seed packs for management UI. |
+| `POST /seed-packs` | Create a draft seed pack. |
+| `GET /seed-packs/:sid` | Fetch one seed pack by SID. |
+| `PUT /seed-packs/:sid` | Update draft metadata/content. |
+| `POST /seed-packs/:sid/publish` | Publish a seed pack version. |
+| `POST /seed-packs/:sid/archive` | Archive a seed pack. |
+| `DELETE /seed-packs/:sid` | Permanently delete a seed pack. |
+| `POST /seed-packs/import/azure-devops-wiki` | Create a seed pack from Azure DevOps wiki markdown payload. |
+
+For deployments that use an `/api` prefix in the gateway base URL, `/api/seed-packs*` aliases are also registered.
 
 These map directly to the requirements described in [`docs/02_gateway_api.md`](../../docs/02_gateway_api.md). Providers without credentials or URLs return `501 Not Implemented` responses so you can enable them incrementally.
