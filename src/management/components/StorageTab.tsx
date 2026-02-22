@@ -840,15 +840,7 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
           Storage Categories
         </Typography>
 
-        <Box sx={{ 
-          maxHeight: '60vh',
-          overflow: 'auto',
-          '&::-webkit-scrollbar': {
-            display: 'none'
-          },
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none'
-        }}>
+        <Box>
           {storageCategories.length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">

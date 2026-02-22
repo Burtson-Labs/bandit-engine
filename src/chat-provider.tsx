@@ -18,7 +18,7 @@ const __auditTrail_chatprovidertsx = 'BL-AU-MGOIKVV6-O6E4';
 
 import React, { useEffect, useState } from "react";
 import { PackageSettings, usePackageSettingsStore } from "./store/packageSettingsStore";
-import { authenticationService } from "./services/auth/authenticationService";
+import { AUTH_TOKEN_CHANGED_EVENT, authenticationService } from "./services/auth/authenticationService";
 import { useConversationStore } from "./store/conversationStore";
 import { useAIQueryStore } from "./store/aiQueryStore";
 import { useMemoryStore } from "./store/memoryStore";
@@ -181,6 +181,43 @@ export const ChatProvider: React.FC<ChatConfig> = (props) => {
 
     initializeAsync();
   }, [props.packageSettings, loadDocuments]);
+
+  useEffect(() => {
+    const isPlaygroundRoute = typeof window !== "undefined" && window.location.pathname.includes("/playground");
+    const isPlaygroundMode = isPlaygroundRoute || props.packageSettings.playgroundMode === true;
+
+    if (isPlaygroundMode || !props.packageSettings.gatewayApiUrl) {
+      return;
+    }
+
+    const initializeSyncState = async () => {
+      try {
+        await useConversationSyncStore.getState().initialize();
+      } catch (error) {
+        debugLogger.error("ChatProvider: deferred sync initialization failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    };
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleAuthTokenChange = () => {
+      void initializeSyncState();
+    };
+
+    window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, handleAuthTokenChange);
+    window.addEventListener("pageshow", handleAuthTokenChange);
+    window.addEventListener("focus", handleAuthTokenChange);
+
+    return () => {
+      window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, handleAuthTokenChange);
+      window.removeEventListener("pageshow", handleAuthTokenChange);
+      window.removeEventListener("focus", handleAuthTokenChange);
+    };
+  }, [props.packageSettings.gatewayApiUrl, props.packageSettings.playgroundMode]);
 
   return (
     <QueryClientProvider client={queryClient}>

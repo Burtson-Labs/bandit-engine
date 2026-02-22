@@ -85,6 +85,16 @@ export interface JwtClaims {
 }
 
 export const TOKEN_KEY = "authToken";
+export const AUTH_TOKEN_CHANGED_EVENT = "bandit:auth-token-changed";
+
+function emitAuthTokenChanged(token: string | null) {
+    if (typeof window === "undefined") {
+        return;
+    }
+    window.dispatchEvent(new CustomEvent(AUTH_TOKEN_CHANGED_EVENT, {
+        detail: { token }
+    }));
+}
 
 class AuthenticationService {
     getToken(): string | null {
@@ -95,11 +105,13 @@ class AuthenticationService {
     setToken(token: string) {
         localStorage.setItem(TOKEN_KEY, token);
         useAuthenticationStore.getState().setToken(token);
+        emitAuthTokenChanged(token);
     }
 
     clearToken() {
         localStorage.removeItem(TOKEN_KEY);
         useAuthenticationStore.getState().clearToken();
+        emitAuthTokenChanged(null);
     }
 
     isAuthenticated(): boolean {

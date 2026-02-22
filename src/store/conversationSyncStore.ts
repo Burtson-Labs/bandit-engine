@@ -22,6 +22,7 @@ import { useConversationStore, Conversation } from "./conversationStore";
 import { useProjectStore, Project } from "./projectStore";
 import { usePackageSettingsStore } from "./packageSettingsStore";
 import { authenticationService } from "../services/auth/authenticationService";
+import indexedDBService from "../services/indexedDB/indexedDBService";
 import {
   CONVERSATION_DELETE_EVENT,
   CONVERSATION_UPSERT_EVENT,
@@ -42,9 +43,14 @@ import {
 import { debugLogger } from "../services/logging/debugLogger";
 
 const DEVICE_STORAGE_KEY = "banditConversationDeviceId";
+const SYNC_IDENTITY_STORAGE_KEY = "banditConversationSyncIdentity";
 const PAYLOAD_VERSION = 1;
 const MAX_CONVERSATION_BYTES = 12 * 1024 * 1024; // ~12 MB cloud cap
 const WARN_CONVERSATION_BYTES = 10 * 1024 * 1024; // warn at ~10 MB
+const PROJECT_DB_NAME = "bandit-projects";
+const PROJECT_DB_VERSION = 1;
+const PROJECT_STORE_NAME = "projects";
+const PROJECT_STORE_CONFIGS = [{ name: PROJECT_STORE_NAME, keyPath: "id" }];
 
 let suppressTracking = false;
 let conversationsMeta = new Map<string, ConversationMeta>();
@@ -81,6 +87,9 @@ export type ConversationSyncStatus = "disabled" | "idle" | "syncing" | "error";
 
 export interface ConversationSyncState {
   initialized: boolean;
+  hasLoadedPreference: boolean;
+  initializedForToken: string | null;
+  initializedForIdentity: string | null;
   syncEnabled: boolean;
   status: ConversationSyncStatus;
   lastSyncAt?: string | null;
@@ -125,8 +134,109 @@ function ensureDeviceId(): string {
   }
 }
 
+function getStoredSyncIdentity(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return window.localStorage.getItem(SYNC_IDENTITY_STORAGE_KEY);
+  } catch (error) {
+    debugLogger.warn("conversationSyncStore: unable to read stored sync identity", { error });
+    return null;
+  }
+}
+
+function setStoredSyncIdentity(identity: string | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    if (identity) {
+      window.localStorage.setItem(SYNC_IDENTITY_STORAGE_KEY, identity);
+    } else {
+      window.localStorage.removeItem(SYNC_IDENTITY_STORAGE_KEY);
+    }
+  } catch (error) {
+    debugLogger.warn("conversationSyncStore: unable to persist sync identity", { error });
+  }
+}
+
 function getPackageDefaultAdvancedKnowledgeSync(): boolean | undefined {
   return usePackageSettingsStore.getState().settings?.advancedKnowledgeSyncDefaultEnabled;
+}
+
+function clearAutoSyncTimer() {
+  if (autoSyncTimeout) {
+    clearTimeout(autoSyncTimeout);
+    autoSyncTimeout = null;
+  }
+}
+
+function resolveAuthIdentity(token: string | null): string | null {
+  if (!token) {
+    return null;
+  }
+
+  const claims = authenticationService.parseJwtClaims(token);
+  if (claims?.sub) {
+    return claims.sub;
+  }
+
+  if (claims?.email) {
+    return `email:${claims.email.toLowerCase()}`;
+  }
+
+  return `token:${token.slice(0, 32)}`;
+}
+
+function buildQueueResetState() {
+  return {
+    pendingConversationUpserts: new Set<string>(),
+    pendingConversationDeletes: new Set<string>(),
+    pendingProjectUpserts: new Set<string>(),
+    pendingProjectDeletes: new Set<string>(),
+    conflicts: null,
+    lastSyncAt: null,
+    cursor: null,
+    lastError: null,
+    totalConversationsOnServer: undefined,
+    totalProjectsOnServer: undefined,
+    hasCompletedInitialUpload: false,
+    warningConversations: [],
+    oversizedConversations: [],
+  };
+}
+
+async function clearLocalStoresForIdentitySwitch(fromIdentity: string, toIdentity: string) {
+  const conversationCount = useConversationStore.getState().conversations.length;
+  const projectCount = useProjectStore.getState().projects.length;
+
+  debugLogger.warn("conversationSyncStore: auth identity changed, clearing local conversation/project cache", {
+    fromIdentity,
+    toIdentity,
+    conversationCount,
+    projectCount,
+  });
+
+  suppressTracking = true;
+  try {
+    await useConversationStore.getState().clearAllConversations();
+    await indexedDBService.clear(
+      PROJECT_DB_NAME,
+      PROJECT_DB_VERSION,
+      PROJECT_STORE_NAME,
+      PROJECT_STORE_CONFIGS
+    );
+    useProjectStore.setState({ projects: [] });
+    conversationsMeta = snapshotConversationMetaMap(useConversationStore.getState().conversations);
+    projectsMeta = snapshotProjectMetaMap(useProjectStore.getState().projects);
+  } catch (error) {
+    debugLogger.error("conversationSyncStore: failed to clear local stores on auth switch", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  } finally {
+    suppressTracking = false;
+  }
 }
 
 function mapConversationToDTO(conversation: Conversation): ConversationRecordDTO {
@@ -587,6 +697,9 @@ async function applyServerResults(response: ConversationSyncResponse) {
 
 export const useConversationSyncStore = create<ConversationSyncState>((set, get) => ({
   initialized: false,
+  hasLoadedPreference: false,
+  initializedForToken: null,
+  initializedForIdentity: null,
   syncEnabled: false,
   status: "disabled",
   lastSyncAt: null,
@@ -607,23 +720,76 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
   oversizedConversations: [],
 
   async initialize() {
-    if (get().initialized) {
-      return;
-    }
-
     ensureTrackersInitialized();
 
     const gatewayUrl = usePackageSettingsStore.getState().settings?.gatewayApiUrl;
-    if (!gatewayUrl) {
-      debugLogger.info("conversationSyncStore: gateway API URL not configured; sync disabled");
-      set({ initialized: true, status: "disabled", syncEnabled: false });
+    const token = authenticationService.getToken();
+    const tokenIdentity = resolveAuthIdentity(token);
+    const current = get();
+    const storedIdentity = getStoredSyncIdentity();
+    const knownIdentity = current.initializedForIdentity ?? storedIdentity;
+    if (
+      current.initialized &&
+      current.hasLoadedPreference &&
+      knownIdentity &&
+      tokenIdentity &&
+      knownIdentity === tokenIdentity
+    ) {
       return;
     }
 
-    const token = authenticationService.getToken();
+    const hasIdentitySwitch = Boolean(
+      knownIdentity &&
+      tokenIdentity &&
+      knownIdentity !== tokenIdentity
+    );
+
+    if (hasIdentitySwitch) {
+      clearAutoSyncTimer();
+      set({
+        ...buildQueueResetState(),
+        syncEnabled: false,
+        status: "disabled",
+        hasLoadedPreference: false,
+        initializedForToken: null,
+        initializedForIdentity: tokenIdentity,
+      });
+      await clearLocalStoresForIdentitySwitch(
+        knownIdentity as string,
+        tokenIdentity as string
+      );
+      setStoredSyncIdentity(tokenIdentity);
+    }
+
+    if (!gatewayUrl) {
+      debugLogger.info("conversationSyncStore: gateway API URL not configured; sync disabled");
+      if (tokenIdentity) {
+        setStoredSyncIdentity(tokenIdentity);
+      }
+      set({
+        ...buildQueueResetState(),
+        initialized: true,
+        hasLoadedPreference: false,
+        initializedForToken: null,
+        initializedForIdentity: tokenIdentity,
+        status: "disabled",
+        syncEnabled: false,
+      });
+      return;
+    }
+
     if (!token) {
       debugLogger.info("conversationSyncStore: no authentication token; sync disabled until login");
-      set({ initialized: true, status: "disabled", syncEnabled: false });
+      clearAutoSyncTimer();
+      set({
+        ...buildQueueResetState(),
+        initialized: true,
+        hasLoadedPreference: false,
+        initializedForToken: null,
+        initializedForIdentity: null,
+        status: "disabled",
+        syncEnabled: false,
+      });
       return;
     }
 
@@ -648,14 +814,27 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
           isAdvancedVectorFeaturesEnabled: get().isAdvancedVectorFeaturesEnabled,
         },
       });
-      set({ initialized: true });
+      set({
+        initialized: true,
+        hasLoadedPreference: true,
+        initializedForToken: token,
+        initializedForIdentity: tokenIdentity,
+      });
+      setStoredSyncIdentity(tokenIdentity);
       if (preference.syncEnabled) {
         await get().runSync({ force: true });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to load conversation sync preference";
       debugLogger.error("conversationSyncStore: initialization failed", { error: message });
-      set({ initialized: true, status: "error", lastError: message });
+      set({
+        initialized: true,
+        hasLoadedPreference: false,
+        initializedForToken: null,
+        initializedForIdentity: tokenIdentity,
+        status: "error",
+        lastError: message,
+      });
     }
   },
 
@@ -686,6 +865,12 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
           isAdvancedVectorFeaturesEnabled,
         },
       });
+      set({
+        hasLoadedPreference: true,
+        initializedForToken: authenticationService.getToken(),
+        initializedForIdentity: resolveAuthIdentity(authenticationService.getToken()),
+      });
+      setStoredSyncIdentity(resolveAuthIdentity(authenticationService.getToken()));
       if (enabled) {
         set({ hasCompletedInitialUpload: false });
       }
@@ -727,6 +912,12 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
           isAdvancedVectorFeaturesEnabled: enabled,
         },
       });
+      set({
+        hasLoadedPreference: true,
+        initializedForToken: authenticationService.getToken(),
+        initializedForIdentity: resolveAuthIdentity(authenticationService.getToken()),
+      });
+      setStoredSyncIdentity(resolveAuthIdentity(authenticationService.getToken()));
       if (preference.syncEnabled && preference.isAdvancedVectorFeaturesEnabled) {
         await get().runSync({ force: true });
       }
@@ -773,6 +964,19 @@ export const useConversationSyncStore = create<ConversationSyncState>((set, get)
     if (!token) {
       set({ status: "error", lastError: "Authentication required to sync conversations." });
       debugLogger.error('conversationSyncStore: runSync error - missing auth token');
+      return;
+    }
+    const tokenIdentity = resolveAuthIdentity(token);
+    if (
+      state.initializedForIdentity &&
+      tokenIdentity &&
+      state.initializedForIdentity !== tokenIdentity
+    ) {
+      debugLogger.warn("conversationSyncStore: runSync aborted due auth identity mismatch; reinitializing", {
+        initializedForIdentity: state.initializedForIdentity,
+        tokenIdentity,
+      });
+      await get().initialize();
       return;
     }
 

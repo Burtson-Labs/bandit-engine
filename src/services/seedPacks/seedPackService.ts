@@ -363,3 +363,20 @@ export const archiveSeedPack = async (sid: string): Promise<SeedPack> => {
     throw error;
   }
 };
+
+export const deleteSeedPack = async (sid: string): Promise<void> => {
+  const url = buildUrl(`/seed-packs/${encodeURIComponent(sid)}`);
+  try {
+    const response = await fetch(url, { method: "DELETE", headers: buildHeaders() });
+    if (response.status === 204) {
+      return;
+    }
+    await handleJsonResponse<unknown>(response, "Failed to delete seed pack");
+  } catch (error) {
+    debugLogger.error("seedPackService: failed to delete seed pack", {
+      sid,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+};

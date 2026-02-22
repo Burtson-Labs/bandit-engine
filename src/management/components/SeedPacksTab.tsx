@@ -44,6 +44,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import GroupIcon from "@mui/icons-material/Group";
 import PersonIcon from "@mui/icons-material/Person";
 import PublishIcon from "@mui/icons-material/Publish";
@@ -58,6 +59,7 @@ import { debugLogger } from "../../services/logging/debugLogger";
 import {
   archiveSeedPack,
   createSeedPack,
+  deleteSeedPack,
   getSeedPack,
   listSeedPacks,
   publishSeedPack,
@@ -68,6 +70,7 @@ import {
 } from "../../services/seedPacks/seedPackService";
 
 type SnackbarSeverity = "success" | "error" | "info" | "warning";
+type ImportSource = "local" | "azure-wiki";
 
 interface SeedPackFormState {
   name: string;
@@ -81,6 +84,8 @@ interface ImportedMarkdownFile {
   size: number;
   content: string;
   lastModified: number;
+  relativePath?: string;
+  source: ImportSource;
 }
 
 const parseTags = (value: string): string[] =>
@@ -128,13 +133,30 @@ const getPreviewSnippet = (content: string): string => {
   return trimmed.length > 120 ? `${trimmed.slice(0, 120)}...` : trimmed;
 };
 
+const getImportedFileKey = (file: Pick<ImportedMarkdownFile, "name" | "relativePath">): string =>
+  (file.relativePath ?? file.name).toLowerCase();
+
+const isMarkdownFileName = (name: string): boolean => {
+  const lower = name.toLowerCase();
+  return lower.endsWith(".md") || lower.endsWith(".markdown");
+};
+
+const getWebkitRelativePath = (file: File): string | undefined => {
+  const relativePath = (file as File & { webkitRelativePath?: string }).webkitRelativePath;
+  if (!relativePath) {
+    return undefined;
+  }
+  const trimmed = relativePath.trim().replace(/^\/+/, "");
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
 const mergeMarkdownFiles = (
   existing: ImportedMarkdownFile[],
   incoming: ImportedMarkdownFile[]
 ): ImportedMarkdownFile[] => {
   const next = [...existing];
   incoming.forEach((file) => {
-    const index = next.findIndex((item) => item.name === file.name);
+    const index = next.findIndex((item) => getImportedFileKey(item) === getImportedFileKey(file));
     if (index >= 0) {
       next[index] = file;
     } else {
@@ -152,18 +174,24 @@ const buildMarkdownContent = (files: ImportedMarkdownFile[]): string => {
 };
 
 const readMarkdownFiles = async (
-  files: FileList | File[]
+  files: FileList | File[],
+  source: ImportSource = "local"
 ): Promise<{ imported: ImportedMarkdownFile[]; skipped: number }> => {
   const list = Array.from(files);
-  const markdownFiles = list.filter((file) => file.name.toLowerCase().endsWith(".md"));
+  const markdownFiles = list.filter((file) => isMarkdownFileName(file.name));
   const imported = await Promise.all(
-    markdownFiles.map(async (file) => ({
-      id: `${file.name}-${file.lastModified}`,
-      name: file.name,
-      size: file.size,
-      content: await file.text(),
-      lastModified: file.lastModified,
-    }))
+    markdownFiles.map(async (file) => {
+      const relativePath = getWebkitRelativePath(file);
+      return {
+        id: `${source}-${relativePath ?? file.name}-${file.lastModified}-${file.size}`,
+        name: file.name,
+        size: file.size,
+        content: await file.text(),
+        lastModified: file.lastModified,
+        relativePath,
+        source,
+      };
+    })
   );
   return { imported, skipped: list.length - markdownFiles.length };
 };
@@ -279,7 +307,7 @@ const SeedPackFileCard: React.FC<{
         </Typography>
       </Box>
 
-      <Tooltip title={file.name} arrow>
+      <Tooltip title={file.relativePath ?? file.name} arrow>
         <Typography
           variant="body2"
           sx={{
@@ -296,6 +324,23 @@ const SeedPackFileCard: React.FC<{
           {file.name}
         </Typography>
       </Tooltip>
+      {file.relativePath && file.relativePath !== file.name && (
+        <Tooltip title={file.relativePath} arrow>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              display: "block",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              mb: 1,
+            }}
+          >
+            {file.relativePath}
+          </Typography>
+        </Tooltip>
+      )}
 
       <Box
         sx={{
@@ -309,7 +354,7 @@ const SeedPackFileCard: React.FC<{
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", flex: 1, mr: 1 }}>
           <Chip
             icon={<PersonIcon sx={{ fontSize: "0.9rem !important" }} />}
-            label="Local"
+            label={file.source === "azure-wiki" ? "Azure Wiki" : "Local"}
             size="small"
             sx={{
               bgcolor: "#388e3c20",
@@ -396,18 +441,22 @@ const SeedPacksTab: React.FC = () => {
   const [createImportedFiles, setCreateImportedFiles] = useState<ImportedMarkdownFile[]>([]);
   const [previewFile, setPreviewFile] = useState<ImportedMarkdownFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const wikiFolderInputRef = useRef<HTMLInputElement | null>(null);
   const createFileInputRef = useRef<HTMLInputElement | null>(null);
+  const createWikiFolderInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [newPackName, setNewPackName] = useState("");
   const [newPackDescription, setNewPackDescription] = useState("");
@@ -531,6 +580,19 @@ const SeedPacksTab: React.FC = () => {
     }
   }, [selectedSid, loadSeedPackDetail]);
 
+  useEffect(() => {
+    const setDirectoryUploadAttributes = (input: HTMLInputElement | null) => {
+      if (!input) {
+        return;
+      }
+      input.setAttribute("webkitdirectory", "");
+      input.setAttribute("directory", "");
+    };
+
+    setDirectoryUploadAttributes(wikiFolderInputRef.current);
+    setDirectoryUploadAttributes(createWikiFolderInputRef.current);
+  }, [selectedSeedPack, createDialogOpen]);
+
   const handleSelectPack = (pack: SeedPack) => {
     setSelectedSid(pack.sid);
     setSelectedSeedPack(pack);
@@ -538,14 +600,14 @@ const SeedPacksTab: React.FC = () => {
   };
 
   const handleImportFiles = useCallback(
-    async (files: FileList | null) => {
+    async (files: FileList | null, source: ImportSource = "local") => {
       if (!files || files.length === 0) {
         return;
       }
 
-      const { imported, skipped } = await readMarkdownFiles(files);
+      const { imported, skipped } = await readMarkdownFiles(files, source);
       if (skipped > 0) {
-        showSnackbar("Only .md files are supported for seed packs.", "error");
+        showSnackbar("Only .md and .markdown files are supported for seed packs.", "error");
       }
 
       if (imported.length === 0) {
@@ -554,7 +616,8 @@ const SeedPacksTab: React.FC = () => {
 
       try {
         const newlyAdded = imported.filter(
-          (file) => !importedFiles.some((existing) => existing.name === file.name)
+          (file) =>
+            !importedFiles.some((existing) => getImportedFileKey(existing) === getImportedFileKey(file))
         );
         setImportedFiles((prev) => mergeMarkdownFiles(prev, imported));
 
@@ -566,8 +629,10 @@ const SeedPacksTab: React.FC = () => {
             return { ...prev, content: nextContent };
           });
         }
+        const importLabel =
+          source === "azure-wiki" ? "from Azure DevOps wiki folder into the editor" : "into the editor";
         showSnackbar(
-          `Imported ${imported.length} markdown file${imported.length === 1 ? "" : "s"} into the editor.`,
+          `Imported ${imported.length} markdown file${imported.length === 1 ? "" : "s"} ${importLabel}.`,
           "success"
         );
       } catch (error) {
@@ -582,7 +647,15 @@ const SeedPacksTab: React.FC = () => {
 
   const handleFileInputChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      await handleImportFiles(event.target.files);
+      await handleImportFiles(event.target.files, "local");
+      event.target.value = "";
+    },
+    [handleImportFiles]
+  );
+
+  const handleWikiFolderInputChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      await handleImportFiles(event.target.files, "azure-wiki");
       event.target.value = "";
     },
     [handleImportFiles]
@@ -593,22 +666,24 @@ const SeedPacksTab: React.FC = () => {
   }, []);
 
   const handleCreateImportFiles = useCallback(
-    async (files: FileList | null) => {
+    async (files: FileList | null, source: ImportSource = "local") => {
       if (!files || files.length === 0) {
         return;
       }
 
-      const { imported, skipped } = await readMarkdownFiles(files);
+      const { imported, skipped } = await readMarkdownFiles(files, source);
       if (skipped > 0) {
-        showSnackbar("Only .md files are supported for seed packs.", "error");
+        showSnackbar("Only .md and .markdown files are supported for seed packs.", "error");
       }
       if (imported.length === 0) {
         return;
       }
 
       setCreateImportedFiles((prev) => mergeMarkdownFiles(prev, imported));
+      const importLabel =
+        source === "azure-wiki" ? "from Azure DevOps wiki folder for this seed pack" : "for this seed pack";
       showSnackbar(
-        `Imported ${imported.length} markdown file${imported.length === 1 ? "" : "s"} for this seed pack.`,
+        `Imported ${imported.length} markdown file${imported.length === 1 ? "" : "s"} ${importLabel}.`,
         "success"
       );
     },
@@ -617,7 +692,15 @@ const SeedPacksTab: React.FC = () => {
 
   const handleCreateFileInputChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      await handleCreateImportFiles(event.target.files);
+      await handleCreateImportFiles(event.target.files, "local");
+      event.target.value = "";
+    },
+    [handleCreateImportFiles]
+  );
+
+  const handleCreateWikiFolderInputChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      await handleCreateImportFiles(event.target.files, "azure-wiki");
       event.target.value = "";
     },
     [handleCreateImportFiles]
@@ -770,6 +853,35 @@ const SeedPacksTab: React.FC = () => {
       });
     } finally {
       setIsArchiving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSeedPack) {
+      return;
+    }
+    const deletingSid = selectedSeedPack.sid;
+    const deletingName = selectedSeedPack.name;
+    setDeleteDialogOpen(false);
+    setIsDeleting(true);
+    try {
+      await deleteSeedPack(deletingSid);
+      setSelectedSid(null);
+      setSelectedSeedPack(null);
+      setDraft({ name: "", description: "", content: "" });
+      setTagsInput("");
+      setImportedFiles([]);
+      setPreviewFile(null);
+      await refreshSeedPacks();
+      showSnackbar(`Deleted seed pack "${deletingName}".`, "success");
+    } catch (error) {
+      showSnackbar("Failed to delete seed pack.", "error");
+      debugLogger.error("SeedPacksTab: failed to delete seed pack", {
+        sid: deletingSid,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1010,10 +1122,10 @@ const SeedPacksTab: React.FC = () => {
                     display: "grid",
                     gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
                     gap: 2,
-                  alignItems: "start",
-                }}
-              >
-                <Box>
+                    alignItems: "start",
+                  }}
+                >
+                  <Box>
                   <Stack
                     direction={{ xs: "column", sm: "row" }}
                     spacing={1}
@@ -1022,26 +1134,45 @@ const SeedPacksTab: React.FC = () => {
                     sx={{ mb: 1 }}
                   >
                     <Typography variant="subtitle2">Markdown content</Typography>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<UploadFileIcon />}
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isReadOnly}
-                    >
-                      Import .md
-                    </Button>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<UploadFileIcon />}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isReadOnly}
+                      >
+                        Import .md
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<FolderOpenIcon />}
+                        onClick={() => wikiFolderInputRef.current?.click()}
+                        disabled={isReadOnly}
+                      >
+                        Import wiki folder
+                      </Button>
+                    </Stack>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".md"
+                      accept=".md,.markdown,text/markdown"
                       multiple
                       onChange={handleFileInputChange}
                       style={{ display: "none" }}
                     />
+                    <input
+                      ref={wikiFolderInputRef}
+                      type="file"
+                      accept=".md,.markdown,text/markdown"
+                      multiple
+                      onChange={handleWikiFolderInputChange}
+                      style={{ display: "none" }}
+                    />
                   </Stack>
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
-                    Paste or import markdown files. Imports copy content into the editor.
+                    Paste or import markdown files. Use folder import for Azure DevOps wiki clones.
                   </Typography>
                   <TextField
                     label="Content"
@@ -1138,6 +1269,15 @@ const SeedPacksTab: React.FC = () => {
                     >
                       {isArchiving ? "Archiving..." : "Archive"}
                     </Button>
+                    <Button
+                      variant="text"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                      onClick={() => setDeleteDialogOpen(true)}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </Button>
                   </Stack>
                 )}
               </Stack>
@@ -1176,24 +1316,43 @@ const SeedPacksTab: React.FC = () => {
             />
             <Divider />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="center">
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<UploadFileIcon />}
-                onClick={() => createFileInputRef.current?.click()}
-                disabled={!canManage}
-              >
-                Import .md files
-              </Button>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<UploadFileIcon />}
+                  onClick={() => createFileInputRef.current?.click()}
+                  disabled={!canManage}
+                >
+                  Import .md files
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<FolderOpenIcon />}
+                  onClick={() => createWikiFolderInputRef.current?.click()}
+                  disabled={!canManage}
+                >
+                  Import wiki folder
+                </Button>
+              </Stack>
               <Typography variant="caption" color="text.secondary">
-                Optional. Files are merged into the draft content.
+                Optional. Local files or cloned Azure DevOps wiki folders are merged into draft content.
               </Typography>
               <input
                 ref={createFileInputRef}
                 type="file"
-                accept=".md"
+                accept=".md,.markdown,text/markdown"
                 multiple
                 onChange={handleCreateFileInputChange}
+                style={{ display: "none" }}
+              />
+              <input
+                ref={createWikiFolderInputRef}
+                type="file"
+                accept=".md,.markdown,text/markdown"
+                multiple
+                onChange={handleCreateWikiFolderInputChange}
                 style={{ display: "none" }}
               />
             </Stack>
@@ -1271,6 +1430,25 @@ const SeedPacksTab: React.FC = () => {
           <Button onClick={() => setArchiveDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" color="error" onClick={handleArchive} disabled={isArchiving}>
             {isArchiving ? "Archiving..." : "Archive"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Delete seed pack</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Delete "{selectedSeedPack?.name ?? "this seed pack"}" permanently from this scope.
+            Published versions and draft content will no longer be available.
+          </DialogContentText>
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            This action cannot be undone.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

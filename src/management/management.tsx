@@ -138,7 +138,7 @@ const Management = () => {
   const banditHead = "https://cdn.burtson.ai/images/bandit-head.png";
   const [fabLogo, setFabLogo] = useState<string>(banditHead);
 
-  const [tabIndex, setTabIndex] = useState(0);
+  const [tabIndex, setTabIndex] = useState(4);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoBase64, setLogoBase64] = useState<string | null>(null);
   const [brandingText, setBrandingText] = useState("");
@@ -1024,7 +1024,6 @@ const Management = () => {
       },
     });
   }, [theme]);
-  if (!brandingLoaded) return null;
   // Side navigation tab config
   const allNavTabs = [
     {
@@ -1077,6 +1076,21 @@ const Management = () => {
     }
     return true;
   });
+
+  const preferredDefaultTabIndex = navTabs.findIndex((tab) => tab.label === "Preferences");
+  const defaultTabIndex = preferredDefaultTabIndex >= 0 ? preferredDefaultTabIndex : 0;
+
+  useEffect(() => {
+    setTabIndex((current) => {
+      if (current < 0 || current >= navTabs.length) {
+        return defaultTabIndex;
+      }
+      return current;
+    });
+  }, [navTabs.length, defaultTabIndex]);
+
+  const mobileQuickTabs = navTabs.slice(0, 5);
+  const hasMobileOverflowTabs = navTabs.length > mobileQuickTabs.length;
 
   const navigationContent = (
     <Box
@@ -1244,6 +1258,9 @@ const Management = () => {
       </Box>
     </Box>
   );
+
+  if (!brandingLoaded) return null;
+
   return (
     <ThemeProvider theme={currentTheme}>
       <CssBaseline />
@@ -1263,7 +1280,7 @@ const Management = () => {
           <Box
             sx={{
               width: "100%",
-              height: 64,
+              minHeight: 64,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -1364,6 +1381,87 @@ const Management = () => {
           </Box>
         )}
 
+        {isMobile && (
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              gap: 1,
+              px: 1.5,
+              py: 1,
+              overflowX: "auto",
+              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "rgba(24,28,40,0.95)"
+                  : "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            {mobileQuickTabs.map((tab) => {
+              const quickTabIndex = navTabs.findIndex((navTab) => navTab.label === tab.label);
+              const selected = tabIndex === quickTabIndex;
+
+              return (
+                <Button
+                  key={tab.label}
+                  size="small"
+                  onClick={() => setTabIndex(quickTabIndex)}
+                  sx={{
+                    flexShrink: 0,
+                    textTransform: "none",
+                    borderRadius: 999,
+                    px: 1.5,
+                    py: 0.6,
+                    minHeight: 32,
+                    fontSize: "0.78rem",
+                    fontWeight: selected ? 700 : 600,
+                    bgcolor: selected
+                      ? (theme) =>
+                          theme.palette.mode === "dark"
+                            ? "rgba(25,118,210,0.2)"
+                            : "rgba(25,118,210,0.12)"
+                      : "transparent",
+                    color: selected ? "primary.main" : "text.secondary",
+                    border: (theme) =>
+                      selected
+                        ? `1px solid ${theme.palette.primary.main}66`
+                        : `1px solid ${alpha(theme.palette.divider, 0.45)}`,
+                    "&:hover": {
+                      bgcolor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(25,118,210,0.16)"
+                          : "rgba(25,118,210,0.1)",
+                    },
+                  }}
+                >
+                  {tab.label}
+                </Button>
+              );
+            })}
+            {hasMobileOverflowTabs && (
+              <Button
+                size="small"
+                onClick={() => setSidebarOpen(true)}
+                sx={{
+                  flexShrink: 0,
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: 1.5,
+                  py: 0.6,
+                  minHeight: 32,
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  border: (theme) => `1px dashed ${alpha(theme.palette.divider, 0.6)}`,
+                }}
+              >
+                More
+              </Button>
+            )}
+          </Box>
+        )}
+
         {/* Enhanced Side Navigation */}
         {isMobile ? (
           <SwipeableDrawer
@@ -1425,22 +1523,16 @@ const Management = () => {
             flex: 1,
             p: { xs: 1, sm: 3, md: 4 },
             overflowY: "auto",
-            height: isMobile ? "auto" : "100vh",
+            overflowX: "hidden",
             maxWidth: "100vw",
             minWidth: 0,
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             bgcolor: "background.default",
             ml: isMobile ? 0 : "280px", // Fixed left margin only on desktop
             mt: 0,
             transition: "margin-left 0.2s",
-            overflow: "auto",
-            // Hide scrollbars while keeping scroll functionality
-            scrollbarWidth: "none", // Firefox
-            "&::-webkit-scrollbar": {
-              display: "none", // Chrome, Safari, Edge
-            },
-            "-ms-overflow-style": "none", // IE and Edge
           }}
         >
           {/* Tab Content */}
