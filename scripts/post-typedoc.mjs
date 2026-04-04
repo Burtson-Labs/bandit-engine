@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import fsExtra from 'fs-extra';
+import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -202,11 +202,13 @@ const findRepoRoot = (startDir) => {
   }
 };
 
+const pathExists = (p) => fsp.access(p).then(() => true, () => false);
+
 const resolveExistingPath = async (paths) => {
   for (const candidate of paths) {
     if (!candidate) continue;
     // eslint-disable-next-line no-await-in-loop
-    if (await fsExtra.pathExists(candidate)) {
+    if (await pathExists(candidate)) {
       return candidate;
     }
   }
@@ -215,12 +217,12 @@ const resolveExistingPath = async (paths) => {
 
 const ensureStyleOverrides = async (targetDir) => {
   const stylePath = path.join(targetDir, 'assets', 'style.css');
-  const exists = await fsExtra.pathExists(stylePath);
+  const exists = await pathExists(stylePath);
   if (!exists) {
     return;
   }
 
-  let css = await fsExtra.readFile(stylePath, 'utf8');
+  let css = await fsp.readFile(stylePath, 'utf8');
   const startIndex = css.indexOf(STYLE_OVERRIDE_START);
   const endIndex = css.indexOf(STYLE_OVERRIDE_END);
 
@@ -229,7 +231,7 @@ const ensureStyleOverrides = async (targetDir) => {
   }
 
   const mergedCss = `${css.trimEnd()}\n\n${STYLE_OVERRIDE_FULL}\n`;
-  await fsExtra.writeFile(stylePath, mergedCss, 'utf8');
+  await fsp.writeFile(stylePath, mergedCss, 'utf8');
 };
 
 const ensureCustomScript = async (targetDir, scriptSource) => {
@@ -239,24 +241,24 @@ const ensureCustomScript = async (targetDir, scriptSource) => {
   }
 
   const assetsDir = path.join(targetDir, 'assets');
-  const exists = await fsExtra.pathExists(assetsDir);
+  const exists = await pathExists(assetsDir);
   if (!exists) {
     return;
   }
 
   const destination = path.join(assetsDir, 'bandit-docs.js');
-  await fsExtra.copy(scriptSource, destination, { overwrite: true });
+  await fsp.copyFile(scriptSource, destination);
 
   const mainScriptPath = path.join(assetsDir, 'main.js');
-  const mainExists = await fsExtra.pathExists(mainScriptPath);
+  const mainExists = await pathExists(mainScriptPath);
   if (!mainExists) {
     return;
   }
 
-  let mainSource = await fsExtra.readFile(mainScriptPath, 'utf8');
+  let mainSource = await fsp.readFile(mainScriptPath, 'utf8');
   if (!mainSource.includes('assets/bandit-docs.js')) {
     mainSource = `${mainSource.trim()}\n${LOAD_SNIPPET}\n`;
-    await fsExtra.writeFile(mainScriptPath, mainSource, 'utf8');
+    await fsp.writeFile(mainScriptPath, mainSource, 'utf8');
   }
 };
 
@@ -265,12 +267,12 @@ const SOURCE_PREFIX =
 const SOURCE_REPLACEMENT = 'https://github.com/Burtson-Labs/bandit-engine/blob/main/';
 
 const rewriteSourceLinks = async (targetDir) => {
-  const exists = await fsExtra.pathExists(targetDir);
+  const exists = await pathExists(targetDir);
   if (!exists) {
     return;
   }
 
-  const entries = await fsExtra.readdir(targetDir, { withFileTypes: true });
+  const entries = await fsp.readdir(targetDir, { withFileTypes: true });
 
   for (const entry of entries) {
     const entryPath = path.join(targetDir, entry.name);
@@ -286,19 +288,19 @@ const rewriteSourceLinks = async (targetDir) => {
     }
 
     // eslint-disable-next-line no-await-in-loop
-    let html = await fsExtra.readFile(entryPath, 'utf8');
+    let html = await fsp.readFile(entryPath, 'utf8');
     if (!html.includes(SOURCE_PREFIX)) {
       continue;
     }
 
     html = html.split(SOURCE_PREFIX).join(SOURCE_REPLACEMENT);
     // eslint-disable-next-line no-await-in-loop
-    await fsExtra.writeFile(entryPath, html, 'utf8');
+    await fsp.writeFile(entryPath, html, 'utf8');
   }
 };
 
 export const syncTypedocAssets = async () => {
-  const docsExist = await fsExtra.pathExists(DOC_OUTPUT_DIR);
+  const docsExist = await pathExists(DOC_OUTPUT_DIR);
   if (!docsExist) {
     console.warn(`⚠️  TypeDoc output directory missing at ${DOC_OUTPUT_DIR}; skipping sync.`);
     return;
@@ -320,13 +322,13 @@ export const syncTypedocAssets = async () => {
   }
 
   const publicDir = path.join(repoRoot, 'public');
-  if (!(await fsExtra.pathExists(publicDir))) {
+  if (!(await pathExists(publicDir))) {
     return;
   }
 
   const publicDocsDir = path.join(publicDir, 'docs', 'api_reference');
-  await fsExtra.remove(publicDocsDir);
-  await fsExtra.copy(DOC_OUTPUT_DIR, publicDocsDir, { overwrite: true });
+  await fsp.rm(publicDocsDir, { recursive: true, force: true });
+  await fsp.cp(DOC_OUTPUT_DIR, publicDocsDir, { recursive: true });
   await ensureCustomScript(publicDocsDir, customScriptSource);
   await ensureStyleOverrides(publicDocsDir);
   await rewriteSourceLinks(publicDocsDir);
