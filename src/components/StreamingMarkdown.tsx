@@ -23,14 +23,13 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useTheme, alpha } from "@mui/material/styles";
-import CheckIcon from "@mui/icons-material/Check";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import type { Element, Text, Root } from "hast";
 import type { Components } from "react-markdown";
 import type { CodeProps } from "react-markdown/lib/ast-to-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { getHighlightTree } from "../utils/lowlight";
 import { markdownSanitizeSchema, renderLowlightChildren } from "../utils/markdownRendering";
+import { CheckIcon, ContentCopyIcon } from "../icons/lucide-icons";
 
 interface SourceSummary {
   id: string;

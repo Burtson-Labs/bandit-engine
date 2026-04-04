@@ -46,17 +46,19 @@ import {
   Typography,
   Button,
 } from "@mui/material";
-import HomeIcon from "@mui/icons-material/Home";
-import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
-import AddIcon from "@mui/icons-material/Add";
-import SettingsIcon from "@mui/icons-material/Settings";
-import NotesIcon from "@mui/icons-material/Notes";
-import NotesIconOutlined from "@mui/icons-material/NotesOutlined";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import CloudOffIcon from "@mui/icons-material/CloudOff";
-import SyncIcon from "@mui/icons-material/Sync";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
+import {
+  AddIcon,
+  CloudDoneIcon,
+  CloudOffIcon,
+  ErrorOutlineIcon,
+  HomeIcon,
+  NotesIcon,
+  NotesIconOutlined,
+  RecordVoiceOverIcon,
+  SettingsIcon,
+  SyncIcon,
+} from "../icons/lucide-icons";
 import { toTitleCase } from "../util";
 import ConversationDrawer from "./conversation-drawer";
 import MobileConversationsModal from "./enhanced-mobile-conversations-modal";

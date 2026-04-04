@@ -30,16 +30,7 @@ import {
   Fade,
   useMediaQuery,
 } from "@mui/material";
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  MoreVert as MoreVertIcon,
-  DragIndicator as DragIcon,
-  MoveToInbox as MoveIcon,
-  ContentCopy as CopyIcon,
-  Star as StarIcon,
-  StarBorder as StarBorderIcon,
-} from "@mui/icons-material";
+import { Pencil as EditIcon, Trash2 as DeleteIcon, MoreVertical as MoreVertIcon, GripVertical as DragIcon, MailOpen as MoveIcon, Copy as CopyIcon, Star as StarIcon, Star as StarBorderIcon } from "lucide-react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { Conversation } from "../store/conversationStore";
 
@@ -190,15 +181,9 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
           {/* Drag Handle */}
           {!isMobile && !multiSelectMode && showActions && (
-            <DragIcon 
-              fontSize="small" 
-              sx={{ 
-                color: alpha(theme.palette.text.secondary, 0.5),
-                cursor: "grab",
-                "&:hover": {
-                  color: theme.palette.text.secondary,
-                }
-              }} 
+            <DragIcon
+              size={16}
+              style={{ color: alpha(theme.palette.text.secondary, 0.5), cursor: "grab" }}
             />
           )}
 
@@ -322,7 +307,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                 }
               }}
             >
-              <MoreVertIcon fontSize="small" />
+              <MoreVertIcon size={16} />
             </IconButton>
           ) : (
             // Desktop: Show actions on hover
@@ -343,7 +328,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                       }
                     }}
                   >
-                    <EditIcon fontSize="small" />
+                    <EditIcon size={16} />
                   </IconButton>
                 </Tooltip>
                 
@@ -359,7 +344,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                       }
                     }}
                   >
-                    <MoreVertIcon fontSize="small" />
+                    <MoreVertIcon size={16} />
                   </IconButton>
                 </Tooltip>
               </>
@@ -378,7 +363,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           {!isEditing && (
             <MenuItem onClick={handleRename}>
               <ListItemIcon>
-                <EditIcon fontSize="small" />
+                <EditIcon size={16} />
               </ListItemIcon>
               <ListItemText>Rename</ListItemText>
             </MenuItem>
@@ -386,7 +371,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           
           <MenuItem onClick={handleMove}>
             <ListItemIcon>
-              <MoveIcon fontSize="small" />
+              <MoveIcon size={16} />
             </ListItemIcon>
             <ListItemText>Move to project</ListItemText>
           </MenuItem>
@@ -394,14 +379,14 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           {/* Future features */}
           <MenuItem onClick={() => setIsPinned(!isPinned)}>
             <ListItemIcon>
-              {isPinned ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+              {isPinned ? <StarIcon size={16} /> : <StarBorderIcon size={16} />}
             </ListItemIcon>
             <ListItemText>{isPinned ? "Unpin" : "Pin"}</ListItemText>
           </MenuItem>
 
           <MenuItem onClick={() => navigator.clipboard.writeText(conversation.name)}>
             <ListItemIcon>
-              <CopyIcon fontSize="small" />
+              <CopyIcon size={16} />
             </ListItemIcon>
             <ListItemText>Copy name</ListItemText>
           </MenuItem>
@@ -411,7 +396,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
             sx={{ color: theme.palette.error.main }}
           >
             <ListItemIcon>
-              <DeleteIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <DeleteIcon size={16} color={theme.palette.error.main} />
             </ListItemIcon>
             <ListItemText>Delete</ListItemText>
           </MenuItem>

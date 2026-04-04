@@ -18,7 +18,7 @@ const __auditTrail_chatmodal_queryinputtsx = 'BL-AU-MGOIKVVO-66S9';
 
 import React, { useRef } from "react";
 import { Box, TextField, IconButton, Tooltip, InputAdornment, useTheme } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
+import { CheckIcon } from "../../icons/lucide-icons";
 
 interface QueryInputProps {
   inputValue: string;

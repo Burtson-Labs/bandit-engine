@@ -27,16 +27,7 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Add as AddIcon,
-  Folder as FolderIcon,
-  FolderOpen as FolderOpenIcon,
-  Inbox as InboxIcon,
-  Close as CloseIcon,
-  Check as CheckIcon,
-} from "@mui/icons-material";
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Plus as AddIcon, Folder as FolderIcon, FolderOpen as FolderOpenIcon, Inbox as InboxIcon, X as CloseIcon, Check as CheckIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useConversationStore } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
@@ -173,15 +164,13 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         }}
       >
         {isUngrouped ? (
-          <InboxIcon 
-            fontSize="small" 
-            sx={{ 
-              color: theme.palette.text.disabled,
-              opacity: 0.7,
-            }} 
+          <InboxIcon
+            size={16}
+            color={theme.palette.text.disabled}
+            style={{ opacity: 0.7 }}
           />
         ) : (
-          <Icon fontSize="small" />
+          <Icon size={16} />
         )}
       </Avatar>
       
@@ -301,7 +290,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               }}
               sx={{ color: alpha(theme.palette.error.main, 0.9) }}
             >
-              <CloseIcon fontSize="small" />
+              <CloseIcon size={16} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Save">
@@ -314,7 +303,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               }}
               sx={{ color: theme.palette.success.main }}
             >
-              <CheckIcon fontSize="small" />
+              <CheckIcon size={16} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -339,7 +328,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               transition: "all 0.2s ease",
             }}
           >
-            <AddIcon fontSize="small" />
+            <AddIcon size={16} />
           </IconButton>
         </Tooltip>
       )}
@@ -354,9 +343,9 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           }}
         >
           {isCollapsed ? (
-            <ExpandMoreIcon fontSize="small" />
+            <ExpandMoreIcon size={16} />
           ) : (
-            <ExpandLessIcon fontSize="small" />
+            <ExpandLessIcon size={16} />
           )}
         </IconButton>
       )}

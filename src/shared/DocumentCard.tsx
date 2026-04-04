@@ -28,24 +28,26 @@ import {
   Chip,
   Alert,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import DownloadIcon from "@mui/icons-material/Download";
-import InfoIcon from "@mui/icons-material/Info";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import CloudOffIcon from "@mui/icons-material/CloudOff";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import DescriptionIcon from "@mui/icons-material/Description";
-import ArticleIcon from "@mui/icons-material/Article";
-import CodeIcon from "@mui/icons-material/Code";
 import { debugLogger } from "../services/logging/debugLogger";
-import DataObjectIcon from "@mui/icons-material/DataObject";
-import PersonIcon from "@mui/icons-material/Person";
-import CloudIcon from "@mui/icons-material/Cloud";
 import { KnowledgeDoc } from "../store/knowledgeStore";
 import { useKnowledgeStore } from "../chat/hooks/useKnowledgeStore";
 import { useVectorStore } from "../hooks/useVectorStore";
 import { useTheme } from "@mui/material/styles";
+import {
+  ArticleIcon,
+  CloudIcon,
+  CloudOffIcon,
+  CodeIcon,
+  DataObjectIcon,
+  DeleteIcon,
+  DescriptionIcon,
+  DownloadIcon,
+  ErrorOutlineIcon,
+  InfoIcon,
+  PersonIcon,
+  PictureAsPdfIcon,
+  SearchIcon,
+} from "../icons/lucide-icons";
 
 interface DocumentCardProps {
   doc: KnowledgeDoc;

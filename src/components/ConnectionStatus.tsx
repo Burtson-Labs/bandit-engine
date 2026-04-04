@@ -18,10 +18,8 @@ const __auditTrail_components_ConnectionStatustsx = 'BL-AU-MGOIKVV8-XF32';
 
 import React from "react";
 import { Box, Chip, useTheme } from "@mui/material";
-import WifiIcon from "@mui/icons-material/Wifi";
-import WifiOffIcon from "@mui/icons-material/WifiOff";
-import SignalWifi2BarIcon from "@mui/icons-material/SignalWifi2Bar";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
+import { SignalWifi2BarIcon, WifiIcon, WifiOffIcon } from "../icons/lucide-icons";
 
 interface ConnectionStatusProps {
   showWhenGood?: boolean;

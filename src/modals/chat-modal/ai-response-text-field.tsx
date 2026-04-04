@@ -43,13 +43,11 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import { useModelStore } from "../../store/modelStore";
 import type { Element, Text, Root } from "hast";
 import { getHighlightTree } from "../../utils/lowlight";
 import { markdownSanitizeSchema, renderLowlightChildren } from "../../utils/markdownRendering";
+import { CheckIcon, CloseIcon, ContentCopyIcon } from "../../icons/lucide-icons";
 const brainIcon = "https://cdn.burtson.ai/images/brain-icon.png";
 
 const avatarFilenames: Record<string, string> = {

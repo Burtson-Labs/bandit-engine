@@ -18,7 +18,7 @@ const __auditTrail_chat_chatscrolltobottombuttontsx = 'BL-AU-MGOIKVUX-MLTK';
 
 import React from "react";
 import { IconButton } from "@mui/material";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { ArrowDownwardIcon } from "../icons/lucide-icons";
 
 interface Props {
   inputHeight: number;

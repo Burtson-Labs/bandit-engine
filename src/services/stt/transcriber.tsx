@@ -17,14 +17,12 @@ const __auditTrail_stt_transcribertsx = 'BL-AU-MGOIKVVZ-JTMQ';
 // File: transcriber.tsx | Path: src/services/stt/transcriber.tsx | Hash: f29171ef
 
 import { useState, useRef } from "react";
-import MicIcon from "@mui/icons-material/Mic";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
 import { SoundRecorderService } from "./sound-recorder.service";
 import { STTClient } from "./stt-client";
 import { CircularProgress, IconButton, useTheme } from "@mui/material";
 import { from, Subscription, switchMap } from "rxjs";
 import { debugLogger } from "../logging/debugLogger";
+import { CheckIcon, CloseIcon, MicIcon } from "../../icons/lucide-icons";
 
 interface TranscriberProps {
   onTranscriptionCompleted: (text: string) => void;

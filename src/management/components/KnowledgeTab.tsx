@@ -43,25 +43,6 @@ import {
   useTheme,
   ThemeOptions,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DownloadIcon from '@mui/icons-material/Download';
-import FolderIcon from '@mui/icons-material/Folder';
-import DescriptionIcon from '@mui/icons-material/Description';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import CodeIcon from '@mui/icons-material/Code';
-import DataObjectIcon from '@mui/icons-material/DataObject';
-import ArticleIcon from '@mui/icons-material/Article';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CheckIcon from '@mui/icons-material/Check';
-import ErrorIcon from '@mui/icons-material/Error';
-import PersonIcon from '@mui/icons-material/Person';
-import GroupIcon from '@mui/icons-material/Group';
-import LockIcon from '@mui/icons-material/Lock';
-import PublicIcon from '@mui/icons-material/Public';
 import { KnowledgeDoc } from '../../chat/hooks/useKnowledgeStore';
 import KnowledgeFileModal from '../../modals/knowlege/knowledge-file-modal';
 import DocumentCard from '../../shared/DocumentCard';
@@ -71,6 +52,27 @@ import { useFeatures } from '../../hooks/useFeatures';
 import ProcessingOverlay from '../../components/shared/ProcessingOverlay';
 import { useProcessingOverlay } from '../../hooks/useProcessingOverlay';
 import { useConversationSyncStore } from '../../store/conversationSyncStore';
+import {
+  ArticleIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  CodeIcon,
+  DataObjectIcon,
+  DeleteIcon,
+  DescriptionIcon,
+  DownloadIcon,
+  ErrorIcon,
+  FolderIcon,
+  GroupIcon,
+  LockIcon,
+  PersonIcon,
+  PictureAsPdfIcon,
+  PublicIcon,
+  SearchIcon,
+  UploadFileIcon,
+  ViewListIcon,
+  ViewModuleIcon,
+} from "../../icons/lucide-icons";
 
 // File type detection and categorization with language detection
 const getFileTypeInfo = (filename: string) => {

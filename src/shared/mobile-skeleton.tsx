@@ -18,8 +18,7 @@ const __auditTrail_shared_mobileskeletontsx = 'BL-AU-MGOIKVW2-IACQ';
 
 import React, { useEffect, useState } from "react";
 import { Box, Skeleton, useTheme, Typography } from "@mui/material";
-import SignalWifi2BarIcon from "@mui/icons-material/SignalWifi2Bar";
-import WifiOffIcon from "@mui/icons-material/WifiOff";
+import { SignalWifi2BarIcon, WifiOffIcon } from "../icons/lucide-icons";
 
 interface MobileSkeletonProps {
   isNetworkSlow?: boolean;

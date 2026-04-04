@@ -34,16 +34,6 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import DownloadIcon from "@mui/icons-material/Download";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import CodeIcon from "@mui/icons-material/Code";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
-import DescriptionIcon from "@mui/icons-material/Description";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import DataObjectIcon from "@mui/icons-material/DataObject";
-import ArticleIcon from "@mui/icons-material/Article";
 import { KnowledgeDoc } from "../../store/knowledgeStore";
 import { useVectorStore } from "../../hooks/useVectorStore";
 import { usePackageSettingsStore } from "../../store/packageSettingsStore";
@@ -53,6 +43,18 @@ import { getHighlightTree } from "../../utils/lowlight";
 import { renderLowlightChildren } from "../../utils/markdownRendering";
 import { debugLogger } from "../../services/logging/debugLogger";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+import {
+  ArticleIcon,
+  CloseIcon,
+  CodeIcon,
+  DataObjectIcon,
+  DescriptionIcon,
+  DownloadIcon,
+  PictureAsPdfIcon,
+  TextFieldsIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "../../icons/lucide-icons";
 
 type FileTypeInfo = {
   icon: React.ElementType;

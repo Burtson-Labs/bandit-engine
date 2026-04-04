@@ -29,12 +29,14 @@ import {
   Chip,
   Fade,
 } from "@mui/material";
-import MinimizeIcon from "@mui/icons-material/Minimize";
-import FullscreenIcon from "@mui/icons-material/Fullscreen";
-import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
-import CloseIcon from "@mui/icons-material/Close";
-import HistoryIcon from "@mui/icons-material/History";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import {
+  CloseIcon,
+  DragIndicatorIcon,
+  FullscreenExitIcon,
+  FullscreenIcon,
+  HistoryIcon,
+  MinimizeIcon,
+} from "../../icons/lucide-icons";
 
 const banditaiLogo = "https://cdn.burtson.ai/logos/bandit-ai-logo.png";
 const banditHead = "https://cdn.burtson.ai/images/bandit-head.png";

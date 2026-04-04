@@ -18,10 +18,9 @@ const __auditTrail_components_KnowledgeHubTabtsx = "BL-AU-MGOIKVWZ-RU6M";
 
 import React, { useEffect, useState } from "react";
 import { Box, Tab, Tabs, useMediaQuery, useTheme } from "@mui/material";
-import DescriptionIcon from "@mui/icons-material/Description";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import KnowledgeTab from "./KnowledgeTab";
 import SeedPacksTab from "./SeedPacksTab";
+import { AutoStoriesIcon, DescriptionIcon } from "../../icons/lucide-icons";
 
 type KnowledgeHubTabProps = React.ComponentProps<typeof KnowledgeTab> & {
   seedPacksEnabled?: boolean;

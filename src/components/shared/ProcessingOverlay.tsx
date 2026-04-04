@@ -29,14 +29,7 @@ import {
   alpha,
   keyframes,
 } from '@mui/material';
-import { 
-  CloudUpload, 
-  Psychology, 
-  Memory, 
-  AutoAwesome,
-  SmartToy,
-  Bolt
-} from '@mui/icons-material';
+import { CloudUpload, Brain as Psychology, Cpu as Memory, Sparkles as AutoAwesome, Bot as SmartToy, Zap as Bolt } from 'lucide-react';
 
 // Ninja animation keyframes
 const ninjaFloat = keyframes`

@@ -25,9 +25,7 @@ import {
   Button,
   IconButton,
 } from '@mui/material';
-import {
-  Feedback as FeedbackIcon,
-} from '@mui/icons-material';
+import { MessageCircle as FeedbackIcon } from 'lucide-react';
 import { FeedbackModal } from './index';
 
 export interface FeedbackButtonProps {

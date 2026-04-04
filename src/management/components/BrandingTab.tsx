@@ -34,14 +34,16 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import UploadIcon from '@mui/icons-material/Upload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PreviewIcon from '@mui/icons-material/Preview';
-import RestoreIcon from '@mui/icons-material/Restore';
-import DownloadIcon from '@mui/icons-material/Download';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import SaveIcon from '@mui/icons-material/Save';
 import LogoCropper from '../../components/LogoCropper';
+import {
+  DeleteIcon,
+  DownloadIcon,
+  FileUploadIcon,
+  PreviewIcon,
+  RestoreIcon,
+  SaveIcon,
+  UploadIcon,
+} from "../../icons/lucide-icons";
 
 // Default logos from CDN
 const banditAiLogo = "https://cdn.burtson.ai/logos/bandit-ai-logo-simple.png";

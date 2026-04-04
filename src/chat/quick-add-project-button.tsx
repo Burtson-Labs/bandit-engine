@@ -29,7 +29,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Plus as AddIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useProjectStore } from "../store/projectStore";
 
@@ -106,7 +106,7 @@ const QuickAddProjectButton: React.FC<QuickAddProjectButtonProps> = ({
 
   const buttonContent = (
     <>
-      <AddIcon fontSize={size} />
+      <AddIcon size={size === "small" ? 16 : size === "large" ? 24 : 20} />
       {variant === "button" && "New Project"}
     </>
   );

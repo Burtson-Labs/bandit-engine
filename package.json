@@ -5,12 +5,8 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "bin": {
-    "bandit": "dist/cli.js"
-  },
   "files": [
     "dist",
-    "dist/cli",
     "docs",
     "LICENSE",
     "README.md"
@@ -52,20 +48,18 @@
     "sha.js": "^2.4.12"
   },
   "dependencies": {
+    "@burtson-labs/bandit-types": "*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.0.1",
     "@mui/material": "^7.1.0",
     "@tanstack/react-query": "^5.66.3",
     "axios": "^1.7.9",
-    "commander": "^12.1.0",
-    "fs-extra": "^11.3.0",
     "highlight.js": "^11.10.0",
     "idb": "latest",
     "lowlight": "^3.1.0",
+    "lucide-react": "^1.7.0",
     "mammoth": "^1.9.0",
     "pdfjs-dist": "^5.2.133",
-    "prompts": "^2.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
@@ -80,9 +74,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
-    "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.0.3",
-    "@types/prompts": "^2.4.9",
     "@types/react": "^18.3.22",
     "@types/react-dom": "^18.2.17",
     "@types/uuid": "^10.0.0",

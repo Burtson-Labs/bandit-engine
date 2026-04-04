@@ -33,13 +33,7 @@ import {
   Alert
 } from '@mui/material';
 import type { ChipProps } from '@mui/material';
-import {
-  PlayArrow as PlayIcon,
-  Stop as StopIcon,
-  Pause as PauseIcon,
-  VolumeUp as VolumeIcon,
-  Speed as SpeedIcon
-} from '@mui/icons-material';
+import { Play as PlayIcon, Square as StopIcon, Pause as PauseIcon, Volume2 as VolumeIcon, Gauge as SpeedIcon } from 'lucide-react';
 import { useTTS } from '../hooks/useTTS';
 import { TTSState } from '../services/tts/streaming-tts';
 import { useVoiceStore } from '../store/voiceStore';

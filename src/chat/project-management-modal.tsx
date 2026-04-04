@@ -35,15 +35,7 @@ import {
   SwipeableDrawer,
   useMediaQuery,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  MoreVert as MoreVertIcon,
-  Folder as FolderIcon,
-  Close as CloseIcon,
-  ArrowBack as ArrowBackIcon,
-} from "@mui/icons-material";
+import { Plus as AddIcon, Pencil as EditIcon, Trash2 as DeleteIcon, MoreVertical as MoreVertIcon, Folder as FolderIcon, X as CloseIcon, ArrowLeft as ArrowBackIcon } from "lucide-react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { useProjectStore, Project } from "../store/projectStore";
 import { useConversationStore } from "../store/conversationStore";
@@ -296,7 +288,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
           >
             {showCreateForm && (
               <IconButton onClick={resetForm} size="small" sx={{ mr: 0.5 }}>
-                <ArrowBackIcon fontSize="small" />
+                <ArrowBackIcon size={16} />
               </IconButton>
             )}
             <Typography
@@ -417,7 +409,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
                   backgroundColor: subtleSurface,
                 }}
               >
-                <FolderIcon sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                <FolderIcon size={48} style={{ marginBottom: 8, opacity: 0.5 }} />
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
                   No projects yet
                 </Typography>
@@ -457,7 +449,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
                             fontSize: "1rem",
                           }}
                         >
-                          <FolderIcon fontSize="small" />
+                          <FolderIcon size={16} />
                         </Avatar>
 
                         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -503,7 +495,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
                             zIndex: 1,
                           }}
                         >
-                          <MoreVertIcon fontSize="small" />
+                          <MoreVertIcon size={16} />
                         </IconButton>
                       </Box>
                     </ListItem>
@@ -579,7 +571,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <EditIcon fontSize="small" />
+            <EditIcon size={16} />
             <Typography variant="body2" color="inherit">
               Edit
             </Typography>
@@ -593,7 +585,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
           sx={{ color: theme.palette.error.main }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <DeleteIcon fontSize="small" />
+            <DeleteIcon size={16} />
             <Typography variant="body2" color="inherit">
               Delete
             </Typography>

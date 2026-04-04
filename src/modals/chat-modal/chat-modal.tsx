@@ -30,9 +30,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
-import CloseIcon from "@mui/icons-material/Close";
-import SendIcon from "@mui/icons-material/Send";
-import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import DraggableBox from "./draggable-box";
 import ModalHeader from "./modal-header";
 import QueryInput from "./query-input";
@@ -56,6 +53,7 @@ import { banditDarkTheme } from "../../theme/banditTheme";
 import themeMap from "../../theme/themeMap";
 import { useTTS } from "../../hooks/useTTS";
 import { Subscription } from "rxjs";
+import { CloseIcon, RecordVoiceOverIcon, SendIcon } from "../../icons/lucide-icons";
 
 export const FULL_SCREEN_THRESHOLD = 100;
 export const MIN_WINDOWED_HEIGHT = 400;

@@ -18,13 +18,15 @@ const __auditTrail_components_MCPToolsTabV2tsx = 'BL-AU-MGOIKVVJ-JBSK';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Paper, Chip, Stack, IconButton, Tooltip, LinearProgress, Switch, FormControlLabel } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { fetchAvailableMcpTools, fetchMcpHealth, McpTool } from '../../services/mcp/mcpControllerService';
 import { useMCPToolsStore } from '../../store/mcpToolsStore';
 import { usePackageSettingsStore } from '../../store/packageSettingsStore';
+import {
+  ErrorOutlineIcon,
+  HealthAndSafetyIcon,
+  RefreshIcon,
+  SettingsIcon,
+} from "../../icons/lucide-icons";
 
 const MCPToolsTabV2: React.FC = () => {
   const { settings } = usePackageSettingsStore();

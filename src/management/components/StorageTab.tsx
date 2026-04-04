@@ -44,22 +44,24 @@ import {
   useTheme,
   ThemeOptions,
 } from '@mui/material';
-import StorageIcon from '@mui/icons-material/Storage';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import WarningIcon from '@mui/icons-material/Warning';
-import InfoIcon from '@mui/icons-material/Info';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import DescriptionIcon from '@mui/icons-material/Description';
-import PersonIcon from '@mui/icons-material/Person';
-import ChatIcon from '@mui/icons-material/Chat';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
 import { debugLogger } from '../../services/logging/debugLogger';
 import indexedDBService from '../../services/indexedDB/indexedDBService';
 import { useConversationSyncStore } from '../../store/conversationSyncStore';
+import {
+  ChatIcon,
+  CheckCircleIcon,
+  CleaningServicesIcon,
+  DeleteIcon,
+  DescriptionIcon,
+  ErrorIcon,
+  ExpandMoreIcon,
+  InfoIcon,
+  PersonIcon,
+  RefreshIcon,
+  SettingsIcon,
+  StorageIcon,
+  WarningIcon,
+} from "../../icons/lucide-icons";
 
 // Storage category types
 interface StorageCategory {

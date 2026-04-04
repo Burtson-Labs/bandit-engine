@@ -43,20 +43,7 @@ import {
   useMediaQuery,
   Snackbar,
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  BugReport as BugReportIcon,
-  Lightbulb as LightbulbIcon,
-  TrendingUp as TrendingUpIcon,
-  Help as HelpIcon,
-  Message as MessageIcon,
-  PhotoCamera as PhotoCameraIcon,
-  AttachFile as AttachFileIcon,
-  Delete as DeleteIcon,
-  Mail as MailIcon,
-  PsychologyAltRounded,
-  AttachFileRounded,
-} from '@mui/icons-material';
+import { X as CloseIcon, Bug as BugReportIcon, Lightbulb as LightbulbIcon, TrendingUp as TrendingUpIcon, HelpCircle as HelpIcon, MessageSquare as MessageIcon, Camera as PhotoCameraIcon, Paperclip as AttachFileIcon, Trash2 as DeleteIcon, Mail as MailIcon, Brain as PsychologyAltRounded, Paperclip as AttachFileRounded } from 'lucide-react';
 import { 
   FeedbackRequest, 
   FeedbackResponse,
@@ -635,7 +622,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 alignSelf: 'end',
               }}
             >
-              <MessageIcon sx={{ color: theme.palette.text.primary }} />
+              <MessageIcon size={20} color={theme.palette.text.primary} />
               <Typography
                 variant="h6"
                 sx={{
@@ -721,7 +708,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   return (
                     <MenuItem key={key} value={key}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Icon sx={{ color: category.color, fontSize: 20 }} />
+                        <Icon size={20} color={category.color} />
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>{category.label}</Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -857,7 +844,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                <PsychologyAltRounded sx={{ color: theme.palette.warning.main }} />
+                <PsychologyAltRounded size={20} color={theme.palette.warning.main} />
                 <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
                   Impact Assessment
                 </Typography>
@@ -901,7 +888,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                           fontSize: '14px',
                         }}
                       >
-                        <PsychologyAltRounded sx={{ color: theme.palette.warning.main, fontSize: 22 }} />
+                        <PsychologyAltRounded size={22} color={theme.palette.warning.main} />
                       </Box>
                       How annoying is this issue? ({formData.annoyanceLevel}/5)
                     </Typography>
@@ -974,7 +961,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                <AttachFileRounded sx={{ color: theme.palette.primary.main }} />
+                <AttachFileRounded size={20} color={theme.palette.primary.main} />
                 <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
                   Attachments
                 </Typography>
@@ -1028,7 +1015,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                         transition: 'all 0.3s ease',
                       }}
                     >
-                      <AttachFileIcon sx={{ fontSize: 28 }} />
+                      <AttachFileIcon size={28} />
                     </Avatar>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, fontSize: '1.1rem' }}>
@@ -1087,7 +1074,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               {formData.images && formData.images.length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                    <PhotoCameraIcon color="primary" fontSize="small" />
+                    <PhotoCameraIcon size={16} />
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       Attached Image
                     </Typography>
@@ -1137,7 +1124,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                           },
                         }}
                       >
-                        <DeleteIcon sx={{ fontSize: 14 }} />
+                        <DeleteIcon size={14} />
                       </IconButton>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

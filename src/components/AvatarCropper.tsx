@@ -30,10 +30,12 @@ import {
   Paper,
   Alert,
 } from '@mui/material';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import {
+  RotateLeftIcon,
+  RotateRightIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "../icons/lucide-icons";
 
 interface AvatarCropperProps {
   open: boolean;

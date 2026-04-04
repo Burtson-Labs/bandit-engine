@@ -33,13 +33,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
-import {
-  MoreVert as MoreVertIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  DragIndicator as DragIcon,
-  MoveToInbox as MoveIcon,
-} from "@mui/icons-material";
+import { MoreVertical as MoreVertIcon, Pencil as EditIcon, Trash2 as DeleteIcon, GripVertical as DragIcon, MailOpen as MoveIcon } from "lucide-react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { Conversation } from "../store/conversationStore";
 
@@ -329,16 +323,10 @@ const SimpleConversationItem: React.FC<SimpleConversationItemProps> = ({
     >
       {/* Drag Handle */}
       {!isMobile && !isEditing && (
-        <DragIcon 
-          sx={{ 
-            color: theme.palette.text.disabled,
-            mr: 1,
-            cursor: "grab",
-            fontSize: "1rem",
-            "&:active": {
-              cursor: "grabbing",
-            },
-          }} 
+        <DragIcon
+          size={16}
+          color={theme.palette.text.disabled}
+          style={{ marginRight: 4, cursor: "grab" }}
         />
       )}
 
@@ -434,7 +422,7 @@ const SimpleConversationItem: React.FC<SimpleConversationItemProps> = ({
             }),
           }}
         >
-          <MoreVertIcon fontSize="small" />
+          <MoreVertIcon size={16} />
         </IconButton>
       )}
 
@@ -467,7 +455,7 @@ const SimpleConversationItem: React.FC<SimpleConversationItemProps> = ({
         {onRename && (
           <MenuItem onClick={handleEdit}>
             <ListItemIcon>
-              <EditIcon fontSize="small" />
+              <EditIcon size={16} />
             </ListItemIcon>
             <ListItemText>Rename</ListItemText>
           </MenuItem>
@@ -475,14 +463,14 @@ const SimpleConversationItem: React.FC<SimpleConversationItemProps> = ({
         {onMove && (
           <MenuItem onClick={handleMove}>
             <ListItemIcon>
-              <MoveIcon fontSize="small" />
+              <MoveIcon size={16} />
             </ListItemIcon>
             <ListItemText>Move to Project</ListItemText>
           </MenuItem>
         )}
         <MenuItem onClick={handleDelete}>
           <ListItemIcon>
-            <DeleteIcon fontSize="small" />
+            <DeleteIcon size={16} />
           </ListItemIcon>
           <ListItemText>Delete</ListItemText>
         </MenuItem>

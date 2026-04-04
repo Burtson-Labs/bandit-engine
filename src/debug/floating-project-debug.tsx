@@ -26,10 +26,7 @@ import {
   Alert,
   Chip,
 } from "@mui/material";
-import {
-  BugReport as BugIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
+import { Bug as BugIcon, X as CloseIcon } from "lucide-react";
 import { useProjectStore } from "../store/projectStore";
 import { useConversationStore } from "../store/conversationStore";
 import ProjectDebugPanel from "./project-debug-panel";

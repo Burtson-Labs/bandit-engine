@@ -39,16 +39,7 @@ import {
   alpha,
   Tooltip,
 } from "@mui/material";
-import {
-  Close as CloseIcon,
-  Clear as ClearIcon,
-  Search as SearchIcon,
-  Folder as FolderIcon,
-  MoreVert as MoreVertIcon,
-  DeleteSweep as DeleteSweepIcon,
-  Inbox as InboxIcon,
-} from "@mui/icons-material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useConversationStore, type Conversation } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
@@ -363,7 +354,7 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: theme.palette.text.secondary }} />
+                  <SearchIcon size={16} color={theme.palette.text.secondary} />
                 </InputAdornment>
               ),
               endAdornment: searchQuery && (
@@ -374,7 +365,7 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
                     edge="end"
                     sx={{ color: theme.palette.text.secondary }}
                   >
-                    <ClearIcon fontSize="small" />
+                    <ClearIcon size={16} />
                   </IconButton>
                 </InputAdornment>
               ),
@@ -438,7 +429,7 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
                 flexShrink: 0,
               }}
             >
-              <FolderIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <FolderIcon size={16} color={theme.palette.success.main} />
             </Box>
             <Typography
               variant="subtitle2"
@@ -452,7 +443,7 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
                 aria-label={tooltip("addProject")}
                 sx={{ color: theme.palette.success.main }}
               >
-                <AddIcon fontSize="small" />
+                <AddIcon size={16} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -473,12 +464,10 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
                 >
                   <Divider sx={{ flex: 1, opacity: 0.6 }} />
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <InboxIcon 
-                      sx={{ 
-                        color: theme.palette.text.disabled,
-                        fontSize: "0.9rem",
-                        opacity: 0.7,
-                      }} 
+                    <InboxIcon
+                      size={14}
+                      color={theme.palette.text.disabled}
+                      style={{ opacity: 0.7 }}
                     />
                     <Typography 
                       variant="caption" 
@@ -677,7 +666,7 @@ const EnhancedConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
           sx={{ color: theme.palette.error.main }}
         >
           <ListItemIcon>
-            <DeleteSweepIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+            <DeleteSweepIcon size={16} color={theme.palette.error.main} />
           </ListItemIcon>
           <ListItemText>Clear All Conversations</ListItemText>
         </MenuItem>

@@ -40,18 +40,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import ArchiveIcon from "@mui/icons-material/Archive";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DescriptionIcon from "@mui/icons-material/Description";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import GroupIcon from "@mui/icons-material/Group";
-import PersonIcon from "@mui/icons-material/Person";
-import PublishIcon from "@mui/icons-material/Publish";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import SaveIcon from "@mui/icons-material/Save";
-import SearchIcon from "@mui/icons-material/Search";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { usePackageSettingsStore } from "../../store/packageSettingsStore";
 import { useAuthenticationStore } from "../../store/authenticationStore";
 import StreamingMarkdown from "../../components/StreamingMarkdown";
@@ -68,6 +56,20 @@ import {
   type SeedPackDraft,
   type SeedPackStatus,
 } from "../../services/seedPacks/seedPackService";
+import {
+  AddIcon,
+  ArchiveIcon,
+  DeleteIcon,
+  DescriptionIcon,
+  FolderOpenIcon,
+  GroupIcon,
+  PersonIcon,
+  PublishIcon,
+  RefreshIcon,
+  SaveIcon,
+  SearchIcon,
+  UploadFileIcon,
+} from "../../icons/lucide-icons";
 
 type SnackbarSeverity = "success" | "error" | "info" | "warning";
 type ImportSource = "local" | "azure-wiki";

@@ -34,10 +34,7 @@ import {
   Box,
   Divider,
 } from "@mui/material";
-import {
-  Folder as FolderIcon,
-  Inbox as InboxIcon,
-} from "@mui/icons-material";
+import { Folder as FolderIcon, Inbox as InboxIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useProjectStore } from "../store/projectStore";
 import { useConversationStore, Conversation } from "../store/conversationStore";

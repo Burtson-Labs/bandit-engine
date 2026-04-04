@@ -41,16 +41,6 @@ import {
   Button,
   MenuItem,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
-import DeleteIcon from "@mui/icons-material/Delete";
-import HistoryIcon from "@mui/icons-material/History";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
-import MemoryIcon from "@mui/icons-material/Memory";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import { useAIQueryStore } from "../../store/aiQueryStore";
 import { useConversationStore, type Conversation } from "../../store/conversationStore";
 import { useVoiceStore } from "../../store/voiceStore";
@@ -65,6 +55,18 @@ import { speakStream } from "../../services/tts/streaming-tts";
 import { Subscription } from "rxjs";
 import { debugLogger } from "../../services/logging/debugLogger";
 import { toTitleCase } from "../../util";
+import {
+  CloseIcon,
+  DeleteIcon,
+  ExpandLessIcon,
+  ExpandMoreIcon,
+  HistoryIcon,
+  InfoOutlinedIcon,
+  MemoryIcon,
+  RecordVoiceOverIcon,
+  RefreshIcon,
+  SearchIcon,
+} from "../../icons/lucide-icons";
 
 interface AIQueriesDrawerProps {
   drawerOpen: boolean;

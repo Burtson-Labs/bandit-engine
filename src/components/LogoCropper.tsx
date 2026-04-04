@@ -33,13 +33,15 @@ import {
   ToggleButton,
   Chip,
 } from '@mui/material';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import Crop169Icon from '@mui/icons-material/Crop169';
-import CropSquareIcon from '@mui/icons-material/CropSquare';
-import CropPortraitIcon from '@mui/icons-material/CropPortrait';
+import {
+  Crop169Icon,
+  CropPortraitIcon,
+  CropSquareIcon,
+  RotateLeftIcon,
+  RotateRightIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from "../icons/lucide-icons";
 
 interface LogoCropperProps {
   open: boolean;

@@ -37,15 +37,7 @@ import {
   Divider,
   SwipeableDrawer,
 } from "@mui/material";
-import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
-import BrushIcon from '@mui/icons-material/Brush';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import TuneIcon from '@mui/icons-material/Tune';
-import BuildIcon from '@mui/icons-material/Build';
-import CloudIcon from '@mui/icons-material/Cloud';
-import StorageIcon from '@mui/icons-material/Storage';
 import { useNavigate } from "react-router-dom";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChatModal from "../modals/chat-modal/chat-modal";
 import PersonalitiesTab, { LocalModelState } from './components/PersonalitiesTab';
 import PreferencesTab from './components/PreferencesTab';
@@ -68,6 +60,16 @@ import { useAIProviderStore } from "../store/aiProviderStore";
 import { useAuthenticationStore } from "../store/authenticationStore";
 import { useNotificationService } from "../hooks/useNotificationService";
 import { useFeatures, useFeatureVisibility } from "../hooks/useFeatures";
+import {
+  BrushIcon,
+  BuildIcon,
+  ChevronLeftIcon,
+  CloudIcon,
+  FaceRetouchingNaturalIcon,
+  MenuBookIcon,
+  StorageIcon,
+  TuneIcon,
+} from "../icons/lucide-icons";
 import { StoredBanditConfigRecord, StoredModelConfig } from "../types/config";
 
 const buildCapabilitiesUrl = (gatewayApiUrl: string): string => {

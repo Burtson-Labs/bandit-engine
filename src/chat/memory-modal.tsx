@@ -43,15 +43,17 @@ import {
   FormControl,
   useMediaQuery,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
 import { useMemoryStore } from "../store/memoryStore";
 import { useVectorStore } from "../hooks/useVectorStore";
 import { useConversationSyncStore } from "../store/conversationSyncStore";
 import { debugLogger } from "../services/logging/debugLogger";
+import {
+  CloudSyncIcon,
+  CloseIcon,
+  DeleteIcon,
+  PushPinIcon,
+  PushPinOutlinedIcon,
+} from "../icons/lucide-icons";
 
 interface MemoryModalProps {
   open: boolean;

@@ -40,18 +40,20 @@ import {
 } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
-import ViewModuleOutlinedIcon from '@mui/icons-material/ViewModuleOutlined';
-import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
-import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import AvatarCropper from '../../components/AvatarCropper';
 import { BanditPersonality, useModelStore } from "../../store/modelStore";
 import { models as defaultModels } from "../../models/models";
 import { resolveAvatar } from "../../util";
 import indexedDBService from "../../services/indexedDB/indexedDBService";
 import { debugLogger } from "../../services/logging/debugLogger";
+import {
+  AutoAwesomeIcon,
+  EditNoteOutlinedIcon,
+  ManageAccountsOutlinedIcon,
+  PlayArrowRoundedIcon,
+  RocketLaunchOutlinedIcon,
+  ViewModuleOutlinedIcon,
+} from "../../icons/lucide-icons";
 
 export interface LocalModelState {
   name: string;

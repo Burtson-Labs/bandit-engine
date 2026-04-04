@@ -33,16 +33,6 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import LinkIcon from '@mui/icons-material/Link';
-import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
-import RestoreIcon from '@mui/icons-material/Restore';
-import CloudDoneIcon from '@mui/icons-material/CloudDone';
-import CloudOffIcon from '@mui/icons-material/CloudOff';
-import SyncIcon from '@mui/icons-material/Sync';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import { UserPreferences, usePreferencesStore } from "../../store/preferencesStore";
 import { useModelStore } from "../../store/modelStore";
 import { useVoiceStore } from "../../store/voiceStore";
@@ -50,6 +40,18 @@ import { useFeatures } from "../../hooks/useFeatures";
 import { PackageSettings } from "../../store/packageSettingsStore";
 import { useConversationSyncStore } from "../../store/conversationSyncStore";
 import { useGatewayHealth } from "../../hooks/useGatewayQueries";
+import {
+  CheckCircleIcon,
+  CloudDoneIcon,
+  CloudOffIcon,
+  DownloadIcon,
+  ErrorIcon,
+  LinkIcon,
+  RefreshIcon,
+  RestoreIcon,
+  SyncIcon,
+  UploadIcon,
+} from "../../icons/lucide-icons";
 
 interface PreferencesTabProps {
   preferences: UserPreferences;

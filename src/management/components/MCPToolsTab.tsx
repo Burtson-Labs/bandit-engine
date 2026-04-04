@@ -37,18 +37,20 @@ import {
   FormControlLabel,
   Divider,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 import { useMCPToolsStore } from '../../store/mcpToolsStore';
 import { usePackageSettingsStore } from '../../store/packageSettingsStore';
 import { executeMCPTool } from '../../services/mcp/mcpService';
 import { debugLogger } from '../../services/logging/debugLogger';
 import type { MCPTool } from '../../store/mcpToolsStore';
+import {
+  AddCircleIcon,
+  AddIcon,
+  DeleteIcon,
+  EditIcon,
+  PlayArrowIcon,
+  VisibilityIcon,
+} from "../../icons/lucide-icons";
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 type ParameterType = 'string' | 'number' | 'boolean' | 'array' | 'object';

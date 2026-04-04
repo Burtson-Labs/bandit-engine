@@ -17,19 +17,30 @@ An AI chat toolkit built for speed, design, and control. Power branded AI assist
 [![License: BUSL-1.1](https://img.shields.io/badge/License-BUSL--1.1-red)](./LICENSE)
 
 ## Features
-- 🔌 Plug-and-play React chat, modal, and management surfaces
-- 🧠 Memory, searchable knowledge, and provider switching behind a secure gateway
-- 🎨 Full MUI theming, dark mode, and branding controls out of the box
-- 🌐 Multimodal support (voice, images, documents) with Bandit AI, Ollama, OpenAI, Azure OpenAI, Anthropic, and xAI today — tell us which providers you need next so we can prioritize them
-- 🛠️ CLI scaffolding, sample gateway, and docs to launch in minutes
+- Plug-and-play React chat, modal, and management surfaces
+- Memory, searchable knowledge, and provider switching behind a secure gateway
+- Full MUI theming, dark mode, and branding controls out of the box
+- Multimodal support (voice, images, documents) with Bandit AI, Ollama, OpenAI, Azure OpenAI, Anthropic, and xAI today — tell us which providers you need next so we can prioritize them
+- CLI scaffolding, sample gateway, and docs to launch in minutes
 
 Bandit keeps confidentiality, integrity, and availability front and center: data stays within your routes, answers stay auditable, and the UI falls back gracefully when a provider is unavailable.
 
+## Bandit package ecosystem
+
+This package is the core React engine. Related packages:
+
+| Package | Purpose | Install weight |
+|---------|---------|----------------|
+| `@burtson-labs/bandit-engine` | React chat, modal, and management UI — this package | Full |
+| [`@burtson-labs/bandit-cli`](https://banditailabs.com/npm-package) | Quickstart scaffolding CLI — `npx @burtson-labs/bandit-cli create` | Minimal (Node.js only) |
+| [`@burtson-labs/bandit-themes`](https://banditailabs.com/npm-package) | MUI theme pack — use Bandit design tokens without the engine | MUI only |
+| [`@burtson-labs/bandit-types`](https://banditailabs.com/npm-package) | Gateway contract type definitions — type your own gateway or server | Zero runtime deps |
+
 ## Quick Links
-- 📚 Full docs: [banditailabs.com/npm-package](https://banditailabs.com/npm-package) (mirrors `/docs` in this repo)
-- 🎯 Live demo with OAuth sign-in: [banditailabs.com](https://banditailabs.com/)
-- 🧪 Playground (no auth required): [banditailabs.com/playground](https://banditailabs.com/playground)
-- 🔁 Sample gateway: [`examples/gateway-node`](./examples/gateway-node/README.md)
+- Full docs: [banditailabs.com/npm-package](https://banditailabs.com/npm-package) (mirrors `/docs` in this repo)
+- Live demo with OAuth sign-in: [banditailabs.com](https://banditailabs.com/)
+- Playground (no auth required): [banditailabs.com/playground](https://banditailabs.com/playground)
+- Sample gateway: [`examples/gateway-node`](./examples/gateway-node/README.md)
 
 ## Quick Start
 
@@ -38,7 +49,7 @@ Bandit keeps confidentiality, integrity, and availability front and center: data
 Want a working playground instantly? Scaffold a Bandit app and gateway in one command:
 
 ```bash
-npx @burtson-labs/bandit-engine create my-bandit-app
+npx @burtson-labs/bandit-cli create my-bandit-app
 ```
 
 ![Bandit CLI quickstart walkthrough](https://cdn.burtson.ai/images/cli-quickstart.jpg)
@@ -58,9 +69,9 @@ Customize the output with options such as:
 - `--yes` / `--skip-prompts` to accept defaults non-interactively
 - `--force` to overwrite a non-empty directory
 
-> 📦 The generated project installs directly from `https://registry.npmjs.org/` — no GitHub npm token is required once the package is public.
+> The generated project installs directly from `https://registry.npmjs.org/` — no GitHub npm token is required once the package is public.
 
-> ⚠️ The scaffolded gateway focuses on Bandit AI/OpenAI/xAI/Ollama chat and model discovery. All advanced routes (file storage uploads, vector embedding, voice, MCP, etc.) are generated as `501` placeholders so you can wire them to your own infrastructure. Implement the contracts below before turning on those features in production.
+> The scaffolded gateway focuses on Bandit AI/OpenAI/xAI/Ollama chat and model discovery. All advanced routes (file storage uploads, vector embedding, voice, MCP, etc.) are generated as `501` placeholders so you can wire them to your own infrastructure. Implement the contracts below before turning on those features in production.
 
 Check out the [CLI quick start guide](./docs/05_cli_quickstart.md) for the full walkthrough, option matrix, and project anatomy.
 

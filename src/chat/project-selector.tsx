@@ -28,12 +28,7 @@ import {
   Typography,
   Avatar,
 } from "@mui/material";
-import {
-  Add as AddIcon,
-  Folder as FolderIcon,
-  Inbox as InboxIcon,
-  KeyboardArrowDown as ArrowDownIcon,
-} from "@mui/icons-material";
+import { Plus as AddIcon, Folder as FolderIcon, Inbox as InboxIcon, ChevronDown as ArrowDownIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useProjectStore } from "../store/projectStore";
 import { useConversationStore } from "../store/conversationStore";
@@ -97,9 +92,9 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         }}
       >
         {selectedProject ? (
-          <FolderIcon fontSize={size === "small" ? "small" : "medium"} />
+          <FolderIcon size={size === "small" ? 16 : 20} />
         ) : (
-          <InboxIcon fontSize={size === "small" ? "small" : "medium"} />
+          <InboxIcon size={size === "small" ? 16 : 20} />
         )}
       </Avatar>
       
@@ -115,13 +110,13 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         {selectedProject?.name || "No Project"}
       </Typography>
       
-      <ArrowDownIcon 
-        fontSize="small" 
-        sx={{ 
-          ml: "auto",
+      <ArrowDownIcon
+        size={16}
+        style={{
+          marginLeft: "auto",
           transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
           transition: "transform 0.2s",
-        }} 
+        }}
       />
     </Box>
   );
@@ -168,7 +163,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         <MenuItem onClick={() => handleProjectSelect(null)}>
           <ListItemIcon>
             <Avatar sx={{ bgcolor: theme.palette.grey[400], width: 24, height: 24 }}>
-              <InboxIcon fontSize="small" />
+              <InboxIcon size={16} />
             </Avatar>
           </ListItemIcon>
           <ListItemText
@@ -188,7 +183,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           >
             <ListItemIcon>
               <Avatar sx={{ bgcolor: project.color, width: 24, height: 24 }}>
-                <FolderIcon fontSize="small" />
+                <FolderIcon size={16} />
               </Avatar>
             </ListItemIcon>
             <ListItemText
@@ -208,7 +203,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           
           <MenuItem onClick={() => handleCreateConversationInProject(selectedProjectId)}>
             <ListItemIcon>
-              <AddIcon fontSize="small" />
+              <AddIcon size={16} />
             </ListItemIcon>
             <ListItemText primary="New Conversation Here" />
           </MenuItem>

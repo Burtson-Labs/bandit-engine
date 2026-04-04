@@ -22,14 +22,7 @@ import { usePreferencesStore } from "../../store/preferencesStore";
 import { usePackageSettingsStore } from "../../store/packageSettingsStore";
 import { useTTS } from "../../hooks/useTTS";
 import { Box, CircularProgress, IconButton, Tooltip } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import ThumbDownIcon from "@mui/icons-material/ThumbDown";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { CampaignOutlined, CampaignRounded } from "@mui/icons-material";
-import StopIcon from "@mui/icons-material/Stop";
-import PauseIcon from "@mui/icons-material/Pause";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { Check as CheckIcon, ThumbsUp as ThumbUpIcon, ThumbsDown as ThumbDownIcon, Copy as ContentCopyIcon, Megaphone as CampaignOutlined, Megaphone as CampaignRounded, Square as StopIcon, Pause as PauseIcon, Play as PlayArrowIcon } from "lucide-react";
 import { debugLogger } from "../../services/logging/debugLogger";
 import { authenticationService } from "../../services/auth/authenticationService";
 
@@ -162,7 +155,7 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
             },
           }}
         >
-          {copied ? <CheckIcon sx={{ fontSize: 18 }} /> : <ContentCopyIcon sx={{ fontSize: 18 }} />}
+          {copied ? <CheckIcon size={18} /> : <ContentCopyIcon size={18} />}
         </IconButton>
       </Tooltip>
 
@@ -198,11 +191,11 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
               {isLoading ? (
                 <CircularProgress size={18} />
               ) : isPaused ? (
-                <PlayArrowIcon sx={{ fontSize: 18 }} />
+                <PlayArrowIcon size={18} />
               ) : !isPlaying ? (
-                <CampaignOutlined sx={{ fontSize: 18 }} />
+                <CampaignOutlined size={18} />
               ) : (
-                <CampaignRounded sx={{ fontSize: 18, color: '#4caf50' }} />
+                <CampaignRounded size={18} color='#4caf50' />
               )}
             </IconButton>
           </Tooltip>
@@ -222,7 +215,7 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
                   },
                 }}
               >
-                <PauseIcon sx={{ fontSize: 18 }} />
+                <PauseIcon size={18} />
               </IconButton>
             </Tooltip>
           )}
@@ -242,7 +235,7 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
                   },
                 }}
               >
-                <StopIcon sx={{ fontSize: 18 }} />
+                <StopIcon size={18} />
               </IconButton>
             </Tooltip>
           )}
@@ -266,7 +259,7 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
             },
           }}
         >
-          <ThumbUpIcon sx={{ fontSize: 18 }} />
+          <ThumbUpIcon size={18} />
         </IconButton>
       </Tooltip>
 
@@ -286,7 +279,7 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
             },
           }}
         >
-          <ThumbDownIcon sx={{ fontSize: 18 }} />
+          <ThumbDownIcon size={18} />
         </IconButton>
       </Tooltip>
     </Box>

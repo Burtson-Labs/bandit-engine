@@ -29,28 +29,4 @@ export default defineConfig([
     injectStyle: true,
     external: ['react', 'react-dom'],
   },
-  {
-    entry: {
-      cli: 'src/cli/index.ts',
-    },
-    format: ['cjs'],
-    platform: 'node',
-    target: 'node18',
-    outDir: 'dist',
-    clean: false,
-    sourcemap: true,
-    bundle: true,
-    splitting: false,
-    shims: false,
-    minify: false,
-    outExtension({ format }) {
-      return {
-        js: format === 'cjs' ? '.js' : '.js',
-      };
-    },
-    banner: {
-      js: '#!/usr/bin/env node',
-    },
-    external: ['fs-extra', 'prompts', 'commander'],
-  },
 ]);

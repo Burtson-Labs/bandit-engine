@@ -18,13 +18,6 @@ const __auditTrail_chat_chatinputtsx = 'BL-AU-MGOIKVUX-SXD7';
 
 import React, { useEffect, useRef, useState } from "react";
 import { Box, TextField, IconButton, Tooltip, Avatar, Typography, CircularProgress, Collapse } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import PsychologyIcon from "@mui/icons-material/Psychology";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import HearingDisabledIcon from "@mui/icons-material/HearingDisabled";
-import GraphicEqIcon from "@mui/icons-material/GraphicEq";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { BanditPersonality } from "../store/modelStore";
 import { usePreferencesStore } from "../store/preferencesStore";
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
@@ -38,6 +31,15 @@ import { useFeatures, useFeatureVisibility } from "../hooks/useFeatures";
 import { useVoiceStore } from "../store/voiceStore";
 import { useVoiceModeStore } from "../store/voiceModeStore";
 import { shallow } from "zustand/shallow";
+import {
+  ArrowUpwardIcon,
+  CloseIcon,
+  ExpandMoreIcon,
+  FeedbackIcon,
+  GraphicEqIcon,
+  HearingDisabledIcon,
+  PsychologyIcon,
+} from "../icons/lucide-icons";
 
 interface ChatInputProps {
   inputValue: string;

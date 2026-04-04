@@ -28,11 +28,7 @@ import {
   Alert,
   Stack
 } from '@mui/material';
-import {
-  Warning as WarningIcon,
-  Home as HomeIcon,
-  CreditCard as CreditCardIcon
-} from '@mui/icons-material';
+import { AlertTriangle as WarningIcon, Home as HomeIcon, CreditCard as CreditCardIcon } from 'lucide-react';
 
 export interface SubscriptionExpiredModalProps {
   open: boolean;
@@ -88,7 +84,7 @@ export const SubscriptionExpiredModal: React.FC<SubscriptionExpiredModalProps> =
     >
       <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
-          <WarningIcon color="warning" sx={{ fontSize: 32 }} />
+          <WarningIcon size={32} color="warning" />
           <Typography variant="h5" component="span" fontWeight="bold">
             Subscription Expired
           </Typography>

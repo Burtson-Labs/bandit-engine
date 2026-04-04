@@ -18,10 +18,12 @@ const __auditTrail_chat_instantmessagefeedbacktsx = 'BL-AU-MGOIKVV3-J5V3';
 
 import React, { useEffect, useState } from "react";
 import { Box, Typography, CircularProgress, useTheme } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import WifiOffIcon from "@mui/icons-material/WifiOff";
-import SignalWifiStatusbar4BarIcon from "@mui/icons-material/SignalWifiStatusbar4Bar";
-import SignalWifi2BarIcon from "@mui/icons-material/SignalWifi2Bar";
+import {
+  CheckCircleIcon,
+  SignalWifi2BarIcon,
+  SignalWifiStatusbar4BarIcon,
+  WifiOffIcon,
+} from "../icons/lucide-icons";
 
 interface InstantMessageFeedbackProps {
   message: string;
