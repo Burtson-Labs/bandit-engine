@@ -292,7 +292,8 @@ export class GatewayService {
                         index: 0,
                         delta: {
                           role: parsed.message.role,
-                          content: parsed.message.content
+                          content: parsed.message.content,
+                          tool_calls: parsed.message.tool_calls
                         },
                         finish_reason: parsed.done ? (parsed.done_reason || 'stop') : null
                       }]

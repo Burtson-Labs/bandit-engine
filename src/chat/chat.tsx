@@ -200,6 +200,7 @@ const ChatContent = () => {
   const [streamBuffer, setStreamBuffer] = useState("");
   const [responseStarted, setResponseStarted] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const initialLogoState = history.length === 0;
   const [logoVisible, setLogoVisible] = useState(initialLogoState);
   const [logoShouldRender, setLogoShouldRender] = useState(initialLogoState);
@@ -830,6 +831,7 @@ const ChatContent = () => {
     overrideComponentStatus: setComponentStatus,
     setIsSubmitting,
     setIsStreaming,
+    setIsThinking,
     setResponseStarted,
     setResponse,
     setStreamBuffer,
@@ -1324,6 +1326,7 @@ const ChatContent = () => {
             >
               <ChatMessages
                 isStreaming={isStreaming}
+                isThinking={isThinking}
                 history={history}
                 pendingMessage={pendingMessage}
                 streamBuffer={streamBuffer}

@@ -36,6 +36,7 @@ interface ChatMessagesProps {
   scrollTargetRef: React.RefObject<HTMLDivElement>;
   responseStarted: boolean;
   isStreaming: boolean;
+  isThinking?: boolean;
   isNetworkSlow?: boolean;
   showInstantFeedback?: boolean;
   selectedModel?: string;
@@ -51,6 +52,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   scrollTargetRef,
   responseStarted,
   isStreaming,
+  isThinking = false,
   isNetworkSlow = false,
   showInstantFeedback = true,
   selectedModel,
@@ -74,6 +76,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         const isPlaceholder = entry.answer === "...";
 
         const showLoader = isLast && isStreaming && streamBuffer.trim() === "";
+        const showThinking = showLoader && isThinking;
         const content = isLast
           ? (isStreaming ? (streamBuffer || "") : (isPlaceholder ? "" : entry.answer))
           : entry.answer;
@@ -108,12 +111,26 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                 zIndex: showLoader ? 1 : 0,
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", minHeight: "40px", pl: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: "40px", pl: 2 }}>
                 <div className="typing-only">
                   <span className="dot" />
                   <span className="dot" />
                   <span className="dot" />
                 </div>
+                {showThinking && (
+                  <Box
+                    component="span"
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "text.secondary",
+                      opacity: 0.6,
+                      fontStyle: "italic",
+                      userSelect: "none",
+                    }}
+                  >
+                    Thinking…
+                  </Box>
+                )}
               </Box>
             </Box>
 

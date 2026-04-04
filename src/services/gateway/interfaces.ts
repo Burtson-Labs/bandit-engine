@@ -32,6 +32,19 @@ export interface GatewayMessage {
   images?: string[]; // For Ollama's native format
 }
 
+export interface GatewayTool {
+  type: 'function';
+  function: {
+    name: string;
+    description?: string;
+    parameters?: {
+      type: string;
+      properties?: Record<string, unknown>;
+      required?: string[];
+    };
+  };
+}
+
 export interface GatewayChatRequest {
   model: string;
   messages: GatewayMessage[];
@@ -44,6 +57,16 @@ export interface GatewayChatRequest {
   provider?: 'openai' | 'azure-openai' | 'anthropic' | 'ollama' | 'xai' | 'bandit' | 'playground';
   stop?: string | string[];
   images?: string[]; // Base64 images for Ollama-style providers
+  tools?: GatewayTool[]; // Native LLM tool definitions
+}
+
+export interface GatewayToolCall {
+  id?: string;
+  type?: 'function';
+  function: {
+    name: string;
+    arguments: string | Record<string, unknown>;
+  };
 }
 
 export interface GatewayChatResponse {
@@ -56,10 +79,12 @@ export interface GatewayChatResponse {
     delta?: {
       role?: string;
       content?: string;
+      tool_calls?: GatewayToolCall[];
     };
     message?: {
       role: string;
       content: string;
+      tool_calls?: GatewayToolCall[];
     };
     finish_reason?: string | null;
   }[];

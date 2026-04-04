@@ -519,6 +519,7 @@ export interface UseAIProviderProps {
   setIsSubmitting: (val: boolean) => void;
   setResponseStarted: (val: boolean) => void;
   setIsStreaming: (val: boolean) => void;
+  setIsThinking?: (val: boolean) => void;
   setResponse: (response: string) => void;
   setPastedImages: React.Dispatch<React.SetStateAction<string[]>>;
   setPendingMessage: React.Dispatch<
@@ -553,6 +554,7 @@ export const useAIProvider = ({
   setIsSubmitting,
   setResponseStarted,
   setIsStreaming,
+  setIsThinking,
   setResponse,
   setPastedImages,
   setPendingMessage,
@@ -1081,6 +1083,17 @@ export const useAIProvider = ({
       let latestDisplayMessage = "";
       let sawToolBlock = false;
 
+      // Strip <think>...</think> blocks from text before displaying.
+      // Hides in-progress thinking (unclosed tag) and removes completed blocks.
+      const stripThinking = (text: string): string => {
+        // Remove completed think blocks
+        let result = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+        // If an unclosed think block remains, hide everything from it onwards
+        const openIdx = result.indexOf('<think>');
+        if (openIdx !== -1) result = result.slice(0, openIdx);
+        return result.trimStart();
+      };
+
       const flushNow = () => {
         clearFlushTimer();
         if (!sawToolBlock) {
@@ -1112,15 +1125,18 @@ export const useAIProvider = ({
 
       const sub = stream.subscribe({
         next: (data) => {
-          if (!data?.message?.content) return;
-          fullMessage += data.message.content;
-          // Throttled UI update, apply on all devices (no extra status injection)
-          // Detect tool call block and suppress streaming if present
-          if (/```(?:tool_code|TOOL_CODE)/.test(fullMessage)) {
+          if (!data?.message?.content && !data?.message?.tool_calls) return;
+          if (data.message.content) fullMessage += data.message.content;
+          // Track whether we're currently inside a <think> block
+          const inThinkBlock = /<think>/.test(fullMessage) && !/<think>[\s\S]*<\/think>/.test(fullMessage);
+          setIsThinking?.(inThinkBlock);
+          // Detect tool call block in visible (non-thinking) content only
+          const visibleMessage = stripThinking(fullMessage);
+          if (/```(?:tool_code|TOOL_CODE)/.test(visibleMessage)) {
             sawToolBlock = true;
             clearFlushTimer();
           }
-          latestDisplayMessage = fullMessage;
+          latestDisplayMessage = visibleMessage;
           if (!sawToolBlock) {
             scheduleFlush();
           }
@@ -1143,6 +1159,7 @@ export const useAIProvider = ({
             setResponse(partial);
           }
           setStreamBuffer("");
+          setIsThinking?.(false);
           setPendingMessage(null);
           setLogoVisible(false);
 
@@ -1153,7 +1170,8 @@ export const useAIProvider = ({
         },
         complete: async () => {
           try {
-            latestDisplayMessage = fullMessage;
+            setIsThinking?.(false);
+            latestDisplayMessage = stripThinking(fullMessage);
             if (!sawToolBlock) {
               flushNow();
             }

@@ -25,7 +25,7 @@ Project maintainers are responsible for clarifying and enforcing our standards. 
 This Code of Conduct applies within project spaces and in public spaces when an individual is representing the project or its community.
 
 ## Enforcement
-Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to `team@burtson.ai`. All complaints will be reviewed promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to `team@banditai.ai`. All complaints will be reviewed promptly and fairly.
 
 ## Attribution
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org) version 2.1.

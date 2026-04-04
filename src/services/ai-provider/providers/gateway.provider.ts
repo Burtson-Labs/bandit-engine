@@ -34,10 +34,11 @@ import { AzureOpenAIGatewayService } from '../../gateway/azure-openai-gateway.se
 import { AnthropicGatewayService } from '../../gateway/anthropic-gateway.service';
 import { OllamaGatewayService } from '../../gateway/ollama-gateway.service';
 import { BanditAIGatewayService } from '../../gateway/bandit-gateway.service';
-import { 
+import {
   GatewayChatRequest,
   GatewayMessage,
-  GatewayMessageContent
+  GatewayMessageContent,
+  GatewayTool
 } from '../../gateway/interfaces';
 
 /**
@@ -177,6 +178,8 @@ export class GatewayProvider implements IAIProvider {
       }
     }
     
+    const toolAwareRequest = request as AIChatRequest & { tools?: GatewayTool[] };
+
     const gatewayRequest: GatewayChatRequest = {
       model: request.model,
       messages,
@@ -185,7 +188,8 @@ export class GatewayProvider implements IAIProvider {
       max_tokens: request.maxTokens,
       provider: this.config.provider,
       // Only include top-level images for Ollama (fallback)
-      images: this.config.provider === 'ollama' ? request.images : undefined
+      images: this.config.provider === 'ollama' ? request.images : undefined,
+      tools: toolAwareRequest.tools?.length ? toolAwareRequest.tools : undefined
     };
 
     debugLogger.debug('Gateway provider chat request', { 
@@ -208,14 +212,18 @@ export class GatewayProvider implements IAIProvider {
     });
 
     return this.gatewayService.chat(gatewayRequest).pipe(
-      map(response => ({
-        message: {
-          content: response.choices?.[0]?.message?.content || 
-                   response.choices?.[0]?.delta?.content || '',
-          role: 'assistant' as const
-        },
-        done: response.choices?.[0]?.finish_reason === 'stop' || response.choices?.[0]?.finish_reason === 'length'
-      }))
+      map(response => {
+        const choice = response.choices?.[0];
+        const toolCalls = choice?.message?.tool_calls ?? choice?.delta?.tool_calls;
+        return {
+          message: {
+            content: choice?.message?.content ?? choice?.delta?.content ?? '',
+            role: 'assistant' as const,
+            tool_calls: toolCalls
+          },
+          done: choice?.finish_reason === 'stop' || choice?.finish_reason === 'length' || choice?.finish_reason === 'tool_calls'
+        };
+      })
     );
   }
 

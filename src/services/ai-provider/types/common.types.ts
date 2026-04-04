@@ -35,10 +35,20 @@ export interface AIChatRequest {
   options?: Record<string, unknown>;
 }
 
+export interface AIToolCall {
+  id?: string;
+  type?: 'function';
+  function: {
+    name: string;
+    arguments: string | Record<string, unknown>;
+  };
+}
+
 export interface AIChatResponse {
   message: {
     content: string;
     role: 'assistant';
+    tool_calls?: AIToolCall[];
   };
   done?: boolean;
 }
