@@ -6,7 +6,7 @@
   </picture>
 </a>
 
-# Bandit Engine ⚡
+# Bandit Engine <img src="https://api.iconify.design/lucide/zap.svg?color=%23888888" width="18" align="center" />
 
 An AI chat toolkit built for speed, design, and control. Power branded AI assistants with battle-tested React components and a secure gateway contract.
 
@@ -97,7 +97,7 @@ Want to feel the UX without wiring a gateway or signing in? Visit the hosted pla
 
 The playground is ideal for product demos, initial stakeholder reviews, or QA before you connect real providers. When you’re ready to go live, swap the provider back to your gateway for production traffic.
 
-## 🛠️ Getting Started – Plug & Play AI
+## <img src="https://api.iconify.design/lucide/hammer.svg?color=%23888888" width="18" align="center" /> Getting Started – Plug & Play AI
 
 
 Bandit ships with responsive layouts baked in — the chat surface, management console, and modal all collapse gracefully on phones and tablets. Install it inside a Vite project and you can ship a polished PWA: the package works offline when cached, supports mobile nav patterns, and plays nicely with add-to-home-screen flows.
@@ -170,9 +170,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 );
 ```
 
-> 🚀 Within minutes, you'll have a fully functional chat interface that can read, speak, and reason – all brandable, themeable, and extensible.
+> <img src="https://api.iconify.design/lucide/rocket.svg?color=%23888888" width="18" align="center" /> Within minutes, you'll have a fully functional chat interface that can read, speak, and reason – all brandable, themeable, and extensible.
 
-### 🔄 Quick Provider Setup
+### <img src="https://api.iconify.design/lucide/refresh-cw.svg?color=%23888888" width="18" align="center" /> Quick Provider Setup
 
 **Option 1: Gateway Provider (Recommended)**
 ```tsx
@@ -223,7 +223,7 @@ aiProvider: {
   - `POST /api/feedback` — submit in-app feedback
   - `GET /subscription/{userId}` and `PUT /subscription/{userId}` — synchronize subscription tiers used by the feature-flag system
 
-> **⚠️ Important:** The Bandit Engine automatically routes to provider-specific endpoints:
+> **<img src="https://api.iconify.design/lucide/triangle-alert.svg?color=%23d29922" width="16" align="center" /> Important:** The Bandit Engine automatically routes to provider-specific endpoints:
 > - **Bandit AI** → `/api/bandit/chat/completions` (OpenAI format, token or API key)
 > - **Ollama** → `/api/ollama/chat` (native Ollama format)
 > - **OpenAI/Azure/xAI/Anthropic** → `/api/{provider}/chat/completions` (OpenAI format)
@@ -255,7 +255,7 @@ To run the quickstart purely against an Ollama daemon:
 > **Gateway tip**  
 > Set `VITE_DEFAULT_MODEL` / `VITE_FALLBACK_MODEL` to the exact Ollama model tags you have available (`gemma`, `llava`, `moondream`, or your own custom builds). Bandit automatically detects multimodal Ollama models, so using `llava`, `moondream`, or other vision-capable variants enables image understanding with no extra code.
 
-### 🎤 Voice Services (TTS/STT)
+### <img src="https://api.iconify.design/lucide/mic.svg?color=%23888888" width="18" align="center" /> Voice Services (TTS/STT)
 
 The Bandit Engine supports Text-to-Speech (TTS) and Speech-to-Text (STT) through your gateway API. These services are **technology-agnostic** - you can implement them using any backend technology:
 
@@ -286,7 +286,7 @@ Use the Management interface to switch providers anytime or migrate from direct 
 
 ---
 
-## 🧩 Consuming the Components
+## <img src="https://api.iconify.design/lucide/puzzle.svg?color=%23888888" width="18" align="center" /> Consuming the Components
 
 Once you've wrapped your app with `ChatProvider`, you can selectively integrate Bandit's components as needed:
 
@@ -324,7 +324,7 @@ function YourPage() {
 }
 ```
 
-### 🛠️ Utility Functions & Hooks
+### <img src="https://api.iconify.design/lucide/hammer.svg?color=%23888888" width="18" align="center" /> Utility Functions & Hooks
 
 Bandit Engine exports several utility functions for advanced use cases:
 
@@ -365,36 +365,36 @@ const mood = await detectMessageMood("I'm so excited about this project!");
 #### Date/Time Context
 All AI interactions automatically include current date/time context to improve relevance and accuracy of responses.
 
-> ⚠️ **Important:** Each component (`<Chat />`, `<Management />`, `<ChatModal />`) **must** be wrapped in a `ChatProvider` to function correctly.  
+> <img src="https://api.iconify.design/lucide/triangle-alert.svg?color=%23d29922" width="16" align="center" /> **Important:** Each component (`<Chat />`, `<Management />`, `<ChatModal />`) **must** be wrapped in a `ChatProvider` to function correctly.  
 > In React, you can wrap your app once at the root.  
 > In Angular or Vue, you may need to wrap each usage with a `<bandit-chat-provider>` tag and pass settings each time until full reactive context is supported.
 
 ---
 
-## 🎛️ Chat Control Center (ChatModal Feature)
+## <img src="https://api.iconify.design/lucide/sliders-horizontal.svg?color=%23888888" width="18" align="center" /> Chat Control Center (ChatModal Feature)
 
 The `<ChatModal />` includes a comprehensive Chat Control Center that provides advanced session management:
 
-### 🔧 Core Features
+### <img src="https://api.iconify.design/lucide/wrench.svg?color=%23888888" width="18" align="center" /> Core Features
 - **Session vs. Conversation Context**: Toggle between local modal session and persistent conversation history
 - **Voice Model Selection**: Real-time voice switching with preview greetings (requires TTS gateway configuration)
 - **Memory Management**: View and manage AI personal memory entries
 - **Conversation Navigation**: Seamless transition from modal to full chat interface
 - **Manual Refresh**: Force reload of conversations and voice models for troubleshooting
 
-### 🎤 Voice Integration
+### <img src="https://api.iconify.design/lucide/mic.svg?color=%23888888" width="18" align="center" /> Voice Integration
 When your gateway API includes TTS endpoints, the Chat Control Center provides:
 - **Voice Selection Dropdown**: Choose from available voice models (e.g., Mark, Amy, Kathleen, Lessac, Ryan)
 - **Real-time Preview**: Hear voice greetings when switching models
 - **Consistent Formatting**: Voice names display as proper titles (e.g., "Mark" instead of "en_US-mark-premium")
 - **Availability Detection**: Automatic detection and fallback when voice services are unavailable
 
-### 🔄 Context Switching
+### <img src="https://api.iconify.design/lucide/refresh-cw.svg?color=%23888888" width="18" align="center" /> Context Switching
 - **Local Session**: Quick interactions within the modal scope
 - **Main Conversation**: Access full conversation history with automatic navigation to `/chat` route
 - **Smart Conversation Selection**: Automatically loads most recent conversation when switching contexts
 
-### 💾 Memory Features
+### <img src="https://api.iconify.design/lucide/save.svg?color=%23888888" width="18" align="center" /> Memory Features
 - **Personal Memory Display**: View AI's stored personal information about the user
 - **Memory Entry Count**: Real-time count of stored memory entries
 - **Memory Management Modal**: Full CRUD operations for memory entries
@@ -421,7 +421,7 @@ function App() {
 }
 ```
 
-### 📧 Feedback System
+### <img src="https://api.iconify.design/lucide/mail.svg?color=%23888888" width="18" align="center" /> Feedback System
 
 The Bandit Engine includes a comprehensive feedback system that can be configured and customized for your application.
 
@@ -457,13 +457,13 @@ import { FeedbackButton } from '@burtson-labs/bandit-engine';
 ```
 
 **Features:**
-- 📱 **Responsive Design**: Automatic floating FAB on desktop, inline button on mobile
-- 🎨 **Category System**: Bug reports, feature requests, general feedback
-- 📊 **Priority Levels**: Low, medium, high, critical
-- 😤 **Annoyance Slider**: Measure user frustration (1-5 scale)
-- 📎 **Single Image Support**: Automatic clipboard integration
-- 📧 **Email Fallback**: Generates mailto URLs when API unavailable
-- ⚙️ **User Preferences**: Can be enabled/disabled in management UI
+- <img src="https://api.iconify.design/lucide/smartphone.svg?color=%23888888" width="18" align="center" /> **Responsive Design**: Automatic floating FAB on desktop, inline button on mobile
+- <img src="https://api.iconify.design/lucide/palette.svg?color=%23888888" width="18" align="center" /> **Category System**: Bug reports, feature requests, general feedback
+- <img src="https://api.iconify.design/lucide/bar-chart-3.svg?color=%23888888" width="18" align="center" /> **Priority Levels**: Low, medium, high, critical
+- <img src="https://api.iconify.design/lucide/angry.svg?color=%23888888" width="18" align="center" /> **Annoyance Slider**: Measure user frustration (1-5 scale)
+- <img src="https://api.iconify.design/lucide/paperclip.svg?color=%23888888" width="18" align="center" /> **Single Image Support**: Automatic clipboard integration
+- <img src="https://api.iconify.design/lucide/mail.svg?color=%23888888" width="18" align="center" /> **Email Fallback**: Generates mailto URLs when API unavailable
+- <img src="https://api.iconify.design/lucide/settings.svg?color=%23888888" width="18" align="center" /> **User Preferences**: Can be enabled/disabled in management UI
 
 **Auto-Integration:**
 - Desktop: Floating feedback button (when `preferences.feedbackEnabled` is true)
@@ -472,7 +472,7 @@ import { FeedbackButton } from '@burtson-labs/bandit-engine';
 
 ---
 
-## ⚙️ Angular Integration (Experimental)
+## <img src="https://api.iconify.design/lucide/settings.svg?color=%23888888" width="18" align="center" /> Angular Integration (Experimental)
 
 To use Bandit Engine in an Angular project:
 
@@ -511,7 +511,7 @@ Note: You only need to define the elements you intend to use. Don't mount all co
 
 ---
 
-## ⚙️ Vue.js Integration (Experimental)
+## <img src="https://api.iconify.design/lucide/settings.svg?color=%23888888" width="18" align="center" /> Vue.js Integration (Experimental)
 
 To use Bandit Engine in a Vue 3 project:
 
@@ -550,7 +550,7 @@ Note: You only need to define the elements you intend to use. Don't mount all co
 
 > `defineCustomElement` allows usage in Vue and Angular apps via native Web Components, making Bandit fully framework-agnostic.
 
-> 🔄 Similar to Angular, when using `<Management />` or `<ChatModal />`, wrap each one with a `<bandit-chat-provider>` to ensure proper context injection.
+> <img src="https://api.iconify.design/lucide/refresh-cw.svg?color=%23888888" width="18" align="center" /> Similar to Angular, when using `<Management />` or `<ChatModal />`, wrap each one with a `<bandit-chat-provider>` to ensure proper context injection.
 
 > Make sure `packageSettings` is passed as a serialized JSON string when using with HTML-based custom elements.
 
@@ -558,7 +558,7 @@ Note: You only need to define the elements you intend to use. Don't mount all co
 
 ---
 
-## 📦 Custom Element Support
+## <img src="https://api.iconify.design/lucide/package.svg?color=%23888888" width="18" align="center" /> Custom Element Support
 
 To use Bandit components (`Chat`, `Management`, `ChatModal`) in any modern JS framework (Angular, Vue, Svelte, etc.), you can register them as native custom elements:
 
@@ -571,7 +571,7 @@ customElements.define('bandit-modal', BanditModal);
 
 Wrap it in `<bandit-chat-provider>` and you’re ready to go. Ideal for environments where React isn’t used directly.
 
-> 🧠 **Note for Non-React Users:**  
+> <img src="https://api.iconify.design/lucide/brain.svg?color=%23888888" width="18" align="center" /> **Note for Non-React Users:**  
 > When using Bandit components as custom elements (e.g., in Angular, Vue, or static HTML), make sure the compiled custom elements script is loaded before usage. You can do this by importing or referencing it in your HTML or entry file. This ensures the custom elements are defined before being rendered.
 
 To create custom elements, you must import the React components and pass them to `defineCustomElement`. For example:
@@ -584,7 +584,7 @@ customElements.define('bandit-modal', defineCustomElement(ChatModal));
 
 ---
 
-## 📸 Live Preview
+## <img src="https://api.iconify.design/lucide/camera.svg?color=%23888888" width="18" align="center" /> Live Preview
 
 Here are some screenshots of Bandit Chat in action:
 
@@ -631,7 +631,7 @@ Here are some screenshots of Bandit Chat in action:
 </p>
 
 
-4. **🌐 CDN-Based Config (Optional)**
+4. **<img src="https://api.iconify.design/lucide/globe.svg?color=%23888888" width="18" align="center" /> CDN-Based Config (Optional)**
 
 To streamline configuration, you can host your `config.json` (and related assets like model presets or branding) via your own CDN or edge cache.
 
@@ -650,11 +650,11 @@ Update the `brandingConfigUrl` like this:
 
 This enables remote control of Bandit appearance, available models, and more — without redeploying your frontend.
 
-> ℹ️ Note: All CDN assets such as logos, avatars, config, and workers are available at `https://cdn.burtson.ai/`. You may override these by hosting your own versions and pointing `packageSettings` to the appropriate URLs.
+> <img src="https://api.iconify.design/lucide/info.svg?color=%2358a6ff" width="16" align="center" /> Note: All CDN assets such as logos, avatars, config, and workers are available at `https://cdn.burtson.ai/`. You may override these by hosting your own versions and pointing `packageSettings` to the appropriate URLs.
 
 ---
 
-## ⚙️ Configuration Options
+## <img src="https://api.iconify.design/lucide/settings.svg?color=%23888888" width="18" align="center" /> Configuration Options
 - `defaultModel`: Primary chat model (string; required)
 - `fallbackModel`: Optional fallback model if the default is unavailable
 - `gatewayApiUrl`: Gateway API base URL for AI, TTS, STT, and MCP
@@ -681,13 +681,13 @@ These file operations are invoked in tandem with the `/api/embedding/*` endpoint
 
 > Quickstart note: the bundled Express gateway does not implement these upload/download routes; they currently return `501` until you connect real storage.
 
-## 🤖 AI Provider System
+## <img src="https://api.iconify.design/lucide/bot.svg?color=%23888888" width="18" align="center" /> AI Provider System
 
 Bandit Engine features a unified, gateway-based AI provider architecture that supports multiple AI services through a secure backend:
 
 ### Supported Providers
 
-- **🌟 Gateway Provider** (Recommended): Routes all requests through your secure backend
+- **<img src="https://api.iconify.design/lucide/star.svg?color=%23888888" width="18" align="center" /> Gateway Provider** (Recommended): Routes all requests through your secure backend
 - **Bandit AI**: Bandit Core models served through the secure gateway
 - **Ollama**: Self-hosted models and Ollama-compatible endpoints
 - **OpenAI**: GPT models via OpenAI API
@@ -714,11 +714,11 @@ const chatPackageSettings = {
 ```
 
 **Benefits:**
-- 🔒 **Control**: Your gateway owns credentials, routing, and policy enforcement
-- 📊 **Monitoring**: Request logging and usage analytics  
-- 🚦 **Rate Limiting**: Built-in throttling and quotas
-- 🔄 **Provider Switching**: Change backends without frontend updates
-- 🛡️ **Authentication**: Unified auth and request validation across services
+- <img src="https://api.iconify.design/lucide/lock.svg?color=%23888888" width="18" align="center" /> **Control**: Your gateway owns credentials, routing, and policy enforcement
+- <img src="https://api.iconify.design/lucide/bar-chart-3.svg?color=%23888888" width="18" align="center" /> **Monitoring**: Request logging and usage analytics  
+- <img src="https://api.iconify.design/lucide/gauge.svg?color=%23888888" width="18" align="center" /> **Rate Limiting**: Built-in throttling and quotas
+- <img src="https://api.iconify.design/lucide/refresh-cw.svg?color=%23888888" width="18" align="center" /> **Provider Switching**: Change backends without frontend updates
+- <img src="https://api.iconify.design/lucide/shield.svg?color=%23888888" width="18" align="center" /> **Authentication**: Unified auth and request validation across services
 
 **Gateway Requirements:**  
 Your gateway API can be built with any technology (Node.js, Python, .NET, Java, etc.) as long as it implements:
@@ -765,10 +765,10 @@ The Bandit Engine provides comprehensive image support across all AI providers t
 - **Anthropic**: `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`
 
 **Key Features:**
-- 🖼️ **Universal Image Input**: Drop, paste, or upload images directly in chat
-- 🔄 **Provider-Specific Formatting**: Automatic conversion to each provider's image format
-- 📱 **Multi-Image Support**: Send multiple images in a single message
-- 🎯 **Vision Models**: Seamless integration with multimodal AI models
+- <img src="https://api.iconify.design/lucide/image.svg?color=%23888888" width="18" align="center" /> **Universal Image Input**: Drop, paste, or upload images directly in chat
+- <img src="https://api.iconify.design/lucide/refresh-cw.svg?color=%23888888" width="18" align="center" /> **Provider-Specific Formatting**: Automatic conversion to each provider's image format
+- <img src="https://api.iconify.design/lucide/smartphone.svg?color=%23888888" width="18" align="center" /> **Multi-Image Support**: Send multiple images in a single message
+- <img src="https://api.iconify.design/lucide/target.svg?color=%23888888" width="18" align="center" /> **Vision Models**: Seamless integration with multimodal AI models
 
 **Usage Example:**
 ```tsx
@@ -834,7 +834,7 @@ function MyComponent() {
 }
 ```
 
-## 🔧 Model Context Protocol (MCP) Integration
+## <img src="https://api.iconify.design/lucide/wrench.svg?color=%23888888" width="18" align="center" /> Model Context Protocol (MCP) Integration
 
 Bandit Engine now supports **Model Context Protocol (MCP)** for extending AI capabilities with external tools and services:
 
@@ -913,7 +913,7 @@ if (isMCPAvailable()) {
 
 ---
 
-## 🎛️ Feature Flags & Subscription Tiers
+## <img src="https://api.iconify.design/lucide/sliders-horizontal.svg?color=%23888888" width="18" align="center" /> Feature Flags & Subscription Tiers
 
 Bandit Engine includes a comprehensive **tier-based feature flag system** that enables subscription-based access control and feature gating:
 
@@ -965,15 +965,15 @@ Different subscription tiers have access to different features:
 
 | Feature | Basic | Premium | Pro | Team | Trial |
 |---------|-------|---------|-----|------|-------|
-| **Core Chat** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Text-to-Speech** | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Speech-to-Text** | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Document Upload** | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Model Management** | ❌ | ❌ | ✅ | ✅ | ❌ |
-| **Admin Dashboard** | ❌ | ❌ | ✅ | ✅ | ❌ |
-| **API Access** | ❌ | ❌ | ✅ | ✅ | ❌ |
-| **Team Collaboration** | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Custom Branding** | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Core Chat** | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> |
+| **Text-to-Speech** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> |
+| **Speech-to-Text** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> |
+| **Document Upload** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> |
+| **Model Management** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> |
+| **Admin Dashboard** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> |
+| **API Access** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> |
+| **Team Collaboration** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> |
+| **Custom Branding** | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> | <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> |
 
 ### JWT-Based Authentication
 
@@ -1110,7 +1110,7 @@ This feature flag system enables you to build sophisticated subscription-based A
 
 ---
 
-## 🐛 Debug Logger
+## <img src="https://api.iconify.design/lucide/bug.svg?color=%23888888" width="18" align="center" /> Debug Logger
 
 Bandit Engine exports a debug logger for consistent logging across your application:
 
@@ -1123,9 +1123,9 @@ debugLogger.warn('Fallback model used');
 debugLogger.error('Failed to connect to AI service');
 ```
 
-## 🔒 Security Best Practices
+## <img src="https://api.iconify.design/lucide/lock.svg?color=%23888888" width="18" align="center" /> Security Best Practices
 
-**⚠️ Important Security Notice:**
+**<img src="https://api.iconify.design/lucide/triangle-alert.svg?color=%23d29922" width="16" align="center" /> Important Security Notice:**
 
 While Bandit Engine supports direct API key configuration for development and testing, **we strongly recommend against using API keys directly in frontend applications** for production environments.
 
@@ -1161,7 +1161,7 @@ const chatPackageSettings = {
 
 ### Legacy Configuration (Deprecated)
 
-⚠️ **Legacy TTS/STT URLs are deprecated.** Use the unified `gatewayApiUrl` instead:
+<img src="https://api.iconify.design/lucide/triangle-alert.svg?color=%23d29922" width="16" align="center" /> **Legacy TTS/STT URLs are deprecated.** Use the unified `gatewayApiUrl` instead:
 
 ```tsx
 // ❌ Deprecated (still works but not recommended)
@@ -1227,7 +1227,7 @@ The Bandit Engine only requires that your endpoints follow the expected input/ou
 - **PDF Worker**: For document embedding features, the engine uses the PDF parsing worker from `https://cdn.burtson.ai/scripts/pdf.worker.js`
 - **CDN Resources**: Default avatars, logos, and configurations load from `https://cdn.burtson.ai/` if not overridden locally
 
-## 💡 Vision & Roadmap
+## <img src="https://api.iconify.design/lucide/lightbulb.svg?color=%23888888" width="18" align="center" /> Vision & Roadmap
 
 Bandit Engine isn't just a component – it's a foundation. Coming soon:
 - Multi-modal input: image, voice, document uploads
@@ -1240,7 +1240,7 @@ We’re building this to be the interface layer of your AI-first products. Own t
 
 ---
 
-## 📌 Migration Guide
+## <img src="https://api.iconify.design/lucide/pin.svg?color=%23888888" width="18" align="center" /> Migration Guide
 
 ### From Legacy TTS/STT URLs to Gateway API
 
@@ -1268,26 +1268,26 @@ const settings = {
 ```
 
 The new approach provides:
-- ✅ **Unified API**: One endpoint for all services
-- ✅ **Better Security**: Centralized authentication and rate limiting  
-- ✅ **Technology Flexibility**: Use any backend implementation
-- ✅ **Automatic Discovery**: Real-time service availability detection
+- <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> **Unified API**: One endpoint for all services
+- <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> **Better Security**: Centralized authentication and rate limiting  
+- <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> **Technology Flexibility**: Use any backend implementation
+- <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> **Automatic Discovery**: Real-time service availability detection
 
 ---
 
-## 🛡️ License & Protection
+## <img src="https://api.iconify.design/lucide/shield.svg?color=%23888888" width="18" align="center" /> License & Protection
 
 This software is protected under the **Business Source License (BUSL) 1.1** by Burtson Labs LLC.
 
-### ⚖️ License Summary
+### <img src="https://api.iconify.design/lucide/scale.svg?color=%23888888" width="18" align="center" /> License Summary
 
-- ✅ **Development & Evaluation**: Free for internal development, testing, and evaluation
-- ✅ **Non-Commercial Use**: Free for educational, research, and personal projects
-- ❌ **Commercial Production**: Requires commercial license for production deployment
-- ❌ **Competitive Use**: Cannot be used to create competing AI chat products
-- ❌ **AI Training**: Cannot be used as training data for AI models
+- <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> **Development & Evaluation**: Free for internal development, testing, and evaluation
+- <img src="https://api.iconify.design/lucide/circle-check.svg?color=%233fb950" width="16" align="center" /> **Non-Commercial Use**: Free for educational, research, and personal projects
+- <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> **Commercial Production**: Requires commercial license for production deployment
+- <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> **Competitive Use**: Cannot be used to create competing AI chat products
+- <img src="https://api.iconify.design/lucide/circle-x.svg?color=%23f85149" width="16" align="center" /> **AI Training**: Cannot be used as training data for AI models
 
-### 📋 Usage Rights
+### <img src="https://api.iconify.design/lucide/clipboard-list.svg?color=%23888888" width="18" align="center" /> Usage Rights
 
 **Permitted:**
 - Internal development and testing
@@ -1301,7 +1301,7 @@ This software is protected under the **Business Source License (BUSL) 1.1** by B
 - Using as training data for AI/ML models
 - Removing or modifying license notices and watermarks
 
-### 🔒 Protection Features
+### <img src="https://api.iconify.design/lucide/lock.svg?color=%23888888" width="18" align="center" /> Protection Features
 
 This codebase includes multiple protection layers:
 - **Embedded Watermarks**: Visible and stealth fingerprints in all source files
@@ -1309,9 +1309,9 @@ This codebase includes multiple protection layers:
 - **License Validation**: Runtime checks for compliance
 - **Honey Pot Files**: Trap files that trigger license violations when accessed
 
-**⚠️ Warning**: Removing, modifying, or bypassing these protection mechanisms constitutes a license violation and may result in immediate license termination.
+**<img src="https://api.iconify.design/lucide/triangle-alert.svg?color=%23d29922" width="16" align="center" /> Warning**: Removing, modifying, or bypassing these protection mechanisms constitutes a license violation and may result in immediate license termination.
 
-### 💼 Commercial Licensing
+### <img src="https://api.iconify.design/lucide/briefcase.svg?color=%23888888" width="18" align="center" /> Commercial Licensing
 
 **Production License**: Required for commercial deployment
 - Full production rights
@@ -1324,7 +1324,7 @@ This codebase includes multiple protection layers:
 - **Website**: https://burtson.ai/license
 - **Sales**: sales@burtson.ai
 
-### 👨‍💻 For Contributors & Developers
+### <img src="https://api.iconify.design/lucide/code.svg?color=%23888888" width="18" align="center" /> For Contributors & Developers
 
 Before contributing or publishing a new Pull Request, run the available validation scripts:
 
@@ -1341,7 +1341,7 @@ npm run validate-protection # Ensure license headers and fingerprints are intact
 - **[PROTECTION-NOTICE.md](./PROTECTION-NOTICE.md)** - Legal notices and compliance requirements
 - **[LICENSE](./LICENSE)** - Full BUSL 1.1 license text
 
-### 📝 License Compliance
+### <img src="https://api.iconify.design/lucide/pencil.svg?color=%23888888" width="18" align="center" /> License Compliance
 
 All source files must include proper license headers and watermarks. The protection system automatically:
 - Adds license headers to new files

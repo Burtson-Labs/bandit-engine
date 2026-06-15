@@ -143,39 +143,25 @@ type MCPToolParameters = Record<string, unknown>;
 
 type ToolAwareChatRequest = AIChatRequest & { tools?: MCPFunctionTool[] };
 
-interface SportsGameResult {
-  status?: string;
-  homeTeam?: string;
-  homeScore?: number | string;
-  awayTeam?: string;
-  awayScore?: number | string;
-}
-
-interface NewsArticleResult {
-  title?: string;
-  description?: string;
-  summary?: string;
-  source?: string;
-  publishedAt?: string;
-  published?: string;
-  url?: string;
-  link?: string;
-}
-
-interface DocSearchResult {
+interface WebSearchResultItem {
   title?: string;
   url?: string;
-  link?: string;
-  summary?: string;
-  description?: string;
+  content?: string;
+  score?: number;
 }
 
-interface WeatherResult {
-  location?: string;
-  description?: string;
-  temperature?: string | number;
-  message?: string;
-  details?: string;
+interface WebSearchResponse {
+  query?: string;
+  answer?: string;
+  results?: WebSearchResultItem[];
+}
+
+interface WebFetchResult {
+  url?: string;
+  status?: number;
+  contentType?: string;
+  content?: string;
+  blocked?: boolean;
   error?: string;
 }
 
@@ -1031,6 +1017,11 @@ export const useAIProvider = ({
   const ragGuidance = `\n\n🎯 CONTEXT USAGE DIRECTIVE:\n- The documents and background information above contain VERIFIED, RELEVANT content for this request\n- Answer confidently using this provided context - do NOT apologize or claim insufficient information\n- When documents are provided, they contain the information needed to answer the question\n- Quote specific details from the documents and cite them as [Doc: NAME]\n- Combine the provided context with your knowledge to give comprehensive answers\n- Only use tools for live data (news, weather, sports scores) when specifically requested\n- Trust and utilize the provided context without hesitation`;
   enhancedSystemPrompt += ragGuidance;
 
+  // Captured BEFORE the tool list/protocol is appended below. The post-tool
+  // summarization pass re-prompts the model with this tool-free prompt so it
+  // writes a natural answer instead of being tempted to call tools again.
+  const systemPromptForSummary = enhancedSystemPrompt;
+
       // Add MCP tools information to system prompt if available
       const mcpToolsAvailable = isMCPAvailable();
       if (mcpToolsAvailable) {
@@ -1044,7 +1035,7 @@ export const useAIProvider = ({
               return `- ${tool.function.name}: ${tool.function.description}${paramSuffix}`;
             })
             .join("\n");
-  const protocol = `\n\nTOOL USAGE PROTOCOL (conservative approach)\n- PRIORITIZE your built-in knowledge and the provided context ABOVE to answer questions first.\n- Use your training data and general knowledge confidently for common topics, concepts, and questions.\n- Only call tools for SPECIFIC, CURRENT information that requires real-time data:\n  * news() - ONLY when explicitly asked about recent/breaking news, current events, or "what's happening now"\n  * sports() - ONLY when asked about live scores, current games, recent sports results, or league standings\n  * search/documentation tools - ONLY when asked about very specific technical documentation or when you need to supplement your knowledge with current docs\n- For general questions about concepts, definitions, explanations, or how-to topics, use your built-in knowledge WITHOUT calling tools.\n- Examples of what NOT to use tools for: "who are you?", "what is React?", "explain machine learning", "how does X work?", general programming questions.\n- When a tool is truly needed, call exactly ONE tool that best matches the request.\n- Begin tool usage with a fenced code block: \`\`\`tool_code\nfunctionName({"param": "value"})\n\`\`\`\n- If you cannot answer with your knowledge and context, and no suitable tool exists, ask a clarifying question.\n\nExamples of appropriate tool usage:\n\n\`\`\`tool_code\nnews({"topic": "latest AI developments", "count": 5})\n\`\`\`\n\n\`\`\`tool_code\nsports({"league": "nfl", "type": "scores"})\n\`\`\`\n`;
+  const protocol = `\n\nTOOL USAGE PROTOCOL (conservative approach)\n- PRIORITIZE your built-in knowledge and the provided context ABOVE to answer questions first.\n- Use your training data and general knowledge confidently for common topics, concepts, and questions.\n- Only call tools for SPECIFIC, CURRENT information that requires real-time data or a source you don't already have:\n  * web_search() - when asked about recent/current events, breaking news, live information (weather, prices, sports scores), or when you need to look up documentation, libraries, APIs, error messages, or verify a specific fact\n  * web_fetch() - ONLY when you already have a specific URL whose contents you need to read\n  * image_generation() - ONLY when explicitly asked to create or generate an image\n- For general questions about concepts, definitions, explanations, or how-to topics, use your built-in knowledge WITHOUT calling tools.\n- Examples of what NOT to use tools for: "who are you?", "what is React?", "explain machine learning", "how does X work?", general programming questions.\n- When a tool is truly needed, call exactly ONE tool that best matches the request.\n- Begin tool usage with a fenced code block: \`\`\`tool_code\nfunctionName({"param": "value"})\n\`\`\`\n- If you cannot answer with your knowledge and context, and no suitable tool exists, ask a clarifying question.\n\nExamples of appropriate tool usage:\n\n\`\`\`tool_code\nweb_search({"query": "latest AI developments 2026", "count": 5})\n\`\`\`\n\n\`\`\`tool_code\nweb_fetch({"url": "https://example.com/changelog"})\n\`\`\`\n`;
           enhancedSystemPrompt += `\n\nYou have access to the following tools that can help you provide better responses. Use them when appropriate:\n\n${toolList}\n${protocol}`;
           
           debugLogger.info("MCP tools added to system prompt", { 
@@ -1093,6 +1084,12 @@ export const useAIProvider = ({
         if (openIdx !== -1) result = result.slice(0, openIdx);
         return result.trimStart();
       };
+
+      // Strip fenced tool_code blocks — used when echoing the assistant's
+      // first turn back into the summarization pass so the transcript reads
+      // naturally (assistant said "let me look that up", then results arrive).
+      const stripToolBlocks = (text: string): string =>
+        text.replace(/```(?:tool_code|TOOL_CODE)\s*\n[\s\S]*?\n```/gi, "").trim();
 
       const flushNow = () => {
         clearFlushTimer();
@@ -1179,6 +1176,10 @@ export const useAIProvider = ({
             // Check for tool calls in the response and execute them
             const toolCallMatches = fullMessage.match(/```(?:tool_code|TOOL_CODE)\s*\n([^`]+)\n```/gi);
             let enhancedMessage = fullMessage;
+            // Informational tool outputs get fed back to the model for a
+            // natural-language summary; image outputs are surfaced as-is.
+            const summarizableResults: Array<{ name: string; output: string }> = [];
+            const inlineImageBlocks: string[] = [];
 
             if (toolCallMatches && toolCallMatches.length > 0 && mcpToolsAvailable) {
               debugLogger.info("Detected tool calls in AI response", {
@@ -1233,51 +1234,45 @@ export const useAIProvider = ({
                   // Summarize result (no raw JSON, no tool names)
                   let resultText = "";
                   if (result.success) {
-                    if (functionName === "sports" && Array.isArray(result.data)) {
-                      const games = (result.data as SportsGameResult[]).filter(Boolean);
-                      const q = (question || "").toLowerCase();
-                      const normalize = (value: unknown) =>
-                        typeof value === "string" ? value.toLowerCase().replace(/[^a-z0-9 ]/g, "") : "";
-                      const tokens = (value: unknown) =>
-                        normalize(value)
-                          .split(" ")
-                          .filter((w) => w.length > 3);
-                      const formatTeamScore = (team: unknown, score: unknown) => {
-                        const teamName = typeof team === "string" && team.trim().length > 0 ? team : "Team";
-                        const teamScore =
-                          typeof score === "number" || typeof score === "string" ? String(score) : "—";
-                        return `${teamName} ${teamScore}`;
-                      };
-                      const scoreLine = (game: SportsGameResult) => {
-                        const status = typeof game.status === "string" ? game.status : "";
-                        const final = status.toLowerCase().includes("final");
-                        const score = `${formatTeamScore(game.homeTeam, game.homeScore)} — ${formatTeamScore(
-                          game.awayTeam,
-                          game.awayScore
-                        )}`;
-                        return final ? `Final: ${score}` : `${status || "In progress"} — ${score}`;
-                      };
-                      let best: SportsGameResult | null = null;
-                      let bestScore = -1;
-                      for (const game of games) {
-                        const homeTokens = tokens(game.homeTeam);
-                        const awayTokens = tokens(game.awayTeam);
-                        const hits = [...homeTokens, ...awayTokens].reduce(
-                          (acc, token) => acc + (q.includes(token) ? 1 : 0),
-                          0
-                        );
-                        if (hits > bestScore) {
-                          bestScore = hits;
-                          best = game;
-                        }
+                    if (functionName === "web_search" || functionName === "web-search") {
+                      const search = (result.data ?? {}) as WebSearchResponse;
+                      const items = Array.isArray(search.results) ? search.results : [];
+                      const blocks: string[] = [];
+                      if (typeof search.answer === "string" && search.answer.trim().length > 0) {
+                        blocks.push(search.answer.trim());
                       }
-                      if (best && bestScore > 0) {
-                        resultText = scoreLine(best);
-                      } else if (games.length > 0) {
-                        const topGames = games.slice(0, Math.min(5, games.length));
-                        resultText = `Here are some current scores:\n- ${topGames.map(scoreLine).join("\n- ")}`;
+                      if (items.length > 0) {
+                        blocks.push(
+                          items
+                            .slice(0, 6)
+                            .map((item, index) => {
+                              const title = item.title?.trim() || "Untitled";
+                              const url = item.url?.trim();
+                              const snippet = item.content?.trim();
+                              let line = `${index + 1}. **${title}**`;
+                              if (url) line += `\n   ${url}`;
+                              if (snippet) {
+                                const truncated =
+                                  snippet.length > 300 ? `${snippet.slice(0, 300)}…` : snippet;
+                                line += `\n   ${truncated}`;
+                              }
+                              return line;
+                            })
+                            .join("\n\n")
+                        );
+                      }
+                      resultText = blocks.length
+                        ? blocks.join("\n\n")
+                        : `No results found${search.query ? ` for "${search.query}"` : ""}.`;
+                    } else if (functionName === "web_fetch" || functionName === "web-fetch") {
+                      const fetched = (result.data ?? {}) as WebFetchResult;
+                      if (fetched.blocked || (fetched.error && !fetched.content)) {
+                        resultText = fetched.error || "Unable to fetch that URL.";
                       } else {
-                        resultText = "No games available right now.";
+                        const body = (fetched.content ?? "").trim();
+                        const preview = body.length > 2000 ? `${body.slice(0, 2000)}…` : body;
+                        const source = fetched.url ? `**Source:** ${fetched.url}\n\n` : "";
+                        resultText = preview ? `${source}${preview}` : `${source}No readable content found.`;
                       }
                     } else if (
                       functionName === "image_generation" ||
@@ -1290,77 +1285,6 @@ export const useAIProvider = ({
                             revisedPrompt ? `Prompt refinement: “${revisedPrompt}”\n` : ""
                           }Note: the image link may expire in ~2 hours.`
                         : "Image generated successfully.";
-                    } else if (functionName === "news" && Array.isArray(result.data)) {
-                      const items = (result.data as NewsArticleResult[]).slice(0, 3);
-                      resultText = items.length
-                        ? `## Top News Results\n\n${items
-                            .map((item, index) => {
-                              const title = item.title ?? "Untitled";
-                              const source = item.source ?? "Unknown";
-                              const url = item.url ?? item.link;
-                              const description = item.description ?? item.summary;
-                              const publishedAt = item.publishedAt ?? item.published;
-
-                              let newsItem = `### ${index + 1}. ${title}\n`;
-
-                              if (typeof description === "string" && description.length > 0) {
-                                const truncated =
-                                  description.length > 150 ? `${description.slice(0, 150)}...` : description;
-                                newsItem += `${truncated}\n\n`;
-                              }
-
-                              newsItem += `**Source:** ${source}\n`;
-
-                              if (publishedAt) {
-                                const date = new Date(publishedAt);
-                                if (!Number.isNaN(date.getTime())) {
-                                  newsItem += `**Published:** ${date.toLocaleDateString()} at ${date.toLocaleTimeString(
-                                    [],
-                                    { hour: "2-digit", minute: "2-digit" }
-                                  )}\n`;
-                                }
-                              }
-
-                              if (typeof url === "string" && url.length > 0) {
-                                newsItem += `\n**[📰 Read Full Article](${url})**\n`;
-                              }
-
-                              return newsItem;
-                            })
-                            .join("\n---\n\n")}`
-                        : "No news results found.";
-                    } else if (functionName === "docs" && Array.isArray(result.data)) {
-                      const items = (result.data as DocSearchResult[]).slice(0, 3);
-                      resultText = items.length
-                        ? `Relevant docs:\n- ${items
-                            .map((item) => {
-                              const title = item.title ?? "Untitled doc";
-                              const url = item.url ?? item.link;
-                              return url ? `${title} — ${url}` : title;
-                            })
-                            .join("\n- ")}`
-                        : "No documentation results found.";
-                    } else if (functionName === "weather") {
-                      const weatherData = (result.data ?? {}) as Partial<WeatherResult>;
-                      const informative = [weatherData.message, weatherData.details, weatherData.error]
-                        .map((value) => (typeof value === "string" ? value.trim() : undefined))
-                        .filter((value): value is string => Boolean(value) && value.toLowerCase() !== "n/a");
-                      if (informative.length > 0) {
-                        const locationLabel =
-                          typeof weatherData.location === "string" && weatherData.location.length > 0
-                            ? ` for ${weatherData.location}`
-                            : "";
-                        resultText = `Weather service notice${locationLabel}: ${informative.join(" — ")}`;
-                      } else {
-                        const parts = [weatherData.location, weatherData.description, weatherData.temperature]
-                          .map((value) =>
-                            typeof value === "number" || typeof value === "string"
-                              ? String(value).trim()
-                              : undefined
-                          )
-                          .filter((value): value is string => Boolean(value));
-                        resultText = parts.length ? parts.join(" — ") : "No weather data found.";
-                      }
                     } else if (typeof result.data === "string") {
                       resultText = result.data;
                     } else if (result.data) {
@@ -1369,22 +1293,24 @@ export const useAIProvider = ({
                       resultText = "Here are the latest results.";
                     }
                   } else {
-                    const data = (result.data ?? {}) as Partial<WeatherResult> & Record<string, unknown>;
+                    const data = (result.data ?? {}) as Record<string, unknown>;
                     const informative = [data.message, data.details, data.error, result.error]
                       .map((value) => (typeof value === "string" ? value.trim() : undefined))
                       .filter((value): value is string => Boolean(value) && value.toLowerCase() !== "n/a");
-                    if (functionName === "weather" && informative.length) {
-                      const locationLabel =
-                        typeof data.location === "string" && data.location.length > 0 ? ` for ${data.location}` : "";
-                      resultText = `Weather service issue${locationLabel}: ${informative.join(" — ")}`;
-                    } else if (informative.length) {
-                      resultText = informative.join(" — ");
-                    } else {
-                      resultText = `I couldn't complete that request: ${result.error || "Unknown error"}.`;
-                    }
+                    resultText = informative.length
+                      ? informative.join(" — ")
+                      : `I couldn't complete that request: ${result.error || "Unknown error"}.`;
                   }
 
                   enhancedMessage = enhancedMessage.replace(placeholderToken, resultText);
+
+                  if (result.success) {
+                    if (functionName === "image_generation" || functionName === "image-generation") {
+                      inlineImageBlocks.push(resultText);
+                    } else if (functionName !== "check_gateway_health") {
+                      summarizableResults.push({ name: functionName, output: resultText });
+                    }
+                  }
 
                   debugLogger.info("Tool execution completed", {
                     functionName,
@@ -1409,6 +1335,71 @@ export const useAIProvider = ({
                   } else {
                     enhancedMessage = enhancedMessage.replace(match, errorText);
                   }
+                }
+              }
+
+              // ── Summarization pass ────────────────────────────────────
+              // Instead of dumping raw tool output into the chat, feed the
+              // results back to the model and stream its natural-language
+              // answer. No tools are offered on this pass (and the prompt
+              // forbids tool_code) to prevent a tool-call loop.
+              if (summarizableResults.length > 0) {
+                try {
+                  const toolResultsText = summarizableResults
+                    .map((r) => `## ${r.name}\n${r.output}`)
+                    .join("\n\n");
+                  const summaryMessages: AIMessage[] = [
+                    { role: "system", content: systemPromptForSummary },
+                    ...contextMessages,
+                    { role: "user", content: question },
+                    { role: "assistant", content: stripToolBlocks(fullMessage) || "Let me look that up." },
+                    {
+                      role: "user",
+                      content: `I ran the tool(s) you requested. Here are the raw results:\n\n${toolResultsText}\n\nUsing these results together with your own knowledge, answer my original question concisely and in a natural, well-formatted way. Cite source URLs inline when you rely on them. Do NOT output tool_code or call any tools again.`,
+                    },
+                  ];
+                  const summaryRequest: ToolAwareChatRequest = {
+                    model: modelName,
+                    messages: summaryMessages,
+                    stream: true,
+                    options: { num_predict: tokenLimit + 250 },
+                  };
+
+                  clearFlushTimer();
+                  setStreamBuffer("");
+                  const summaryText = await new Promise<string>((resolve) => {
+                    let acc = "";
+                    const summarySub = provider.chat(summaryRequest).subscribe({
+                      next: (data) => {
+                        if (data?.message?.content) {
+                          acc += data.message.content;
+                          const visible = stripThinking(acc);
+                          latestDisplayMessage = visible;
+                          lastPartialRef.current.text = visible;
+                          setStreamBuffer(visible);
+                        }
+                      },
+                      error: (summaryErr: Error) => {
+                        debugLogger.error("Summarization pass failed", {
+                          error: summaryErr instanceof Error ? summaryErr.message : String(summaryErr),
+                        });
+                        resolve("");
+                      },
+                      complete: () => resolve(stripThinking(acc).trim()),
+                    });
+                    currentSubRef.current = summarySub;
+                  });
+
+                  if (summaryText.trim()) {
+                    enhancedMessage =
+                      summaryText +
+                      (inlineImageBlocks.length ? `\n\n${inlineImageBlocks.join("\n\n")}` : "");
+                  }
+                } catch (summaryError) {
+                  debugLogger.error("Summarization pass threw", {
+                    error: summaryError instanceof Error ? summaryError.message : String(summaryError),
+                  });
+                  // Fall back to the inline-spliced enhancedMessage.
                 }
               }
             }

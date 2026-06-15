@@ -121,8 +121,9 @@ export class STTClient {
     }
 
     const body = new FormData();
-    const filename = normalizedBlob.type.includes('ogg') ? 'audio.ogg' : 
+    const filename = normalizedBlob.type.includes('ogg') ? 'audio.ogg' :
                     normalizedBlob.type.includes('wav') ? 'audio.wav' :
+                    normalizedBlob.type.includes('mp4') || normalizedBlob.type.includes('m4a') || normalizedBlob.type.includes('aac') ? 'audio.mp4' :
                     normalizedBlob.type.includes('mp3') ? 'audio.mp3' : 'audio.webm';
     
     // Try common parameter names for maximum API compatibility

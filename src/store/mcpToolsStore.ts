@@ -73,97 +73,48 @@ const healthCheckTool: MCPTool = {
   isBuiltIn: true
 };
 
-const newsTool: MCPTool = {
-  id: "news",
-  name: "news",
-  description: "Get the latest news headlines and articles from various sources",
+const webSearchTool: MCPTool = {
+  id: "web-search",
+  name: "web_search",
+  description: "Search the web for current information, documentation, and facts",
   enabled: true,
   type: "function",
   function: {
-    name: "news",
-    description: "Get news articles and headlines",
+    name: "web_search",
+    description: "Search the web and return ranked results with snippets (and an optional summarized answer). Use for current events, documentation, libraries, error messages, and factual lookups.",
     parameters: {
       type: "object",
       properties: {
-        topic: { type: "string", description: "Filter news by topic" },
-        count: { type: "number", description: "Number of articles to return (1-100)" },
-        headlines: { type: "boolean", description: "Return top headlines instead of searching" }
-      },
-      required: []
-    }
-  },
-  endpoint: "/mcp/news",
-  method: "GET",
-  isBuiltIn: true
-};
-
-const weatherTool: MCPTool = {
-  id: "weather",
-  name: "weather",
-  description: "Get current weather conditions and forecasts by location",
-  enabled: true,
-  type: "function",
-  function: {
-    name: "weather",
-    description: "Get weather information by location",
-    parameters: {
-      type: "object",
-      properties: {
-        zip: { type: "string", description: "US zip code" },
-        latitude: { type: "number", description: "Latitude" },
-        longitude: { type: "number", description: "Longitude" }
-      },
-      required: []
-    }
-  },
-  endpoint: "/mcp/weather",
-  method: "GET",
-  isBuiltIn: true
-};
-
-const docsTool: MCPTool = {
-  id: "docs",
-  name: "docs",
-  description: "Search framework documentation",
-  enabled: true,
-  type: "function",
-  function: {
-    name: "docs",
-    description: "Search framework documentation",
-    parameters: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "Search query" },
-        framework: { type: "string", description: "Specific framework to search" },
-        count: { type: "number", description: "Number of results (1-50)" }
+        query: { type: "string", description: "The search query — natural language or keywords" },
+        count: { type: "number", description: "Number of results to return (1-10, default 5)" },
+        include_answer: { type: "boolean", description: "Include a short summarized answer when available" }
       },
       required: ["query"]
     }
   },
-  endpoint: "/mcp/docs",
+  endpoint: "/mcp/web-search",
   method: "GET",
   isBuiltIn: true
 };
 
-const sportsTool: MCPTool = {
-  id: "sports",
-  name: "sports",
-  description: "Get sports scores and game information",
+const webFetchTool: MCPTool = {
+  id: "web-fetch",
+  name: "web_fetch",
+  description: "Fetch the text content of a specific URL",
   enabled: true,
   type: "function",
   function: {
-    name: "sports",
-    description: "Get sports scores and game information",
+    name: "web_fetch",
+    description: "Fetch a single public URL and return its trimmed text content. Use when you already have a specific link you need to read.",
     parameters: {
       type: "object",
       properties: {
-        league: { type: "string", description: "Filter by specific league (e.g., nfl, nba)" },
-        date: { type: "string", description: "Date in YYYY-MM-DD format" }
+        url: { type: "string", description: "Absolute http(s) URL to fetch" }
       },
-      required: []
+      required: ["url"]
     }
   },
-  endpoint: "/mcp/sports",
+  endpoint: "/mcp/web-fetch",
   method: "GET",
   isBuiltIn: true
 };
@@ -194,7 +145,7 @@ const imageGenerationTool: MCPTool = {
   isBuiltIn: true
 };
 
-const defaultTools: MCPTool[] = [healthCheckTool, newsTool, weatherTool, docsTool, sportsTool, imageGenerationTool];
+const defaultTools: MCPTool[] = [healthCheckTool, webSearchTool, webFetchTool, imageGenerationTool];
 
 export const useMCPToolsStore = create<MCPToolsStore>((set, get) => ({
   tools: defaultTools,

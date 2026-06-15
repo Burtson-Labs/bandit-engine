@@ -58,6 +58,27 @@ const computeRms = (data: Uint8Array): number => {
 };
 
 /**
+ * iOS Safari's MediaRecorder cannot produce audio/webm — it only supports
+ * audio/mp4. `new MediaRecorder(stream)` with no options still works (it falls
+ * back to mp4), but being explicit lets us label the blob with the correct
+ * Content-Type for the STT backend. Returns undefined when no candidate is
+ * supported so the caller falls back to the browser default.
+ */
+const pickSupportedMimeType = (): string | undefined => {
+  if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") {
+    return undefined;
+  }
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4;codecs=mp4a.40.2",
+    "audio/mp4",
+    "audio/aac",
+  ];
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type));
+};
+
+/**
  * Continuous voice mode controller that toggles microphone capture, performs lightweight
  * voice-activity detection, forwards audio to STT, and coordinates interruptions with TTS/streaming.
  */
@@ -87,12 +108,17 @@ export const useVoiceMode = (config: UseVoiceModeConfig) => {
     let silenceStartAt = 0;
     const isRecordingRef = { current: false };
     const isProcessingRef = { current: false };
+    let removeResumeListeners: (() => void) | null = null;
 
     const amplitudeThreshold = configRef.current.amplitudeThreshold ?? 0.025;
     const minSpeechMs = configRef.current.minSpeechMs ?? 180;
     const minSilenceMs = configRef.current.minSilenceMs ?? 720;
 
     const clearAudioSession = async () => {
+      if (removeResumeListeners) {
+        removeResumeListeners();
+        removeResumeListeners = null;
+      }
       if (rafId) {
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -192,7 +218,8 @@ export const useVoiceMode = (config: UseVoiceModeConfig) => {
     const startRecording = (stream: MediaStream) => {
       chunks = [];
       try {
-        recorder = new MediaRecorder(stream);
+        const mimeType = pickSupportedMimeType();
+        recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
         recorder.addEventListener("dataavailable", (event) => {
           if (event.data && event.data.size > 0) {
             chunks.push(event.data);
@@ -299,6 +326,35 @@ export const useVoiceMode = (config: UseVoiceModeConfig) => {
         };
 
         resetTransientState();
+
+        // iOS Safari starts every AudioContext suspended; without an explicit
+        // resume the VAD analyser only ever reads silence, so voice mode never
+        // begins recording (this is why the manual STT button works on iPhone
+        // but voice mode "fails"). Resume now, with a user-gesture fallback for
+        // the transient-activation edge case.
+        if (audioContext.state === "suspended") {
+          try {
+            await audioContext.resume();
+          } catch (resumeError) {
+            debugLogger.warn("Voice mode audio context resume failed", { error: resumeError });
+          }
+        }
+        if (!cancelled && audioContext.state === "suspended") {
+          const resumeOnGesture = () => {
+            audioContext.resume().catch(() => undefined);
+          };
+          const gestureEvents: Array<keyof WindowEventMap> = ["touchend", "pointerdown", "click"];
+          gestureEvents.forEach((evt) =>
+            window.addEventListener(evt, resumeOnGesture, { once: true, passive: true })
+          );
+          removeResumeListeners = () => {
+            gestureEvents.forEach((evt) => window.removeEventListener(evt, resumeOnGesture));
+          };
+        }
+
+        if (cancelled) {
+          return;
+        }
         monitorAudio();
       } catch (error) {
         debugLogger.error("Voice mode failed to initialize microphone", {
