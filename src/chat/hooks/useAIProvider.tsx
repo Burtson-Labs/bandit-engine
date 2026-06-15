@@ -1366,9 +1366,22 @@ export const useAIProvider = ({
                   };
 
                   clearFlushTimer();
-                  setStreamBuffer("");
+                  // Show a loading indicator instead of a blank box while the
+                  // tool result is summarized (prevents a "frozen" empty bubble).
+                  const summaryPreamble = stripToolBlocks(fullMessage).trim();
+                  setStreamBuffer(
+                    summaryPreamble ? `${summaryPreamble}\n\n_Working on it…_` : "_Working on it…_"
+                  );
                   const summaryText = await new Promise<string>((resolve) => {
                     let acc = "";
+                    let settled = false;
+                    let timer: ReturnType<typeof setTimeout> | undefined;
+                    const done = (value: string) => {
+                      if (settled) return;
+                      settled = true;
+                      if (timer) clearTimeout(timer);
+                      resolve(value);
+                    };
                     const summarySub = provider.chat(summaryRequest).subscribe({
                       next: (data) => {
                         if (data?.message?.content) {
@@ -1383,11 +1396,18 @@ export const useAIProvider = ({
                         debugLogger.error("Summarization pass failed", {
                           error: summaryErr instanceof Error ? summaryErr.message : String(summaryErr),
                         });
-                        resolve("");
+                        done("");
                       },
-                      complete: () => resolve(stripThinking(acc).trim()),
+                      complete: () => done(stripThinking(acc).trim()),
                     });
                     currentSubRef.current = summarySub;
+                    // Hard timeout so a slow or hung summary call can never freeze
+                    // the turn — fall back to the inline tool output instead.
+                    timer = setTimeout(() => {
+                      debugLogger.warn("Summarization pass timed out; using inline tool output");
+                      try { summarySub.unsubscribe(); } catch { /* noop */ }
+                      done("");
+                    }, 30000);
                   });
 
                   if (summaryText.trim()) {

@@ -133,8 +133,16 @@ export const executeMCPTool = async (toolCall: MCPToolCall): Promise<MCPToolResu
       }
     }
     
-    // Make the API call
-    const response = await fetch(url, requestOptions);
+    // Make the API call with a timeout so a slow or unreachable gateway can't
+    // hang the chat — the AI loop awaits this before it can finalize the turn.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    let response: Response;
+    try {
+      response = await fetch(url, { ...requestOptions, signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     const data = await response.json();
     
     if (!response.ok) {
