@@ -243,7 +243,11 @@ const StreamingMarkdown: React.FC<StreamingMarkdownProps> = ({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      style={{ color: theme.palette.primary.main, textDecoration: "underline" }}
+      style={{
+        color: theme.palette.info?.main ?? theme.palette.primary.main,
+        textDecoration: "underline",
+        textUnderlineOffset: "2px",
+      }}
       {...props}
     >
       {children}

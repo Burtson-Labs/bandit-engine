@@ -22,6 +22,7 @@ import type { Subscription } from "rxjs";
 import type { KnowledgeDoc } from "../../store/knowledgeStore";
 import { useKnowledgeStore } from "../../store/knowledgeStore";
 import { useAIProviderStore } from "../../store/aiProviderStore";
+import { syncTelemetry, telemetryStartTurn, telemetryEvent, telemetryEndTurn } from "../../services/telemetry";
 import { useConversationStore } from "../../store/conversationStore";
 import { useMemoryEnhancer } from "./useMemoryEnhancer";
 import { useVectorStore } from "../../hooks/useVectorStore";
@@ -1108,6 +1109,12 @@ export const useAIProvider = ({
         }, delay);
       };
 
+      // Telemetry (opt-in; every call is a no-op when disabled): one OTLP
+      // trace per turn — agent.turn → llm.generate + tool.* spans.
+      syncTelemetry();
+      telemetryStartTurn(question, modelName);
+      telemetryEvent("tool_loop:llm_start");
+
       const stream = provider.chat(request);
       const initialPlaceholderQuestion = lastEntry?.question;
 
@@ -1123,7 +1130,10 @@ export const useAIProvider = ({
       const sub = stream.subscribe({
         next: (data) => {
           if (!data?.message?.content && !data?.message?.tool_calls) return;
-          if (data.message.content) fullMessage += data.message.content;
+          if (data.message.content) {
+            fullMessage += data.message.content;
+            telemetryEvent("tool_loop:llm_chunk", { chunk: data.message.content });
+          }
           // Track whether we're currently inside a <think> block
           const inThinkBlock = /<think>/.test(fullMessage) && !/<think>[\s\S]*<\/think>/.test(fullMessage);
           setIsThinking?.(inThinkBlock);
@@ -1159,6 +1169,7 @@ export const useAIProvider = ({
           setIsThinking?.(false);
           setPendingMessage(null);
           setLogoVisible(false);
+          telemetryEndTurn({ error: err?.message || "stream error" });
 
           // Call the error handler if provided
           if (onError) {
@@ -1168,6 +1179,7 @@ export const useAIProvider = ({
         complete: async () => {
           try {
             setIsThinking?.(false);
+            telemetryEvent("tool_loop:llm_response", { responseLength: fullMessage.length });
             latestDisplayMessage = stripThinking(fullMessage);
             if (!sawToolBlock) {
               flushNow();
@@ -1180,6 +1192,7 @@ export const useAIProvider = ({
             // natural-language summary; image outputs are surfaced as-is.
             const summarizableResults: Array<{ name: string; output: string }> = [];
             const inlineImageBlocks: string[] = [];
+            const collectedSources: Array<{ title: string; url: string }> = [];
 
             if (toolCallMatches && toolCallMatches.length > 0 && mcpToolsAvailable) {
               debugLogger.info("Detected tool calls in AI response", {
@@ -1225,10 +1238,29 @@ export const useAIProvider = ({
                   // Replace the fenced block with an invisible placeholder token. Do not update UI yet.
                   enhancedMessage = enhancedMessage.replace(match, placeholderToken);
 
+                  // Surface a clear "working" status while the tool runs, so the
+                  // bubble never looks frozen during the fetch + summary.
+                  clearFlushTimer();
+                  const toolStatus =
+                    functionName === "web_search" || functionName === "web-search"
+                      ? "Searching the web…"
+                      : functionName === "web_fetch" || functionName === "web-fetch"
+                        ? "Reading the page…"
+                        : functionName === "image_generation" || functionName === "image-generation"
+                          ? "Generating the image…"
+                          : "Working on it…";
+                  const toolPreamble = stripToolBlocks(fullMessage).trim();
+                  setStreamBuffer(toolPreamble ? `${toolPreamble}\n\n_${toolStatus}_` : `_${toolStatus}_`);
+
                   // Execute the tool
+                  telemetryEvent("tool_loop:tool_execute", { name: functionName, params: parsedParams });
                   const result = await executeMCPTool({
                     toolName: functionName,
                     parameters: parsedParams,
+                  });
+                  telemetryEvent(result.success ? "tool_loop:tool_result" : "tool_loop:tool_error", {
+                    name: functionName,
+                    isError: !result.success,
                   });
 
                   // Summarize result (no raw JSON, no tool names)
@@ -1247,18 +1279,18 @@ export const useAIProvider = ({
                             .slice(0, 6)
                             .map((item, index) => {
                               const title = item.title?.trim() || "Untitled";
-                              const url = item.url?.trim();
+                              const url = item.url?.trim() || "";
                               const snippet = item.content?.trim();
-                              let line = `${index + 1}. **${title}**`;
-                              if (url) line += `\n   ${url}`;
+                              if (url) collectedSources.push({ title, url });
+                              let line = url ? `${index + 1}. [${title}](${url})` : `${index + 1}. ${title}`;
                               if (snippet) {
                                 const truncated =
                                   snippet.length > 300 ? `${snippet.slice(0, 300)}…` : snippet;
-                                line += `\n   ${truncated}`;
+                                line += ` — ${truncated}`;
                               }
                               return line;
                             })
-                            .join("\n\n")
+                            .join("\n")
                         );
                       }
                       resultText = blocks.length
@@ -1355,7 +1387,7 @@ export const useAIProvider = ({
                     { role: "assistant", content: stripToolBlocks(fullMessage) || "Let me look that up." },
                     {
                       role: "user",
-                      content: `I ran the tool(s) you requested. Here are the raw results:\n\n${toolResultsText}\n\nUsing these results together with your own knowledge, answer my original question concisely and in a natural, well-formatted way. Cite source URLs inline when you rely on them. Do NOT output tool_code or call any tools again.`,
+                      content: `I ran the tool(s) you requested. Here are the raw results:\n\n${toolResultsText}\n\nUsing these results together with your own knowledge, answer my original question concisely and in a natural, well-formatted way. Reference sources by name where relevant, but do NOT paste raw URLs or a list of links — a clean Sources section is added automatically below your answer. Do NOT output tool_code or call any tools again.`,
                     },
                   ];
                   const summaryRequest: ToolAwareChatRequest = {
@@ -1370,7 +1402,7 @@ export const useAIProvider = ({
                   // tool result is summarized (prevents a "frozen" empty bubble).
                   const summaryPreamble = stripToolBlocks(fullMessage).trim();
                   setStreamBuffer(
-                    summaryPreamble ? `${summaryPreamble}\n\n_Working on it…_` : "_Working on it…_"
+                    summaryPreamble ? `${summaryPreamble}\n\n_Writing the answer…_` : "_Writing the answer…_"
                   );
                   const summaryText = await new Promise<string>((resolve) => {
                     let acc = "";
@@ -1411,8 +1443,23 @@ export const useAIProvider = ({
                   });
 
                   if (summaryText.trim()) {
+                    const sourcesMd = collectedSources.length
+                      ? `\n\n**Sources**\n${collectedSources
+                          .slice(0, 6)
+                          .map((s) => {
+                            let domain = s.url;
+                            try {
+                              domain = new URL(s.url).hostname.replace(/^www\./, "");
+                            } catch {
+                              /* keep the raw url as the label */
+                            }
+                            return `- [${s.title || domain}](${s.url}) — ${domain}`;
+                          })
+                          .join("\n")}`
+                      : "";
                     enhancedMessage =
                       summaryText +
+                      sourcesMd +
                       (inlineImageBlocks.length ? `\n\n${inlineImageBlocks.join("\n\n")}` : "");
                   }
                 } catch (summaryError) {
@@ -1486,6 +1533,7 @@ export const useAIProvider = ({
 
             setInputValue("");
             setPastedImages([]);
+            telemetryEndTurn();
             // Keep buffer visible briefly so the last frame matches final markdown
             setTimeout(() => {
               clearFlushTimer();
@@ -1502,6 +1550,7 @@ export const useAIProvider = ({
             overrideComponentStatus("Idle");
             setIsSubmitting(false);
             setIsStreaming(false);
+            telemetryEndTurn({ error: e instanceof Error ? e.message : String(e) });
           }
         },
       });

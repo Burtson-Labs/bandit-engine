@@ -19,6 +19,7 @@ const __auditTrail_store_packageSettingsStorets = 'BL-AU-MGOIKVW5-K7IK';
 import { create } from 'zustand';
 import { AIProviderConfig } from '../services/ai-provider/types/common.types';
 import { FeatureFlagConfig } from '../types/featureFlags';
+import type { TelemetryOptIn } from '../services/telemetry/otlpExporter';
 
 export interface PackageSettings {
   // Legacy Ollama settings (for backward compatibility)
@@ -47,6 +48,12 @@ export interface PackageSettings {
   
   // Feature flag configuration
   featureFlags?: FeatureFlagConfig;
+
+  // Opt-in OpenTelemetry — OFF by default. When telemetry.enabled is true,
+  // emits one OTLP trace + usage metrics per chat turn to telemetry.endpoint
+  // (default https://otlp.burtson.ai → grafana.burtson.ai), tagged
+  // service.name = telemetry.serviceName (default "bandit-web").
+  telemetry?: TelemetryOptIn;
 }
 
 interface PackageSettingsState {
