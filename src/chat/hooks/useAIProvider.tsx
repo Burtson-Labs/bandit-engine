@@ -1065,7 +1065,11 @@ export const useAIProvider = ({
         options: { num_predict: tokenLimit + 250 }
       };
 
-      // Add MCP tools to request if available
+      // Attach native tools so native-tool models (e.g. the Kimi cloud engines)
+      // can call them. Native tool_calls are bridged into the ```tool_code```
+      // execution path in the completion handler below, so there's ONE tool
+      // path; text-only models keep using the system-prompt text protocol.
+      // (Text-based tool prompting is being phased out in favor of native.)
       if (mcpToolsAvailable) {
         const enabledTools = getEnabledMCPToolsForAI();
         if (enabledTools.length > 0) {
@@ -1077,6 +1081,8 @@ export const useAIProvider = ({
       let fullMessage = "";
       let latestDisplayMessage = "";
       let sawToolBlock = false;
+      // Native tool_calls (from native-tool models) — bridged to tool_code below.
+      const nativeToolCalls: unknown[] = [];
 
       // Strip <think>...</think> blocks from text before displaying.
       // Hides in-progress thinking (unclosed tag) and removes completed blocks.
@@ -1133,6 +1139,11 @@ export const useAIProvider = ({
       const sub = stream.subscribe({
         next: (data) => {
           if (!data?.message?.content && !data?.message?.tool_calls) return;
+          if (Array.isArray(data.message.tool_calls) && data.message.tool_calls.length > 0) {
+            nativeToolCalls.push(...(data.message.tool_calls as unknown[]));
+            sawToolBlock = true;
+            clearFlushTimer();
+          }
           if (data.message.content) {
             fullMessage += data.message.content;
             telemetryEvent("tool_loop:llm_chunk", { chunk: data.message.content });
@@ -1186,6 +1197,25 @@ export const useAIProvider = ({
             latestDisplayMessage = stripThinking(fullMessage);
             if (!sawToolBlock) {
               flushNow();
+            }
+
+            // Bridge native tool_calls (emitted by native-tool models like the
+            // Kimi engines) into the ```tool_code``` protocol the loop below
+            // executes, so there's ONE execution path. Only synthesize when the
+            // model didn't already produce tool_code text.
+            if (nativeToolCalls.length > 0 && !/```(?:tool_code|TOOL_CODE)/.test(fullMessage)) {
+              for (const raw of nativeToolCalls) {
+                const tc = raw as {
+                  function?: { name?: string; arguments?: unknown };
+                  name?: string;
+                  arguments?: unknown;
+                };
+                const fn = tc.function?.name ?? tc.name;
+                if (!fn) continue;
+                const rawArgs = tc.function?.arguments ?? tc.arguments ?? {};
+                const argStr = typeof rawArgs === "string" ? rawArgs : JSON.stringify(rawArgs ?? {});
+                fullMessage += `\n\n\`\`\`tool_code\n${fn}(${argStr})\n\`\`\``;
+              }
             }
 
             // Check for tool calls in the response and execute them

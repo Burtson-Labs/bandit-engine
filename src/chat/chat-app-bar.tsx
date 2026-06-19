@@ -55,6 +55,7 @@ import {
   HomeIcon,
   NotesIcon,
   NotesIconOutlined,
+  PsychologyIcon,
   RecordVoiceOverIcon,
   SettingsIcon,
   SyncIcon,
@@ -293,8 +294,16 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
   const selectedEngine = useEngineStore((s) => s.selectedEngine);
   const effectiveEngineId =
     selectedEngine || usePackageSettingsStore.getState().settings?.defaultModel || "bandit-core";
-  const currentEngine = engines.find((e) => e.id === effectiveEngineId);
-  const engineLabel = currentEngine?.displayName?.replace(/^Bandit /, "") || "Engine";
+  // Match the catalog id exactly, or by tag prefix so a default like
+  // "bandit-core:4b-it-qat" still resolves to the "bandit-core" engine.
+  const currentEngine =
+    engines.find((e) => e.id === effectiveEngineId) ||
+    engines.find((e) => effectiveEngineId.startsWith(e.id + ":"));
+  const resolvedEngineId = currentEngine?.id ?? effectiveEngineId;
+  // Strip any "(Underlying Model)" parenthetical so the UI never reveals the
+  // backend model (Gemma/Qwen/Kimi) — the brand stays "Bandit".
+  const cleanEngineName = (name?: string) => (name || "").replace(/\s*\([^)]*\)\s*$/, "").trim();
+  const engineDisplay = cleanEngineName(currentEngine?.displayName) || "Engine";
   useEffect(() => {
     useEngineStore.getState().fetchEngines();
   }, []);
@@ -647,16 +656,13 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={`Engine: ${currentEngine?.displayName ?? effectiveEngineId}`} arrow>
+          <Tooltip title={`Engine · ${engineDisplay}`} arrow>
             <IconButton
               onClick={(e) => setEngineAnchorEl(e.currentTarget)}
               sx={pillButtonStyles}
-              aria-label={`Change base model (engine). Currently ${effectiveEngineId}`}
+              aria-label={`Change base model (engine). Currently ${engineDisplay}`}
             >
-              {currentEngine?.cloud ? <CloudDoneIcon fontSize="small" /> : <CloudOffIcon fontSize="small" />}
-              <Typography variant="caption" sx={{ ml: 0.75, fontWeight: 600, whiteSpace: "nowrap" }}>
-                {engineLabel}
-              </Typography>
+              <PsychologyIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Menu
@@ -684,7 +690,7 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
               return (
                 <MenuItem
                   key={engine.id}
-                  selected={engine.id === effectiveEngineId}
+                  selected={engine.id === resolvedEngineId}
                   disabled={!engine.available}
                   onClick={() => {
                     useEngineStore.getState().setSelectedEngine(engine.id);
@@ -703,9 +709,9 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
                     <Typography variant="body2" sx={{ fontWeight: 600, flex: 1 }}>
-                      {engine.displayName}
+                      {cleanEngineName(engine.displayName)}
                     </Typography>
-                    {engine.id === effectiveEngineId && (
+                    {engine.id === resolvedEngineId && (
                       <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: theme.palette.primary.main }} />
                     )}
                   </Box>
