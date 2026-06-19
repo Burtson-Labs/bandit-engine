@@ -1023,9 +1023,10 @@ const AIResponseTextField: React.FC<AIResponseTextFieldProps> = ({
                     variant="rounded"
                     onClick={() => setOpenImage(img)}
                     sx={{
-                      width: 64,
-                      height: 64,
+                      width: 96,
+                      height: 96,
                       borderRadius: 2,
+                      border: `1px solid ${alpha(theme.palette.text.primary, 0.25)}`,
                       cursor: "pointer",
                       "&:hover": { boxShadow: `0 0 0 2px ${theme.palette.primary.main}` },
                     }}
