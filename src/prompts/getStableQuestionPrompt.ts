@@ -29,6 +29,23 @@ export const getRandomTopicOfInterest = (): GeneralTopicOfInterest => {
   return randomTopic;
 }
 
+/**
+ * Pick `count` DISTINCT random topics. Used to spread a starter set across
+ * several topics so it never clusters on one — the root cause of "every set
+ * looks the same".
+ */
+export const pickDistinctRandomTopics = (count: number): GeneralTopicOfInterest[] => {
+  const pool: GeneralTopicOfInterest[] = [...TOPICS];
+  const picked: GeneralTopicOfInterest[] = [];
+  const n = Math.min(Math.max(count, 0), pool.length);
+  for (let i = 0; i < n; i++) {
+    const idx = randomRange(0, pool.length - 1);
+    picked.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+  return picked;
+};
+
 
 export interface QuestionPromptArgs {
   /**
@@ -46,6 +63,21 @@ export interface QuestionPromptArgs {
    * Optional system prompt from the selected model to tailor suggestions
    */
   modelSystemPrompt?: string;
+  /**
+   * The user's saved interest categories (from their profile). Starters lean
+   * toward these without clustering on a single one.
+   */
+  interests?: string[];
+  /**
+   * Titles/topics from the user's knowledge library — included only when the
+   * user has opted in to knowledge-aware starters.
+   */
+  knowledgeTopics?: string[];
+  /**
+   * When true, the assistant can search the web, so some starters should invite
+   * current / up-to-date answers.
+   */
+  webSearchAvailable?: boolean;
 }
 
 /**
@@ -54,48 +86,59 @@ export interface QuestionPromptArgs {
  * @returns A prompt string for generating questions
  */
 export const getStableQuestionPrompt = (args: QuestionPromptArgs): string => {
-  const { limit, topicOfInterest, modelSystemPrompt } = args;
+  const { limit, topicOfInterest, modelSystemPrompt, interests, knowledgeTopics, webSearchAvailable } = args;
   if (limit < 1 || limit > 10) {
     throw new Error("Limit must be between 1 and 10");
   }
   const seed = generateSeed();
-  
-  // Build the base prompt
-  let prompt = `You are a helpful assistant.
 
-The following seed uniquely identifies the topic: "${seed}"`;
+  const lines: string[] = [
+    `You are crafting fresh, engaging conversation starters for a chat app's home screen.`,
+    ``,
+    `Variation seed (make this set different from any previous set): "${seed}"`,
+  ];
 
-  // Add model-specific context if available
   if (modelSystemPrompt && modelSystemPrompt.trim()) {
-    prompt += `
-
-Based on this specialized assistant profile: "${modelSystemPrompt.trim()}"`;
+    lines.push(``, `Tailor the questions to this assistant's role and expertise: "${modelSystemPrompt.trim()}"`);
   }
 
-  prompt += `
-
-Generate ${limit} concise (5–20 words, try to use this entire range), natural-sounding questions a user might ask${modelSystemPrompt ? ' this specialized assistant' : ' an AI assistant'}. These should be:
-
-- Relevant to ${topicOfInterest}`;
-
-  // Add model-specific relevance if we have a system prompt
-  if (modelSystemPrompt && modelSystemPrompt.trim()) {
-    prompt += `
-- Aligned with the assistant's specialized capabilities and knowledge area`;
+  if (interests && interests.length) {
+    lines.push(
+      ``,
+      `The user is especially interested in: ${interests.join(", ")}. Lean toward these, but do NOT make every question about the same one.`,
+    );
   }
 
-  prompt += `
-- Specific enough to be practical
-- Easy to understand and not abstract
+  if (knowledgeTopics && knowledgeTopics.length) {
+    lines.push(
+      ``,
+      `The user keeps these documents in their library: ${knowledgeTopics.join("; ")}. Include one or two questions that draw on this material.`,
+    );
+  }
 
-Do not:
-- Refer to yourself or use phrases like "As an AI..."
-- Include greetings, explanations, or personality
-- Include jokes, fiction, or quotes
-- Number, bullet, or otherwise prefix the questions with extra characters
-- Repeat the same idea phrased differently — each question must explore a distinct angle or subtopic
+  lines.push(
+    ``,
+    `Spread the set across a VARIETY of these topics so it never feels repetitive (do not cluster on one): ${topicOfInterest}.`,
+  );
 
-Output only ${limit} questions — one per line, with no leading numbers, bullets, or prefixes.`;
+  if (webSearchAvailable) {
+    lines.push(
+      ``,
+      `This assistant can search the web for live information. Include 2–3 questions that invite current, up-to-date answers (latest news, recent developments, "today" / "this week") so the user discovers that capability.`,
+    );
+  }
 
-  return prompt.trim();
+  lines.push(
+    ``,
+    `Generate ${limit} concise (5–20 words), natural-sounding questions a user might ask${modelSystemPrompt ? " this specialized assistant" : " an AI assistant"}. Requirements:`,
+    `- Each question must explore a DISTINCT topic or angle — no two may be similar or rephrasings of each other.`,
+    `- Vary the type across the set: practical how-to, curious exploration, current/topical, creative, and learning.`,
+    `- Specific and concrete, easy to understand, not abstract.`,
+    ``,
+    `Do not refer to yourself, say "As an AI", add greetings, explanations, jokes, fiction, quotes, or number/bullet the lines.`,
+    ``,
+    `Output only ${limit} questions — one per line, with no leading numbers, bullets, or prefixes.`,
+  );
+
+  return lines.join("\n").trim();
 }

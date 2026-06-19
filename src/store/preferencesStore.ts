@@ -29,6 +29,10 @@ export interface UserPreferences {
   sttEnabled: boolean;
   banditModelsEnabled: boolean;
   feedbackEnabled: boolean;
+  /** Saved interest categories used to personalize conversation starters. */
+  interests: string[];
+  /** Opt-in: draw conversation starters from the user's knowledge documents. */
+  useKnowledgeForStarters: boolean;
   homeUrl?: string;
 }
 
@@ -53,6 +57,8 @@ const defaultPreferences: UserPreferences = {
   sttEnabled: true,
   banditModelsEnabled: true,
   feedbackEnabled: true,
+  interests: [],
+  useKnowledgeForStarters: false,
   homeUrl: "",
 };
 
@@ -177,6 +183,8 @@ export const usePreferencesStore = create<PreferencesStore>((set, get) => ({
         sttEnabled: typeof mergedPreferences.sttEnabled === 'boolean' ? mergedPreferences.sttEnabled : defaultPreferences.sttEnabled,
         banditModelsEnabled: typeof mergedPreferences.banditModelsEnabled === 'boolean' ? mergedPreferences.banditModelsEnabled : defaultPreferences.banditModelsEnabled,
         feedbackEnabled: typeof mergedPreferences.feedbackEnabled === 'boolean' ? mergedPreferences.feedbackEnabled : defaultPreferences.feedbackEnabled,
+        interests: Array.isArray(mergedPreferences.interests) ? mergedPreferences.interests.filter((i): i is string => typeof i === 'string') : defaultPreferences.interests,
+        useKnowledgeForStarters: typeof mergedPreferences.useKnowledgeForStarters === 'boolean' ? mergedPreferences.useKnowledgeForStarters : defaultPreferences.useKnowledgeForStarters,
         homeUrl: typeof mergedPreferences.homeUrl === 'string' ? mergedPreferences.homeUrl : defaultPreferences.homeUrl,
       };
 

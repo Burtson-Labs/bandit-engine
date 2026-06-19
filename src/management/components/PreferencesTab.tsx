@@ -34,6 +34,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { UserPreferences, usePreferencesStore } from "../../store/preferencesStore";
+import { TOPICS as STARTER_TOPICS } from "../../prompts/getStableQuestionPrompt";
 import { useModelStore } from "../../store/modelStore";
 import { useVoiceStore } from "../../store/voiceStore";
 import { useFeatures } from "../../hooks/useFeatures";
@@ -542,6 +543,60 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
           Control which AI features are enabled to optimize performance for your device. Disabling features can help
           reduce resource usage on machines with limited capabilities.
         </Typography>
+
+        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 } }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>Conversation Starters</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Personalize the suggested prompts on your home screen. Pick the topics you care about — starters lean toward
+              them (blended with fresh ones each time) instead of generic blanket questions.
+            </Typography>
+          </Box>
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {STARTER_TOPICS.map((topic) => {
+              const selected = (preferences.interests ?? []).includes(topic);
+              return (
+                <Chip
+                  key={topic}
+                  label={topic}
+                  size="small"
+                  color={selected ? 'primary' : 'default'}
+                  variant={selected ? 'filled' : 'outlined'}
+                  onClick={() => {
+                    const current = preferences.interests ?? [];
+                    const next = selected
+                      ? current.filter((t) => t !== topic)
+                      : [...current, topic];
+                    updatePreference('interests', next);
+                  }}
+                  sx={{ textTransform: 'capitalize' }}
+                />
+              );
+            })}
+          </Box>
+          <Box sx={{ mt: 2.5 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!preferences.useKnowledgeForStarters}
+                  onChange={(e) => updatePreference('useKnowledgeForStarters', e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={
+                <Box textAlign="left">
+                  <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }}>
+                    Use my knowledge documents
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Let some starters reference the documents in your library.
+                  </Typography>
+                </Box>
+              }
+              sx={{ alignSelf: 'flex-start', ml: 0 }}
+            />
+          </Box>
+        </Paper>
 
         <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 } }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', gap: 2 }}>

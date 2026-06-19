@@ -26,9 +26,13 @@ import rehypeRaw from "rehype-raw";
 import { generateConversationStarters } from "../services/prompts";
 import {
   getRandomTopicOfInterest,
+  pickDistinctRandomTopics,
   QuestionPromptArgs,
 } from "../prompts/getStableQuestionPrompt";
 import { useModelStore } from "../store/modelStore";
+import { usePreferencesStore } from "../store/preferencesStore";
+import { useKnowledgeStore } from "../store/knowledgeStore";
+import { useMCPToolsStore } from "../store/mcpToolsStore";
 
 interface QuerySuggestionPickerProps {
   onSend: (prompt: string, images: string[]) => void;
@@ -68,13 +72,40 @@ export const QuerySuggestionPicker: React.FC<QuerySuggestionPickerProps> = ({
     hasGenerated.current = true;
 
     const currentModel = getCurrentModel();
+    const prefs = usePreferencesStore.getState().preferences;
+    const interests = (prefs.interests ?? []).filter((i) => i && i.trim());
+
+    // Variety: spread each set across SEVERAL distinct topics instead of one
+    // (one topic made every starter look the same). Blend the user's interests
+    // with a few fresh random topics so it stays personalized yet never stale.
+    const randomTopics = pickDistinctRandomTopics(interests.length ? 3 : 5);
+    const topicOfInterest =
+      Array.from(new Set([...interests, ...randomTopics])).join(", ") ||
+      getRandomTopicOfInterest();
+
+    // Web-search-aware: if the model can search, bias toward current/topical Qs.
+    const webSearchAvailable = useMCPToolsStore
+      .getState()
+      .getEnabledTools()
+      .some((t) => t.name === "web_search");
+
+    // Knowledge-aware (opt-in): feed the user's document titles so some starters
+    // draw on their own material.
+    const knowledgeTopics = prefs.useKnowledgeForStarters
+      ? useKnowledgeStore
+          .getState()
+          .docs.map((d) => d.name)
+          .filter((n) => n && n.trim())
+          .slice(0, 12)
+      : undefined;
+
     const args: QuestionPromptArgs = {
-      // keep responses quick and snappy, server may be handling concurrent requests adjust as needed
       limit: 9,
-      // pick a random topic of interest from the list, consider using the users preference topics dynamically, otherwise get a random one
-      topicOfInterest: getRandomTopicOfInterest(),
-      // Pass the current model's system prompt to tailor suggestions
+      topicOfInterest,
       modelSystemPrompt: currentModel?.systemPrompt,
+      interests,
+      knowledgeTopics,
+      webSearchAvailable,
     };
     generateConversationStarters(args)
       .then((prompts) => {
