@@ -1420,7 +1420,7 @@ export const useAIProvider = ({
                     { role: "assistant", content: stripToolBlocks(fullMessage) || "Let me look that up." },
                     {
                       role: "user",
-                      content: `I ran the tool(s) you requested. Here are the raw results:\n\n${toolResultsText}\n\nUsing these results together with your own knowledge, answer my original question concisely and in a natural, well-formatted way. Reference sources by name where relevant, but do NOT paste raw URLs or a list of links — a clean Sources section is added automatically below your answer. Do NOT output tool_code or call any tools again.`,
+                      content: `I ran the tool(s) you requested. Here are the raw results:\n\n${toolResultsText}\n\nUsing these results together with your own knowledge, answer my original question concisely and in a natural, well-formatted way. Do NOT add a "Sources", "References", or "Citations" list of any kind — not names and not URLs. A clean, clickable Sources section is appended automatically below your answer, so any list you add just duplicates it. (Mentioning a source naturally inside a sentence is fine; a trailing list is not.) Do NOT output tool_code or call any tools again.`,
                     },
                   ];
                   const summaryRequest: ToolAwareChatRequest = {
@@ -1476,6 +1476,15 @@ export const useAIProvider = ({
                   });
 
                   if (summaryText.trim()) {
+                    // Belt-and-suspenders: if the model still tacked on its own
+                    // Sources/References list despite instructions, strip the
+                    // trailing block — we append a single clickable one below.
+                    const cleanedSummary = summaryText
+                      .replace(
+                        /\n{1,}\s*(?:[*_#>\s]*)(?:sources?|references?|citations?|further reading)(?:\s*:)?\s*(?:[*_]*)\s*\n[\s\S]*$/i,
+                        "",
+                      )
+                      .trimEnd();
                     const sourcesMd = collectedSources.length
                       ? `\n\n**Sources**\n${collectedSources
                           .slice(0, 6)
@@ -1491,7 +1500,7 @@ export const useAIProvider = ({
                           .join("\n")}`
                       : "";
                     enhancedMessage =
-                      summaryText +
+                      cleanedSummary +
                       sourcesMd +
                       (inlineImageBlocks.length ? `\n\n${inlineImageBlocks.join("\n\n")}` : "");
                   }
