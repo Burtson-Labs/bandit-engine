@@ -70,6 +70,7 @@ import { usePreferencesStore } from "../store/preferencesStore";
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
 import { useFeatures, useFeatureVisibility } from "../hooks/useFeatures";
 import { useConversationSyncStore } from "../store/conversationSyncStore";
+import { useEngineStore } from "../store/engineStore";
 import { shallow } from "zustand/shallow";
 
 interface ChatAppBarProps {
@@ -125,6 +126,7 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
   } = theme.palette.chat.appBar;
 
   const [modelAnchorEl, setModelAnchorEl] = useState<null | HTMLElement>(null);
+  const [engineAnchorEl, setEngineAnchorEl] = useState<null | HTMLElement>(null);
   const [voiceAnchorEl, setVoiceAnchorEl] = useState<null | HTMLElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -284,6 +286,18 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
   const selectedModel = useModelStore((s) => s.selectedModel);
   const currentModel = useModelStore((s) => s.availableModels.find((m) => m.name === selectedModel));
   const currentAvatar = currentModel?.avatarBase64 || modelAvatars[selectedModel] || banditHead;
+
+  // Engine = the base model (the brain), a separate axis from the persona (the
+  // voice). Fetched from the gateway catalog; carries vision/tools/thinking/cloud.
+  const engines = useEngineStore((s) => s.engines);
+  const selectedEngine = useEngineStore((s) => s.selectedEngine);
+  const effectiveEngineId =
+    selectedEngine || usePackageSettingsStore.getState().settings?.defaultModel || "bandit-core";
+  const currentEngine = engines.find((e) => e.id === effectiveEngineId);
+  const engineLabel = currentEngine?.displayName?.replace(/^Bandit /, "") || "Engine";
+  useEffect(() => {
+    useEngineStore.getState().fetchEngines();
+  }, []);
 
   const pendingModelAvatar =
     useModelStore.getState().availableModels.find((m) => m.name === pendingModel)?.avatarBase64 ||
@@ -632,6 +646,95 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
               />
             </IconButton>
           </Tooltip>
+
+          <Tooltip title={`Engine: ${currentEngine?.displayName ?? effectiveEngineId}`} arrow>
+            <IconButton
+              onClick={(e) => setEngineAnchorEl(e.currentTarget)}
+              sx={pillButtonStyles}
+              aria-label={`Change base model (engine). Currently ${effectiveEngineId}`}
+            >
+              {currentEngine?.cloud ? <CloudDoneIcon fontSize="small" /> : <CloudOffIcon fontSize="small" />}
+              <Typography variant="caption" sx={{ ml: 0.75, fontWeight: 600, whiteSpace: "nowrap" }}>
+                {engineLabel}
+              </Typography>
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={engineAnchorEl}
+            open={Boolean(engineAnchorEl)}
+            onClose={() => setEngineAnchorEl(null)}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          >
+            <Typography variant="overline" sx={{ px: 2, color: theme.palette.text.secondary }}>
+              Engine · base model
+            </Typography>
+            {engines.length === 0 && (
+              <MenuItem disabled>
+                <Typography variant="body2">No engines available</Typography>
+              </MenuItem>
+            )}
+            {engines.map((engine) => {
+              const badges = [
+                engine.vision && "vision",
+                engine.tools && "tools",
+                engine.thinking && "thinking",
+                engine.cloud && "cloud",
+              ].filter(Boolean) as string[];
+              return (
+                <MenuItem
+                  key={engine.id}
+                  selected={engine.id === effectiveEngineId}
+                  disabled={!engine.available}
+                  onClick={() => {
+                    useEngineStore.getState().setSelectedEngine(engine.id);
+                    setEngineAnchorEl(null);
+                  }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: 0.5,
+                    py: 1,
+                    px: 2,
+                    maxWidth: 360,
+                    whiteSpace: "normal",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, flex: 1 }}>
+                      {engine.displayName}
+                    </Typography>
+                    {engine.id === effectiveEngineId && (
+                      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: theme.palette.primary.main }} />
+                    )}
+                  </Box>
+                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                    {engine.available ? engine.description : engine.unavailableReason || "Unavailable"}
+                  </Typography>
+                  {badges.length > 0 && (
+                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.25 }}>
+                      {badges.map((b) => (
+                        <Box
+                          key={b}
+                          sx={{
+                            fontSize: "0.65rem",
+                            px: 0.75,
+                            py: 0.1,
+                            borderRadius: 1,
+                            bgcolor: theme.palette.primary.main + "22",
+                            color: theme.palette.primary.main,
+                          }}
+                        >
+                          {b}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </MenuItem>
+              );
+            })}
+          </Menu>
           <Menu
             anchorEl={modelAnchorEl}
             open={Boolean(modelAnchorEl)}

@@ -23,6 +23,7 @@ import type { KnowledgeDoc } from "../../store/knowledgeStore";
 import { useKnowledgeStore } from "../../store/knowledgeStore";
 import { useAIProviderStore } from "../../store/aiProviderStore";
 import { syncTelemetry, telemetryStartTurn, telemetryEvent, telemetryEndTurn } from "../../services/telemetry";
+import { useEngineStore } from "../../store/engineStore";
 import { useConversationStore } from "../../store/conversationStore";
 import { useMemoryEnhancer } from "./useMemoryEnhancer";
 import { useVectorStore } from "../../hooks/useVectorStore";
@@ -655,7 +656,9 @@ export const useAIProvider = ({
       });
 
       // Get current model and config
-      const modelName = usePackageSettingsStore.getState().settings?.defaultModel || "bandit-core:4b-it-qat";
+      // The selected base model ("Engine") — falls back to the package default
+      // when the user hasn't picked one. Personas (modelStore) are a separate axis.
+      const modelName = useEngineStore.getState().getSelectedEngine();
       const CONFIG = modelConfigs[modelName] ?? modelConfigs["bandit-core:4b-it-qat"];
 
       const base64Images = imageList.map((img) => img.split(",")[1]);
