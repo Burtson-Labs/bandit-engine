@@ -558,8 +558,8 @@ const StreamingMarkdown: React.FC<StreamingMarkdownProps> = ({
     <Box
       ref={containerRef}
       sx={{
-        // Base transition for minor layout changes
-        transition: "opacity 120ms ease-out, transform 120ms ease-out",
+        // Settle the whole block to full color a beat after streaming ends.
+        transition: "opacity 380ms ease-out, transform 220ms ease-out",
         "& .cursor": {
           display: showCursor ? "inline" : "none",
           animation: "blink 1s step-start infinite",
@@ -567,16 +567,18 @@ const StreamingMarkdown: React.FC<StreamingMarkdownProps> = ({
         "@keyframes blink": {
           "50%": { opacity: 0 },
         },
+        // Each newly-written word focuses in — blur→sharp, a tiny rise, and fade —
+        // like ink settling onto the page as the typewriter writes.
         "& .bl-fade-word": {
           opacity: 0,
-          animation: "bl-fade-in 420ms ease-out forwards",
+          animation: "bl-fade-in 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards",
         },
         "@keyframes bl-fade-in": {
-          from: { opacity: 0, transform: "translateY(1.5px)" },
-          to: { opacity: 1, transform: "translateY(0)" },
+          from: { opacity: 0, filter: "blur(3px)", transform: "translateY(2px)" },
+          to: { opacity: 1, filter: "blur(0)", transform: "translateY(0)" },
         },
-        // Subtle fade-in for each render while streaming to reduce choppiness perception
-        opacity: isStreaming ? 0.985 : 1,
+        // Dimmed while streaming, then brightens to full color once the answer lands.
+        opacity: isStreaming ? 0.86 : 1,
         transform: isStreaming ? "translateY(0.25px)" : "none",
         // Reduce layout jumpiness between updates
         "& p:last-child": { marginBottom: 0 },
@@ -606,4 +608,23 @@ const StreamingMarkdown: React.FC<StreamingMarkdownProps> = ({
   );
 };
 
-export default StreamingMarkdown;
+// Skip re-rendering (and re-parsing markdown) when nothing this component cares
+// about changed. Critical for long chats: without this, every streamed token
+// re-parses the markdown of EVERY prior message — the main source of mid-stream
+// jank / "thread-locky" feel. Only the actively-streaming message (whose content
+// changes each flush) re-renders.
+const arePropsEqual = (
+  prev: StreamingMarkdownProps,
+  next: StreamingMarkdownProps,
+): boolean => {
+  if (prev.content !== next.content || prev.isStreaming !== next.isStreaming) {
+    return false;
+  }
+  const a = prev.sources;
+  const b = next.sources;
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  return a.every((s, i) => s.id === b[i].id && s.name === b[i].name);
+};
+
+export default React.memo(StreamingMarkdown, arePropsEqual);

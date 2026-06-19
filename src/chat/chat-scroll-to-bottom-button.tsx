@@ -33,8 +33,9 @@ const ChatScrollToBottomButton: React.FC<Props> = ({
   drawerOpen = false, 
   isMobile = false 
 }) => {
-  const verticalBuffer = isMobile ? 28 : 48;
-  const bottomOffset = Math.max(inputHeight + verticalBuffer, verticalBuffer + 64);
+  // Clear the composer fully — the button used to graze its top edge.
+  const verticalBuffer = isMobile ? 44 : 80;
+  const bottomOffset = Math.max(inputHeight + verticalBuffer, verticalBuffer + 72);
 
   return (
     <IconButton
