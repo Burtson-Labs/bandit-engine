@@ -43,38 +43,13 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import { useModelStore } from "../../store/modelStore";
 import type { Element, Text, Root } from "hast";
 import { getHighlightTree } from "../../utils/lowlight";
 import { markdownSanitizeSchema, renderLowlightChildren } from "../../utils/markdownRendering";
 import { CheckIcon, CloseIcon, ContentCopyIcon } from "../../icons/lucide-icons";
 const brainIcon = "https://cdn.burtson.ai/images/brain-icon.png";
 
-const avatarFilenames: Record<string, string> = {
-  "Bandit-Core": "core-avatar.png",
-  "Bandit-Muse": "muse-avatar.png",
-  "Bandit-Logic": "logic-avatar.png",
-  "Bandit-D1VA": "d1va-avatar.png",
-  "Bandit-Exec": "exec-avatar.png",
-  "default": "bandit-head.png",
-};
-
-const banditHead = `https://cdn.burtson.ai/images/bandit-head.png`;
 import AiResponseActionsBar from "./ai-response-action-bar";
-import brandingService from "../../services/branding/brandingService";
-
-
-const resolveAvatar = (selectedModel: string): string => {
-  const model = useModelStore.getState().availableModels.find(
-    (m) => m.name === selectedModel
-  );
-  if (model?.avatarBase64) {
-    return model.avatarBase64;
-  }
-  
-  const avatarFilename = avatarFilenames[selectedModel] || avatarFilenames["default"];
-  return `https://cdn.burtson.ai/avatars/${avatarFilename}`;
-};
 
 interface AIResponseTextFieldProps {
   question: string;
@@ -566,18 +541,6 @@ const AIResponseTextField: React.FC<AIResponseTextFieldProps> = ({
     return () => clearTimeout(timeout);
   }, [memoryUpdated]);
 
-  const selectedModel = useModelStore((state) => state.selectedModel);
-
-
-  const [userAvatar, setUserAvatar] = useState<string>(banditHead);
-  useEffect(() => {
-    const fetchBranding = async () => {
-      const branding = await brandingService.getBranding();
-      setUserAvatar(branding?.logoBase64 || banditHead);
-    };
-    fetchBranding();
-  }, []);
-
   const theme = useTheme();
   const chatResponse = theme.palette.chat?.response as NonNullable<typeof theme.palette.chat>["response"];
   
@@ -1019,83 +982,30 @@ const AIResponseTextField: React.FC<AIResponseTextFieldProps> = ({
           alignSelf: 'stretch',
           display: 'flex',
           flexDirection: 'column',
-          bgcolor: chatResponse.containerBackground,
-          color: chatResponse.aiText || "#fff",
-          p: isMobile ? 1 : 2,
-          borderRadius: "4px",
+          color: chatResponse.aiText || theme.palette.text.primary,
+          px: isMobile ? 0.5 : 2,
+          py: 1,
           userSelect: "text",
-          border: "1px solid " + (chatResponse.aiBorder || "#ccc"),
-          boxShadow: "0 0 6px rgba(0,0,0,0.3)",
         }}
       >
-        {/* User message bubble, right-aligned on desktop */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: {
-              xs: "flex-start",
-              sm: "flex-end",
-            },
-            gap: 2,
-            mb: 2,
-            justifyContent: "flex-end",
-          }}
-        >
-          {/* User avatar and caption - now at the top */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <Avatar
-              alt="You"
-              src={userAvatar}
-              sx={{
-                display: { xs: "none", sm: "flex" },
-                width: { sm: 72 },
-                height: { sm: 72 },
-                bgcolor: chatResponse.userAvatarBackground || (theme.palette.mode === "dark" ? "transparent" : "#eee"),
-                color: "#fff",
-                fontWeight: "bold",
-                fontSize: { sm: "1.1rem" },
-                border: "2px solid #a78bfa",
-                boxShadow: "0 0 8px rgba(167, 139, 250, 0.3)",
-                transform: "scaleX(1)",
-              }}
-            ></Avatar>
-            <Typography
-              variant="caption"
-              sx={{ color: chatResponse.modelLabel || "#888", mt: 1, fontStyle: "italic" }}
-            >
-              You said
-            </Typography>
-          </Box>
-          {/* Message bubble */}
-          <Box sx={{ flex: 1 }}>
+        {/* User message — compact bubble, right-aligned (Claude-style) */}
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2.5 }}>
+          <Box sx={{ maxWidth: { xs: "100%", sm: "85%" }, minWidth: 0 }}>
             <Box
               sx={{
-                display: "inline-block",
-                textAlign: "left",
-                bgcolor: chatResponse.userBubble || "#1f1f1f",
-                borderRadius: "4px",
-                px: isMobile ? 1 : 2,
-                py: 1.5,
-                width: isMobile ? "100%" : "fit-content",
-                maxWidth: "100%",
-                border: "1px solid " + (chatResponse.aiBorder || "#444"),
+                bgcolor: chatResponse.userBubble || alpha(theme.palette.common.white, 0.07),
+                borderRadius: "18px",
+                px: 2,
+                py: 1.25,
                 wordBreak: "break-word",
                 whiteSpace: "pre-wrap",
                 overflowWrap: "break-word",
-                mt: { xs: 0.5, sm: 0.25 },
               }}
             >
               <Typography
                 sx={{
-                  color: chatResponse.userText || "#6C9AC5",
-                  fontStyle: "italic",
+                  color: theme.palette.text.primary,
+                  lineHeight: 1.5,
                   wordBreak: "break-word",
                   whiteSpace: "pre-wrap",
                 }}
@@ -1105,7 +1015,7 @@ const AIResponseTextField: React.FC<AIResponseTextFieldProps> = ({
             </Box>
             {/* Images, if any */}
             {images && images.length > 0 && (
-              <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
+              <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 {images.map((img, i) => (
                   <Avatar
                     key={i}
@@ -1126,149 +1036,61 @@ const AIResponseTextField: React.FC<AIResponseTextFieldProps> = ({
           </Box>
         </Box>
 
-        {/* Divider */}
-        <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, my: 2 }} />
-
-        {/* AI avatar and response bubble, left-aligned like a chat bubble */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: {
-              xs: "center",
-              sm: "flex-start",
-            },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          {/* AI avatar above the message bubble */}
-          {typeof response === "string" && response.trim() !== "" && (
+        {/* AI response — raw text on the chat background (Claude-style: no avatar, label, or bubble) */}
+        <Box sx={{ position: "relative", width: "100%", maxWidth: { xs: "100%", sm: "768px" } }}>
+          {cancelled && (
             <Box
               sx={{
+                position: "absolute",
+                top: -22,
+                left: 0,
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
-                mr: 2,
-                position: "relative",
+                gap: 1,
+                zIndex: 1,
               }}
             >
-              <Avatar
-                src={resolveAvatar(selectedModel)}
-                alt={selectedModel}
-                sx={{
-                  display: { xs: "none", sm: "flex" },
-                  width: 72,
-                  height: 72,
-                  border: "1px solid #888",
-                  boxShadow: "0 0 6px rgba(136, 136, 136, 0.4)",
-                  filter: "brightness(1.6)",
-                }}
-              />
-              <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                <Typography
-                  variant="caption"
-                  sx={{ color: chatResponse.modelLabel || "#888", mt: 1, fontStyle: "italic" }}
-                >
-                  {selectedModel} says
-                </Typography>
-              </Box>
+              <Typography variant="caption" sx={{ fontStyle: "italic", opacity: 0.85 }}>
+                Cancelled by you
+              </Typography>
             </Box>
           )}
-          {/* Model name above AI response bubble (mobile only) */}
-          <Box
-            sx={{
-              display: { xs: "flex", sm: "none" },
-              justifyContent: "right",
-              width: "100%",
-              mt: -1,
-              mb: 1,
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{ fontStyle: "italic", color: chatResponse.modelLabel || "#888" }}
-            >
-              {selectedModel} says
-            </Typography>
-          </Box>
-          {/* AI chat bubble and memory update indicator wrapper */}
-          <Box sx={{ position: "relative", width: "100%" }}>
-            {cancelled && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: -24,
-                  left: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  pl: 1,
-                  zIndex: 1,
-                }}
-              >
-                <Typography variant="caption" sx={{ fontStyle: "italic", opacity: 0.85 }}>
-                  Cancelled by you
-                </Typography>
-              </Box>
-            )}
-            {showMemoryUpdated && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: -24,
-                  right: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  pr: 1,
-                  animation: "fadeOut 0.3s ease-in 2.7s forwards",
-                  zIndex: 1,
-                }}
-              >
-                <img
-                  src={brainIcon}
-                  alt="Memory"
-                  style={{ width: 18, height: 18 }}
-                />
-                <Typography
-                  variant="caption"
-                  sx={{ color: chatResponse.memoryText || "#2e7d32", fontStyle: "italic" }}
-                >
-                  Bandit added to memory
-                </Typography>
-              </Box>
-            )}
+          {showMemoryUpdated && (
             <Box
               sx={{
-                bgcolor: chatResponse.aiBubble ?? "#2f2f2f",
-                borderRadius: "4px",
-                px: isMobile ? 1 : 1.5, // Reduced padding on mobile
-                py: 1.25,
-                width: "100%",
-                maxWidth: isMobile ? "100%" : "768px", // Full width on mobile
-                border: "1px solid " + (chatResponse.aiBorder || "#ccc"),
-                wordBreak: "break-word",
-                alignSelf: "flex-start",
-                mt: { xs: 0.5, sm: 0.25 },
+                position: "absolute",
+                top: -22,
+                right: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                animation: "fadeOut 0.3s ease-in 2.7s forwards",
+                zIndex: 1,
               }}
             >
-              <Box sx={{ width: '100%', maxWidth: '100%' }}>
-                {typeof response === "string" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]}
-                    components={components}
-                  >
-                    {enrichedMarkdown ?? sanitizeMarkdown(response)}
-                  </ReactMarkdown>
-                ) : React.isValidElement(response) ? (
-                  response
-                ) : (
-                  <Typography color="error">⚠️ Invalid AI response</Typography>
-                )}
-              </Box>
+              <img src={brainIcon} alt="Memory" style={{ width: 16, height: 16 }} />
+              <Typography
+                variant="caption"
+                sx={{ color: chatResponse.memoryText || "#2e7d32", fontStyle: "italic" }}
+              >
+                Bandit added to memory
+              </Typography>
             </Box>
+          )}
+          <Box sx={{ width: '100%', maxWidth: '100%' }}>
+            {typeof response === "string" ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]}
+                components={components}
+              >
+                {enrichedMarkdown ?? sanitizeMarkdown(response)}
+              </ReactMarkdown>
+            ) : React.isValidElement(response) ? (
+              response
+            ) : (
+              <Typography color="error">⚠️ Invalid AI response</Typography>
+            )}
           </Box>
         </Box>
         {/* Actions bar at the bottom */}

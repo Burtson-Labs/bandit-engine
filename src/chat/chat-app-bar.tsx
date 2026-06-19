@@ -55,7 +55,7 @@ import {
   HomeIcon,
   NotesIcon,
   NotesIconOutlined,
-  PsychologyIcon,
+  AutoAwesomeIcon,
   RecordVoiceOverIcon,
   SettingsIcon,
   SyncIcon,
@@ -662,7 +662,7 @@ const ChatAppBar: React.FC<ChatAppBarProps> = ({
               sx={pillButtonStyles}
               aria-label={`Change base model (engine). Currently ${engineDisplay}`}
             >
-              <PsychologyIcon fontSize="small" />
+              <AutoAwesomeIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Menu
