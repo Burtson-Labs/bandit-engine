@@ -1433,10 +1433,12 @@ export const useAIProvider = ({
                   clearFlushTimer();
                   // Show a loading indicator instead of a blank box while the
                   // tool result is summarized (prevents a "frozen" empty bubble).
-                  const summaryPreamble = stripToolBlocks(fullMessage).trim();
-                  setStreamBuffer(
-                    summaryPreamble ? `${summaryPreamble}\n\n_Writing the answer…_` : "_Writing the answer…_"
-                  );
+                  // Show the SAME animated loader the first pass uses (empty buffer
+                  // + thinking flag) instead of a static "Writing…" line, so the
+                  // summary never looks frozen while the model reasons before its
+                  // first visible token.
+                  setStreamBuffer("");
+                  setIsThinking?.(true);
                   const summaryText = await new Promise<string>((resolve) => {
                     let acc = "";
                     let settled = false;
@@ -1454,6 +1456,9 @@ export const useAIProvider = ({
                           const visible = stripThinking(acc);
                           latestDisplayMessage = visible;
                           lastPartialRef.current.text = visible;
+                          // Drop the loader the moment real (non-thinking) text
+                          // appears; until then it keeps animating.
+                          if (visible) setIsThinking?.(false);
                           setStreamBuffer(visible);
                         }
                       },
@@ -1474,6 +1479,7 @@ export const useAIProvider = ({
                       done("");
                     }, 30000);
                   });
+                  setIsThinking?.(false);
 
                   if (summaryText.trim()) {
                     // Belt-and-suspenders: if the model still tacked on its own
