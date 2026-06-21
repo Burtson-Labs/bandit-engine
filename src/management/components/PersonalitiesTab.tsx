@@ -525,7 +525,7 @@ interface PersonalitiesTabProps {
       {/* Create from Scratch Card */}
       <Card
         sx={{
-          mb: { xs: 2, md: 4 },
+          mb: { xs: 2, md: 2.5 },
           background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
           border: "2px solid transparent",
           borderRadius: { xs: 2.25, sm: 3 },
@@ -562,35 +562,35 @@ interface PersonalitiesTabProps {
           setPersonalityTabIndex(1); // Switch to Create/Edit tab
         }}
       >
-        <CardContent sx={{ 
-          p: { xs: 1.75, sm: 4 }, 
+        <CardContent sx={{
+          p: { xs: 1.75, sm: 2.5 },
           color: "white",
-          textAlign: { xs: "left", sm: "center" },
+          textAlign: "left",
           position: "relative",
           zIndex: 1,
           display: "flex",
-          flexDirection: { xs: "row", sm: "column" },
-          alignItems: { xs: "center", sm: "center" },
-          gap: { xs: 1.25, sm: 0 },
+          flexDirection: "row",
+          alignItems: "center",
+          gap: { xs: 1.25, sm: 2 },
         }}>
           <Box sx={{ 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 0,
-            mb: { xs: 0, sm: 2 },
+            mb: 0,
             flexShrink: 0,
           }}>
-            <AutoAwesomeIcon sx={{ fontSize: { xs: 28, sm: 44 }, color: 'common.white', filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }} />
+            <AutoAwesomeIcon sx={{ fontSize: { xs: 28, sm: 34 }, color: 'common.white', filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography 
               variant="h5" 
               sx={{ 
                 fontWeight: 700,
-                mb: { xs: 0.25, sm: 1 },
+                mb: 0.25,
                 textShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                fontSize: { xs: "1.1rem", sm: "1.75rem" }
+                fontSize: { xs: "1.1rem", sm: "1.25rem" }
               }}
             >
               Create from Scratch

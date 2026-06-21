@@ -1002,6 +1002,14 @@ const Management = () => {
   const currentTheme = useMemo(() => {
     const baseTheme = predefinedThemes[theme] || banditDarkTheme;
     return createTheme(baseTheme, {
+      // Management-scoped density: condenses every settings tab at once. This
+      // theme only wraps the admin console, so the chat UI is unaffected.
+      typography: {
+        h3: { fontSize: "1.7rem" },
+        h4: { fontSize: "1.35rem" },
+        h5: { fontSize: "1.15rem" },
+        h6: { fontSize: "1rem" },
+      },
       components: {
         MuiInputBase: {
           styleOverrides: {
@@ -1021,6 +1029,19 @@ const Management = () => {
                 boxShadow: "none",
               },
             },
+          },
+        },
+        MuiCardContent: {
+          styleOverrides: {
+            root: {
+              padding: 16,
+              "&:last-child": { paddingBottom: 16 },
+            },
+          },
+        },
+        MuiCard: {
+          styleOverrides: {
+            root: { borderRadius: 12 },
           },
         },
       },
@@ -1523,7 +1544,7 @@ const Management = () => {
         <Box
           sx={{
             flex: 1,
-            p: { xs: 1, sm: 3, md: 4 },
+            p: { xs: 1.5, sm: 2.5, md: 3 },
             overflowY: "auto",
             overflowX: "hidden",
             maxWidth: "100vw",
