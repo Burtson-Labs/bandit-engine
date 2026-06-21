@@ -1465,79 +1465,170 @@ export const useAIProvider = ({
                   const toolResultsText = summarizableResults
                     .map((r) => `## ${r.name}\n${r.output}`)
                     .join("\n\n");
-                  const summaryMessages: AIMessage[] = [
-                    { role: "system", content: systemPromptForSummary },
+
+                  // Tool-ENABLED continuation loop. Feed the tool results back WITH
+                  // tools still available so the model can chain another action
+                  // (e.g. create_file right after an ask_user answer) before its
+                  // final answer. Bounded to avoid a runaway tool loop. The common
+                  // case — one tool, then a text answer — exits after one round.
+                  const MAX_CHAIN_ROUNDS = 4;
+                  const enabledToolsForChain = getEnabledMCPToolsForAI();
+                  const convo: AIMessage[] = [
+                    { role: "system", content: enhancedSystemPrompt },
                     ...contextMessages,
                     { role: "user", content: question },
-                    { role: "assistant", content: stripToolBlocks(fullMessage) || "Let me look that up." },
+                    { role: "assistant", content: stripToolBlocks(fullMessage) || "Let me work on that." },
                     {
                       role: "user",
-                      content: `I ran the tool(s) you requested. Here are the raw results:\n\n${toolResultsText}\n\nUsing these results together with your own knowledge, answer my original question concisely and in a natural, well-formatted way. Do NOT add a "Sources", "References", or "Citations" list of any kind — not names and not URLs. A clean, clickable Sources section is appended automatically below your answer, so any list you add just duplicates it. (Mentioning a source naturally inside a sentence is fine; a trailing list is not.) Do NOT output tool_code or call any tools again.`,
+                      content: `Here are the results of the tool(s) so far:\n\n${toolResultsText}\n\nUse them to fully complete my original request. If you still need to take an action I asked for (for example, actually create a file I want to download), call the appropriate tool now with a \`\`\`tool_code\`\`\` block. Otherwise give your final answer. Do NOT add a "Sources"/"References"/"Citations" list — one is appended automatically.`,
                     },
                   ];
-                  const summaryRequest: ToolAwareChatRequest = {
-                    model: modelName,
-                    messages: summaryMessages,
-                    stream: true,
-                    options: { num_predict: tokenLimit + 250 },
+
+                  // Stream one model turn → its text + any native tool_calls.
+                  const streamTurn = (req: ToolAwareChatRequest) =>
+                    new Promise<{ text: string; native: unknown[] }>((resolve) => {
+                      let acc = "";
+                      const native: unknown[] = [];
+                      let settled = false;
+                      let timer: ReturnType<typeof setTimeout> | undefined;
+                      const finish = (value: { text: string; native: unknown[] }) => {
+                        if (settled) return;
+                        settled = true;
+                        if (timer) clearTimeout(timer);
+                        resolve(value);
+                      };
+                      const sub = provider.chat(req).subscribe({
+                        next: (data) => {
+                          if (Array.isArray(data?.message?.tool_calls) && data.message.tool_calls.length) {
+                            native.push(...(data.message.tool_calls as unknown[]));
+                          }
+                          if (data?.message?.content) {
+                            acc += data.message.content;
+                            const visible = stripThinking(acc);
+                            latestDisplayMessage = visible;
+                            lastPartialRef.current.text = visible;
+                            if (visible) setIsThinking?.(false);
+                            setStreamBuffer(visible);
+                          }
+                        },
+                        error: () => finish({ text: stripThinking(acc).trim(), native }),
+                        complete: () => finish({ text: stripThinking(acc).trim(), native }),
+                      });
+                      currentSubRef.current = sub;
+                      timer = setTimeout(() => {
+                        try { sub.unsubscribe(); } catch { /* noop */ }
+                        finish({ text: stripThinking(acc).trim(), native });
+                      }, 30000);
+                    });
+
+                  // Execute one chained tool call and return a short result for the
+                  // model. Download links / images are pushed to inlineImageBlocks so
+                  // they survive verbatim into the final message.
+                  const runChainedTool = async (fn: string, params: MCPToolParameters): Promise<string> => {
+                    if (fn === "ask_user" || fn === "ask-user") {
+                      const qs = parseAskUserQuestions((params as Record<string, unknown>).questions ?? params);
+                      if (!qs.length) return "ask_user failed: it needs a questions array.";
+                      const ans = await useAskUserStore.getState().ask(qs);
+                      return ans
+                        ? "The user answered:\n\n" +
+                            qs.map((q) => `Q: ${q.question}\nA: ${(ans[q.id] || "").trim() || "(no answer)"}`).join("\n\n")
+                        : "The user dismissed the question(s). Proceed with your best judgment.";
+                    }
+                    const status =
+                      fn === "create_file" || fn === "create-file" ? "Creating the file…"
+                      : fn === "web_search" || fn === "web-search" ? "Searching the web…"
+                      : fn === "web_fetch" || fn === "web-fetch" ? "Reading the page…"
+                      : fn === "image_generation" || fn === "image-generation" ? "Generating the image…"
+                      : "Working on it…";
+                    setStreamBuffer(`_${status}_`);
+                    const result = await executeMCPTool({ toolName: fn, parameters: params });
+                    if (!result.success) return `That step failed: ${result.error || "unknown error"}.`;
+                    if (fn === "create_file" || fn === "create-file") {
+                      const f = (result.data ?? {}) as { url?: string; filename?: string; expiresInMinutes?: number };
+                      if (f.url) {
+                        const mins = f.expiresInMinutes ?? 60;
+                        const name = f.filename || "your file";
+                        inlineImageBlocks.push(`📄 **[${name}](${f.url})** — ready to download.\n\n_This link is temporary and expires in about ${mins} minutes._`);
+                        return `File created and its download link is now shown to the user. Briefly confirm it's ready and that it expires in ~${mins} minutes.`;
+                      }
+                      return "The file was created.";
+                    }
+                    if (fn === "image_generation" || fn === "image-generation") {
+                      const img = (result.data ?? {}) as { imageUrl?: string };
+                      if (img.imageUrl) {
+                        inlineImageBlocks.push(`![Generated image](${img.imageUrl})`);
+                        return "Image generated and shown to the user.";
+                      }
+                    }
+                    if (typeof result.data === "string") return result.data.slice(0, 2000);
+                    if (result.data) return JSON.stringify(result.data).slice(0, 1500);
+                    return "Done.";
                   };
 
                   clearFlushTimer();
-                  // Show a loading indicator instead of a blank box while the
-                  // tool result is summarized (prevents a "frozen" empty bubble).
-                  // Show the SAME animated loader the first pass uses (empty buffer
-                  // + thinking flag) instead of a static "Writing…" line, so the
-                  // summary never looks frozen while the model reasons before its
-                  // first visible token.
-                  setStreamBuffer("");
-                  setIsThinking?.(true);
-                  const summaryText = await new Promise<string>((resolve) => {
-                    let acc = "";
-                    let settled = false;
-                    let timer: ReturnType<typeof setTimeout> | undefined;
-                    const done = (value: string) => {
-                      if (settled) return;
-                      settled = true;
-                      if (timer) clearTimeout(timer);
-                      resolve(value);
+                  let finalText = "";
+                  let lastTurnText = "";
+                  for (let round = 0; round < MAX_CHAIN_ROUNDS; round++) {
+                    setStreamBuffer("");
+                    setIsThinking?.(true);
+                    const turnRequest: ToolAwareChatRequest = {
+                      model: modelName,
+                      messages: convo,
+                      stream: true,
+                      tools: enabledToolsForChain.length ? enabledToolsForChain : undefined,
+                      options: { num_predict: tokenLimit + 250 },
                     };
-                    const summarySub = provider.chat(summaryRequest).subscribe({
-                      next: (data) => {
-                        if (data?.message?.content) {
-                          acc += data.message.content;
-                          const visible = stripThinking(acc);
-                          latestDisplayMessage = visible;
-                          lastPartialRef.current.text = visible;
-                          // Drop the loader the moment real (non-thinking) text
-                          // appears; until then it keeps animating.
-                          if (visible) setIsThinking?.(false);
-                          setStreamBuffer(visible);
-                        }
-                      },
-                      error: (summaryErr: Error) => {
-                        debugLogger.error("Summarization pass failed", {
-                          error: summaryErr instanceof Error ? summaryErr.message : String(summaryErr),
-                        });
-                        done("");
-                      },
-                      complete: () => done(stripThinking(acc).trim()),
+                    const { text: turnText, native: turnNative } = await streamTurn(turnRequest);
+                    setIsThinking?.(false);
+                    if (turnText.trim()) lastTurnText = turnText;
+
+                    // Did the model ask for another tool (text tool_code or native)?
+                    let toolText = turnText;
+                    if (turnNative.length && !/```(?:tool_code|TOOL_CODE)/.test(toolText)) {
+                      for (const raw of turnNative) {
+                        const tc = raw as { function?: { name?: string; arguments?: unknown }; name?: string; arguments?: unknown };
+                        const fnName = tc.function?.name ?? tc.name;
+                        if (!fnName) continue;
+                        const a = tc.function?.arguments ?? tc.arguments ?? {};
+                        toolText += `\n\n\`\`\`tool_code\n${fnName}(${typeof a === "string" ? a : JSON.stringify(a ?? {})})\n\`\`\``;
+                      }
+                    }
+                    const chainMatches = toolText.match(/```(?:tool_code|TOOL_CODE)\s*\n([^`]+)\n```/gi);
+                    if (!chainMatches || !chainMatches.length) {
+                      finalText = turnText;
+                      break;
+                    }
+
+                    const roundOut: string[] = [];
+                    for (const m of chainMatches) {
+                      const code = m.replace(/```(?:tool_code|TOOL_CODE)\s*\n|\n```/gi, "").trim();
+                      const fm = code.match(/^(\w+)\(\s*(.*?)\s*\)$/);
+                      if (!fm) continue;
+                      const [, fnName, rawParams] = fm;
+                      let parsed: MCPToolParameters = {};
+                      const rp = rawParams.trim();
+                      if (rp) {
+                        try { parsed = JSON.parse(rp.startsWith("{") ? rp : `{${rp}}`); } catch { parsed = {}; }
+                      }
+                      try {
+                        roundOut.push(`## ${fnName}\n${await runChainedTool(fnName, parsed)}`);
+                      } catch (e) {
+                        roundOut.push(`## ${fnName}\nThat step failed: ${e instanceof Error ? e.message : String(e)}`);
+                      }
+                    }
+                    convo.push({ role: "assistant", content: stripToolBlocks(turnText) || "(using a tool)" });
+                    convo.push({
+                      role: "user",
+                      content: `Tool results:\n\n${roundOut.join("\n\n")}\n\nNow give your final answer to my original request, or call another tool if you still genuinely need to. Do NOT add a "Sources" list.`,
                     });
-                    currentSubRef.current = summarySub;
-                    // Hard timeout so a slow or hung summary call can never freeze
-                    // the turn — fall back to the inline tool output instead.
-                    timer = setTimeout(() => {
-                      debugLogger.warn("Summarization pass timed out; using inline tool output");
-                      try { summarySub.unsubscribe(); } catch { /* noop */ }
-                      done("");
-                    }, 30000);
-                  });
+                  }
                   setIsThinking?.(false);
 
-                  if (summaryText.trim()) {
-                    // Belt-and-suspenders: if the model still tacked on its own
-                    // Sources/References list despite instructions, strip the
-                    // trailing block — we append a single clickable one below.
-                    const cleanedSummary = summaryText
+                  const answerText = finalText.trim() ? finalText : lastTurnText;
+                  if (answerText.trim() || inlineImageBlocks.length) {
+                    // Belt-and-suspenders: strip any model-authored trailing
+                    // Sources/References list — we append a single clickable one.
+                    const cleanedSummary = answerText
                       .replace(
                         /\n{1,}\s*(?:[*_#>\s]*)(?:sources?|references?|citations?|further reading)(?:\s*:)?\s*(?:[*_]*)\s*\n[\s\S]*$/i,
                         "",
