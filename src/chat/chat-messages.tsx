@@ -20,6 +20,7 @@ import React from "react";
 import { Box } from "@mui/material";
 import AIResponseTextField from "../modals/chat-modal/ai-response-text-field";
 import StreamingMarkdown from "../components/StreamingMarkdown";
+import SourceChips from "./source-chips";
 import { KnowledgeDoc } from "../store/knowledgeStore";
 import { HistoryEntry } from "../store/aiQueryStore";
 import { useConversationStore } from "../store/conversationStore";
@@ -153,6 +154,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                 isStreaming={isStreaming && isLast}
                 sources={sourceSummaries}
               />
+              <SourceChips content={content} />
             </Box>
           </Box>
         );
