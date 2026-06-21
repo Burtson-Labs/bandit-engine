@@ -46,6 +46,7 @@ import { useConversationStore, type Conversation } from "../store/conversationSt
 import { useProjectStore } from "../store/projectStore";
 import { HistoryEntry } from "../store/aiQueryStore";
 import { useAuthenticationStore } from "../store/authenticationStore";
+import { usePackageSettingsStore } from "../store/packageSettingsStore";
 import brandingService from "../services/branding/brandingService";
 import ProjectManagementModal from "./project-management-modal";
 import MoveConversationModal from "./move-conversation-modal";
@@ -189,20 +190,51 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
   const [avatarImage, setAvatarImage] = useState<string>(BANDIT_AVATAR);
 
   useEffect(() => {
-    const fetchBranding = async () => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    const resolveAvatar = async () => {
+      // 1. The user's uploaded profile picture (avatarUrl claim → S3 app-asset).
+      try {
+        const avatarId = getCustomClaim("avatarUrl");
+        const fileStorageApiUrl = usePackageSettingsStore.getState().settings?.fileStorageApiUrl;
+        const token = useAuthenticationStore.getState().token;
+        if (avatarId && fileStorageApiUrl && token) {
+          const base = fileStorageApiUrl.replace(/\/$/, "");
+          const res = await fetch(`${base}/app-asset/download/${encodeURIComponent(avatarId)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            if (active) {
+              objectUrl = URL.createObjectURL(blob);
+              setAvatarImage(objectUrl);
+            }
+            return;
+          }
+        }
+      } catch {
+        /* fall through to branding */
+      }
+
+      // 2. Branding logo, else the Bandit head.
       try {
         const branding = await brandingService.getBranding();
-        setAvatarImage(branding?.logoBase64 || BANDIT_AVATAR);
+        if (active) setAvatarImage(branding?.logoBase64 || BANDIT_AVATAR);
       } catch (error) {
         debugLogger.error("Failed to load branding avatar", {
           error: error instanceof Error ? error.message : String(error),
         });
-        setAvatarImage(BANDIT_AVATAR);
+        if (active) setAvatarImage(BANDIT_AVATAR);
       }
     };
 
-    fetchBranding();
-  }, []);
+    resolveAvatar();
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [getCustomClaim]);
 
   const avatarLabel = userDisplayName || user?.email || "Bandit";
   const avatarInitials = useMemo(() => deriveInitials(avatarLabel), [avatarLabel]);
@@ -748,8 +780,10 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
           )}
         </Box>
 
-        {/* User badge */}
+        {/* User badge — opens profile & settings when signed in */}
         <Box
+          onClick={user ? () => { window.location.href = "/profile"; } : undefined}
+          title={user ? "Profile & settings" : undefined}
           sx={{
             mt: "auto",
             px: 2,
@@ -760,6 +794,9 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             gap: 1.5,
             justifyContent: "center",
             bgcolor: alpha(theme.palette.background.default, isMobile ? 0.9 : 0.6),
+            cursor: user ? "pointer" : "default",
+            transition: "background-color 0.15s ease",
+            "&:hover": user ? { bgcolor: alpha(theme.palette.primary.main, 0.08) } : undefined,
           }}
         >
           <Avatar
