@@ -40,7 +40,7 @@ import {
   Avatar,
   alpha,
 } from "@mui/material";
-import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon, Settings as SettingsIcon } from "lucide-react";
+import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon, Settings as SettingsIcon, Brain as MemoryIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useConversationStore, type Conversation } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
@@ -49,6 +49,7 @@ import { useAuthenticationStore } from "../store/authenticationStore";
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
 import brandingService from "../services/branding/brandingService";
 import ProjectManagementModal from "./project-management-modal";
+import MemoryModal from "./memory-modal";
 import MoveConversationModal from "./move-conversation-modal";
 import SimpleConversationItem from "./simple-conversation-item";
 import ProjectHeader from "./project-header";
@@ -134,6 +135,7 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
 
   // State for UI
   const [projectManagementOpen, setProjectManagementOpen] = useState(false);
+  const [memoryModalOpen, setMemoryModalOpen] = useState(false);
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const didInitCollapseRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -434,6 +436,23 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             gap: 1,
           }}
         >
+          <Tooltip title="Memories" arrow>
+            <IconButton
+              onClick={() => setMemoryModalOpen(true)}
+              size="small"
+              aria-label="Memories"
+              sx={{
+                color: theme.palette.text.secondary,
+                "&:hover": {
+                  color: theme.palette.primary.main,
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <MemoryIcon />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title={tooltip("manageProjects")} arrow>
             <IconButton
               onClick={() => setProjectManagementOpen(true)}
@@ -853,6 +872,8 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
         open={projectManagementOpen}
         onClose={() => setProjectManagementOpen(false)}
       />
+
+      <MemoryModal open={memoryModalOpen} onClose={() => setMemoryModalOpen(false)} />
 
       {/* Move Conversation Modal */}
       {conversationToMove && (
