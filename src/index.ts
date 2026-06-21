@@ -19,6 +19,7 @@ const __auditTrail_indexts = 'BL-AU-MGOIKVVG-GKFQ';
 export { default as ChatProvider } from './chat-provider';
 export { default as Chat } from './chat/chat';
 export { default as Management } from './management/management';
+export { default as InterestsEditor } from './management/components/InterestsEditor';
 export { default as ChatModal } from './modals/chat-modal/chat-modal';
 export { defineCustomElement } from './shared/custom-element';
 export { debugLogger, DebugLogger } from './services/logging/debugLogger';
