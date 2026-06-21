@@ -40,7 +40,7 @@ import {
   Avatar,
   alpha,
 } from "@mui/material";
-import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon } from "lucide-react";
+import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon, Settings as SettingsIcon } from "lucide-react";
 import { useTheme } from "@mui/material/styles";
 import { useConversationStore, type Conversation } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
@@ -830,15 +830,21 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             >
               {user ? userDisplayName : "Not signed in"}
             </Typography>
-            {!user && (
-              <Typography
-                variant="caption"
-                sx={{ color: theme.palette.text.secondary }}
-              >
-                Connect your account to sync chats
-              </Typography>
-            )}
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{ color: theme.palette.text.secondary }}
+            >
+              {user ? (userSecondaryText || "View profile & settings") : "Connect your account to sync chats"}
+            </Typography>
           </Box>
+          {user && (
+            <SettingsIcon
+              size={18}
+              color={theme.palette.text.secondary}
+              style={{ flexShrink: 0, opacity: 0.85 }}
+            />
+          )}
         </Box>
       </Drawer>
 
