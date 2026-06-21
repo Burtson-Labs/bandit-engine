@@ -145,7 +145,37 @@ const imageGenerationTool: MCPTool = {
   isBuiltIn: true
 };
 
-const defaultTools: MCPTool[] = [healthCheckTool, webSearchTool, webFetchTool, imageGenerationTool];
+// Create a downloadable file for the user (stored ~1 hour at a gateway URL).
+const createFileTool: MCPTool = {
+  id: "create-file",
+  name: "create_file",
+  description: "Create a downloadable file for the user (md, txt, csv, json, html, docx, pptx). Returns a temporary (~1 hour) download link.",
+  enabled: true,
+  type: "function",
+  function: {
+    name: "create_file",
+    description:
+      "Generate a file the user can download. For docx/pptx write well-structured Markdown (headings, lists, tables; use '## ' headings to start each slide). Returns a short-lived (~1 hour) download URL — tell the user it expires.",
+    parameters: {
+      type: "object",
+      properties: {
+        content: { type: "string", description: "The file content (Markdown for docx/pptx; raw text for others)." },
+        filename: { type: "string", description: "Desired filename, e.g. 'report.docx' or 'notes.md'." },
+        format: {
+          type: "string",
+          enum: ["md", "txt", "csv", "json", "html", "xml", "yaml", "docx", "pptx"],
+          description: "File format. Defaults to md.",
+        },
+      },
+      required: ["content", "format"],
+    },
+  },
+  endpoint: "/mcp/create-file",
+  method: "POST",
+  isBuiltIn: true,
+};
+
+const defaultTools: MCPTool[] = [healthCheckTool, webSearchTool, webFetchTool, imageGenerationTool, createFileTool];
 
 export const useMCPToolsStore = create<MCPToolsStore>((set, get) => ({
   tools: defaultTools,
