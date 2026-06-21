@@ -866,9 +866,9 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
               sx={{ color: theme.palette.text.secondary, fontSize: "0.85rem", textAlign: isMobileView ? "left" : "center" }}
             >
               {shouldUseVectorForMemories ? (
-                "🚀 AI-Powered Vector Memory. Semantic search across your conversations."
+                "Semantic memory — searches meaning across your conversations."
               ) : (
-                "🧠 Private. Local. Yours. You control your memories."
+                "Private and local. You decide what's remembered."
               )}
             </Typography>
           </Box>
@@ -1122,7 +1122,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
                                 mt: 0.5,
                                 display: "block"
                               }}>
-                                📌 Pinned
+                                Pinned
                               </Typography>
                             )}
                           </Box>
