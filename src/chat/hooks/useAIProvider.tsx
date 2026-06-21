@@ -1084,6 +1084,10 @@ export const useAIProvider = ({
       let sawToolBlock = false;
       // Native tool_calls (from native-tool models) — bridged to tool_code below.
       const nativeToolCalls: unknown[] = [];
+      // Animated "working" indicator shown the instant a tool call begins, so the
+      // (possibly long) tool-argument generation phase — e.g. the model writing an
+      // entire file body into create_file — never sits frozen on the preamble.
+      let workingTimer: ReturnType<typeof setInterval> | null = null;
 
       // Strip <think>...</think> blocks from text before displaying.
       // Hides in-progress thinking (unclosed tag) and removes completed blocks.
@@ -1101,6 +1105,36 @@ export const useAIProvider = ({
       // naturally (assistant said "let me look that up", then results arrive).
       const stripToolBlocks = (text: string): string =>
         text.replace(/```(?:tool_code|TOOL_CODE)\s*\n[\s\S]*?\n```/gi, "").trim();
+
+      // Keep the message area visibly alive while a tool call is being assembled,
+      // executed, or summarized. The model often writes a large argument (a whole
+      // file body, a long query) into the tool call, which is never displayed —
+      // and tool execution itself can take seconds — so without this the preamble
+      // freezes. Animate a "Working…" line under the preamble, with a label that
+      // can change as we move through phases (writing → searching → responding).
+      let workingLabel = "Working on it";
+      let workingPreamble = "";
+      const stopWorking = () => {
+        if (workingTimer) {
+          clearInterval(workingTimer);
+          workingTimer = null;
+        }
+      };
+      const startWorking = (label = "Working on it") => {
+        // Tolerate trailing ellipsis in passed-in labels; we add cycling dots.
+        workingLabel = label.replace(/[.…]+\s*$/, "").trim() || "Working on it";
+        workingPreamble = stripToolBlocks(stripThinking(fullMessage)).trim();
+        if (workingTimer) return; // already animating — label/preamble updated above
+        let dots = 0;
+        const render = () => {
+          dots = (dots + 1) % 4;
+          setStreamBuffer(
+            `${workingPreamble}${workingPreamble ? "\n\n" : ""}_${workingLabel}${".".repeat(dots)}_`
+          );
+        };
+        render();
+        workingTimer = setInterval(render, 450);
+      };
 
       const flushNow = () => {
         clearFlushTimer();
@@ -1144,6 +1178,7 @@ export const useAIProvider = ({
             nativeToolCalls.push(...(data.message.tool_calls as unknown[]));
             sawToolBlock = true;
             clearFlushTimer();
+            startWorking();
           }
           if (data.message.content) {
             fullMessage += data.message.content;
@@ -1157,6 +1192,7 @@ export const useAIProvider = ({
           if (/```(?:tool_code|TOOL_CODE)/.test(visibleMessage)) {
             sawToolBlock = true;
             clearFlushTimer();
+            startWorking();
           }
           latestDisplayMessage = visibleMessage;
           if (!sawToolBlock) {
@@ -1165,6 +1201,7 @@ export const useAIProvider = ({
         },
         error: (err: Error) => {
           debugLogger.error("Stream error:", err);
+          stopWorking();
           overrideComponentStatus("Idle");
           setIsSubmitting(false);
           setIsStreaming(false);
@@ -1271,6 +1308,7 @@ export const useAIProvider = ({
                   if (functionName === "ask_user" || functionName === "ask-user") {
                     enhancedMessage = enhancedMessage.replace(match, "");
                     clearFlushTimer();
+                    stopWorking();
                     const askPreamble = stripToolBlocks(fullMessage).trim();
                     setStreamBuffer(askPreamble || "_Waiting for your answer…_");
                     const questions = parseAskUserQuestions(
@@ -1303,19 +1341,20 @@ export const useAIProvider = ({
                   // Replace the fenced block with an invisible placeholder token. Do not update UI yet.
                   enhancedMessage = enhancedMessage.replace(match, placeholderToken);
 
-                  // Surface a clear "working" status while the tool runs, so the
-                  // bubble never looks frozen during the fetch + summary.
+                  // Surface a clear, animated "working" status while the tool runs,
+                  // so the bubble never looks frozen during the fetch + summary.
                   clearFlushTimer();
                   const toolStatus =
                     functionName === "web_search" || functionName === "web-search"
-                      ? "Searching the web…"
+                      ? "Searching the web"
                       : functionName === "web_fetch" || functionName === "web-fetch"
-                        ? "Reading the page…"
+                        ? "Reading the page"
                         : functionName === "image_generation" || functionName === "image-generation"
-                          ? "Generating the image…"
-                          : "Working on it…";
-                  const toolPreamble = stripToolBlocks(fullMessage).trim();
-                  setStreamBuffer(toolPreamble ? `${toolPreamble}\n\n_${toolStatus}_` : `_${toolStatus}_`);
+                          ? "Generating the image"
+                          : functionName === "create_file" || functionName === "create-file"
+                            ? "Creating your file"
+                            : "Working on it";
+                  startWorking(toolStatus);
 
                   // Execute the tool
                   telemetryEvent("tool_loop:tool_execute", { name: functionName, params: parsedParams });
@@ -1507,7 +1546,10 @@ export const useAIProvider = ({
                             const visible = stripThinking(acc);
                             latestDisplayMessage = visible;
                             lastPartialRef.current.text = visible;
-                            if (visible) setIsThinking?.(false);
+                            if (visible) {
+                              stopWorking();
+                              setIsThinking?.(false);
+                            }
                             setStreamBuffer(visible);
                           }
                         },
@@ -1535,12 +1577,12 @@ export const useAIProvider = ({
                         : "The user dismissed the question(s). Proceed with your best judgment.";
                     }
                     const status =
-                      fn === "create_file" || fn === "create-file" ? "Creating the file…"
-                      : fn === "web_search" || fn === "web-search" ? "Searching the web…"
-                      : fn === "web_fetch" || fn === "web-fetch" ? "Reading the page…"
-                      : fn === "image_generation" || fn === "image-generation" ? "Generating the image…"
-                      : "Working on it…";
-                    setStreamBuffer(`_${status}_`);
+                      fn === "create_file" || fn === "create-file" ? "Creating your file"
+                      : fn === "web_search" || fn === "web-search" ? "Searching the web"
+                      : fn === "web_fetch" || fn === "web-fetch" ? "Reading the page"
+                      : fn === "image_generation" || fn === "image-generation" ? "Generating the image"
+                      : "Working on it";
+                    startWorking(status);
                     const result = await executeMCPTool({ toolName: fn, parameters: params });
                     if (!result.success) return `That step failed: ${result.error || "unknown error"}.`;
                     if (fn === "create_file" || fn === "create-file") {
@@ -1569,6 +1611,7 @@ export const useAIProvider = ({
                   let finalText = "";
                   let lastTurnText = "";
                   for (let round = 0; round < MAX_CHAIN_ROUNDS; round++) {
+                    stopWorking(); // hand off to the thinking-loader below
                     setStreamBuffer("");
                     setIsThinking?.(true);
                     const turnRequest: ToolAwareChatRequest = {
@@ -1663,6 +1706,7 @@ export const useAIProvider = ({
             }
 
             // Wrap up and update UI/history
+            stopWorking(); // ensure the animated indicator never clobbers the final message
             overrideComponentStatus("Idle");
             setIsSubmitting(false);
             setPreviousQuestion(question);
