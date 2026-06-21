@@ -1059,7 +1059,7 @@ const Management = () => {
       requiresFeature: 'advancedSearch', // Pro/Team users with advanced features
     },
     {
-      label: "MCP Tools",
+      label: "Tools",
       icon: <BuildIcon />,
       requiresFeature: 'advancedSearch', // Pro/Team users with advanced features
     },
@@ -1599,7 +1599,7 @@ const Management = () => {
             />
           )}
           {navTabs[tabIndex]?.label === "Provider" && <ProviderTab />}
-          {navTabs[tabIndex]?.label === "MCP Tools" && <MCPToolsTabV2 />}
+          {navTabs[tabIndex]?.label === "Tools" && <MCPToolsTabV2 />}
         </Box>
 
         <Fab
