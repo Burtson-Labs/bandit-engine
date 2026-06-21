@@ -74,6 +74,37 @@ export const executeMCPTool = async (toolCall: MCPToolCall): Promise<MCPToolResu
       };
     }
 
+    // MCP-server tools are invoked through the host proxy (POST /mcp/invoke),
+    // which wraps {serverId, tool, arguments} — not a fixed per-tool endpoint.
+    if (tool.mcpServerId) {
+      const base = settings.gatewayApiUrl.replace(/\/$/, "");
+      const token = authenticationService.getToken();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      try {
+        const res = await fetch(`${base}/mcp/invoke`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            serverId: tool.mcpServerId,
+            tool: tool.mcpToolName ?? toolCall.toolName,
+            arguments: toolCall.parameters ?? {},
+          }),
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          return { success: false, error: data?.error || `MCP call failed: ${res.status}`, data };
+        }
+        return { success: !data?.isError, data: typeof data?.output === "string" ? data.output : data };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     // Check if tool has an endpoint
     if (!tool.endpoint) {
       return {

@@ -19,6 +19,11 @@ const __auditTrail_store_mcpToolsStorets = 'BL-AU-MGOIKVW4-PIWV';
 import { create } from "zustand";
 import indexedDBService from "../services/indexedDB/indexedDBService";
 import { debugLogger } from "../services/logging/debugLogger";
+import { listMcpServers, discoverMcpTools } from "../services/mcp/mcpServersService";
+
+// Sanitize an MCP tool into a valid, namespaced function name for the model.
+const sanitizeMcpToolName = (raw: string): string =>
+  raw.replace(/[^a-zA-Z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").slice(0, 60);
 
 export interface MCPTool {
   id: string;
@@ -38,6 +43,11 @@ export interface MCPTool {
   endpoint?: string; // API endpoint for gateway calls
   method?: "GET" | "POST" | "PUT" | "DELETE";
   isBuiltIn?: boolean;
+  // Set when this tool comes from a user-connected MCP server. Such tools are
+  // invoked through POST /mcp/invoke (not a fixed endpoint) and are never
+  // persisted to IndexedDB — they're re-discovered from the gateway each load.
+  mcpServerId?: string;
+  mcpToolName?: string; // the tool's real name on the MCP server
 }
 
 interface MCPToolsStore {
@@ -50,6 +60,7 @@ interface MCPToolsStore {
   loadTools: () => Promise<void>;
   saveTools: () => Promise<void>;
   getEnabledTools: () => MCPTool[];
+  loadMcpServerTools: () => Promise<void>;
 }
 
 // Built-in controller-backed tools
@@ -260,7 +271,9 @@ export const useMCPToolsStore = create<MCPToolsStore>((set, get) => ({
       const { tools } = get();
       const storeConfigs = [{ name: "config", keyPath: "id" }];
       
-      const customTools = tools.filter((tool) => !tool.isBuiltIn);
+      // Persist only user-defined custom tools — never built-ins or the dynamic
+      // tools discovered from MCP servers (those are re-fetched from the gateway).
+      const customTools = tools.filter((tool) => !tool.isBuiltIn && !tool.mcpServerId);
 
       await indexedDBService.put("banditConfig", 1, "config", {
         id: "mcpTools",
@@ -271,5 +284,53 @@ export const useMCPToolsStore = create<MCPToolsStore>((set, get) => ({
     } catch (error) {
       debugLogger.error("Failed to save MCP tools to IndexedDB", { error });
     }
+  },
+
+  // Discover the user's connected MCP servers' tools from the gateway and merge
+  // them into the tool list (so the model can call them). Replaces any prior
+  // MCP-server tools; best-effort — a single unreachable server is skipped.
+  loadMcpServerTools: async () => {
+    let servers;
+    try {
+      servers = await listMcpServers();
+    } catch (error) {
+      debugLogger.warn("Could not list MCP servers", { error: String(error) });
+      return;
+    }
+
+    const collected: MCPTool[] = [];
+    for (const server of servers.filter((s) => s.enabled)) {
+      try {
+        const { tools } = await discoverMcpTools(server.id);
+        for (const t of tools) {
+          const fnName = sanitizeMcpToolName(`mcp_${server.name}_${t.name}`);
+          const schema =
+            t.inputSchema && typeof t.inputSchema === "object" && (t.inputSchema as { type?: string }).type === "object"
+              ? (t.inputSchema as MCPTool["function"]["parameters"])
+              : { type: "object" as const, properties: {}, required: [] };
+          collected.push({
+            id: `mcp-${server.id}-${t.name}`,
+            name: fnName,
+            description: t.description || `${t.name} (via ${server.name})`,
+            enabled: true,
+            type: "function",
+            function: {
+              name: fnName,
+              description: t.description || `${t.name} — provided by the ${server.name} MCP server.`,
+              parameters: schema,
+            },
+            mcpServerId: server.id,
+            mcpToolName: t.name,
+          });
+        }
+      } catch (error) {
+        debugLogger.warn("Failed to discover tools for MCP server", { server: server.name, error: String(error) });
+      }
+    }
+
+    set((state) => ({
+      tools: [...state.tools.filter((t) => !t.mcpServerId), ...collected],
+    }));
+    debugLogger.info("MCP server tools loaded", { count: collected.length });
   },
 }));

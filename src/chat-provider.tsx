@@ -94,6 +94,9 @@ export const ChatProvider: React.FC<ChatConfig> = (props) => {
         await usePreferencesStore.getState().loadPreferences();
         await useKnowledgeStore.getState().loadDocs();
         await useMCPToolsStore.getState().loadTools();
+        // Discover the user's connected MCP servers' tools in the background
+        // (best-effort) so the model can call them without delaying chat startup.
+        void useMCPToolsStore.getState().loadMcpServerTools();
         await useConversationSyncStore.getState().initialize();
       }
       

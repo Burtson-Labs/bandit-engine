@@ -19,6 +19,7 @@ const __auditTrail_components_MCPToolsTabV2tsx = 'BL-AU-MGOIKVVJ-JBSK';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Paper, Chip, Stack, IconButton, Tooltip, LinearProgress, Switch, FormControlLabel } from '@mui/material';
 import { fetchAvailableMcpTools, fetchMcpHealth, McpTool } from '../../services/mcp/mcpControllerService';
+import McpServersSection from './McpServersSection';
 import { useMCPToolsStore } from '../../store/mcpToolsStore';
 import { usePackageSettingsStore } from '../../store/packageSettingsStore';
 import {
@@ -145,6 +146,8 @@ const MCPToolsTabV2: React.FC = () => {
           </Tooltip>
         </Box>
       </Box>
+
+      <McpServersSection />
 
       {!gatewayConfigured && (
         <Paper sx={{ p: 2, mb: 2 }}>
