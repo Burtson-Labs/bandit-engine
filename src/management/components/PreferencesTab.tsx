@@ -17,6 +17,7 @@ const __auditTrail_components_PreferencesTabtsx = 'BL-AU-MGOIKVVK-ISXN';
 // File: PreferencesTab.tsx | Path: src/management/components/PreferencesTab.tsx | Hash: 0a6cdeab
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import MemoryModal from "../../chat/memory-modal";
 import {
   Box,
   Button,
@@ -78,6 +79,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
   const [syncToggleLoading, setSyncToggleLoading] = useState(false);
   const [manualSyncLoading, setManualSyncLoading] = useState(false);
   const [advancedVectorToggleLoading, setAdvancedVectorToggleLoading] = useState(false);
+  const [memoryModalOpen, setMemoryModalOpen] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -774,6 +776,14 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
                 </Box>
               }
             />
+            {preferences.memoryEnabled && (
+              <Box sx={{ pl: { xs: 0, sm: 6 }, mt: -0.5, mb: 0.5 }}>
+                <Button size="small" variant="outlined" onClick={() => setMemoryModalOpen(true)}>
+                  Manage memories
+                </Button>
+                <MemoryModal open={memoryModalOpen} onClose={() => setMemoryModalOpen(false)} />
+              </Box>
+            )}
 
             <FormControlLabel
               control={

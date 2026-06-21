@@ -463,7 +463,9 @@ const ChatInput: React.FC<ChatInputProps> = (props) => {
   const memory = localStorage.getItem("bandit-memory");
 
   const hasAttachmentAction = !isPlaygroundMode && fileInputs.length < 3 && isDocumentUploadEnabled;
-  const hasMemoryAction = isMemoryEnabled;
+  // Memory is managed from Settings → Preferences now, not the composer, to
+  // keep the input area uncluttered.
+  const hasMemoryAction = false;
   const hasFeedbackAction = isFeedbackEnabled && isMobile;
   const hasSttAction = isSTTAvailable && !isVoiceModeEnabled;
   const hasSecondaryActions = isMobile && (hasAttachmentAction || hasMemoryAction || hasFeedbackAction || hasSttAction);
