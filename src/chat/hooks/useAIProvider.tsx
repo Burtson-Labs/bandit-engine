@@ -35,6 +35,7 @@ import { determineRelevantDocuments, getCurrentDateTimeContext } from "../../ser
 import { AIChatRequest, AIMessage } from "../../services/ai-provider/types/common.types";
 import { usePreferencesStore } from "../../store/preferencesStore";
 import { getEnabledMCPToolsForAI, isMCPAvailable, executeMCPTool } from "../../services/mcp";
+import { useAskUserStore, parseAskUserQuestions } from "../../store/askUserStore";
 import type { VectorMemory, VectorMemoryMetadata } from "../../services/vectorDatabase/vectorDatabaseService";
 
 // Model budget configuration - provider agnostic
@@ -1039,7 +1040,7 @@ export const useAIProvider = ({
               return `- ${tool.function.name}: ${tool.function.description}${paramSuffix}`;
             })
             .join("\n");
-  const protocol = `\n\nTOOL USAGE PROTOCOL (conservative approach)\n- PRIORITIZE your built-in knowledge and the provided context ABOVE to answer questions first.\n- Use your training data and general knowledge confidently for common topics, concepts, and questions.\n- Only call tools for SPECIFIC, CURRENT information that requires real-time data or a source you don't already have:\n  * web_search() - when asked about recent/current events, breaking news, live information (weather, prices, sports scores), or when you need to look up documentation, libraries, APIs, error messages, or verify a specific fact\n  * web_fetch() - to read the FULL contents of a specific URL you already have. Reach for this when the user wants to "tell me more", "go deeper", "read/open that article", or asks for details about a specific source, link, or article from an EARLIER answer: take that item's URL from the previous Sources list in this conversation and fetch it, then answer from the page's actual content (not just the prior summary)\n  * image_generation() - ONLY when explicitly asked to create or generate an image\n- For general questions about concepts, definitions, explanations, or how-to topics, use your built-in knowledge WITHOUT calling tools.\n- Examples of what NOT to use tools for: "who are you?", "what is React?", "explain machine learning", "how does X work?", general programming questions.\n- When a tool is truly needed, call exactly ONE tool that best matches the request.\n- Begin tool usage with a fenced code block: \`\`\`tool_code\nfunctionName({"param": "value"})\n\`\`\`\n- If you cannot answer with your knowledge and context, and no suitable tool exists, ask a clarifying question.\n\nExamples of appropriate tool usage:\n\n\`\`\`tool_code\nweb_search({"query": "latest AI developments 2026", "count": 5})\n\`\`\`\n\n\`\`\`tool_code\nweb_fetch({"url": "https://example.com/changelog"})\n\`\`\`\n`;
+  const protocol = `\n\nTOOL USAGE PROTOCOL (conservative approach)\n- PRIORITIZE your built-in knowledge and the provided context ABOVE to answer questions first.\n- Use your training data and general knowledge confidently for common topics, concepts, and questions.\n- Only call tools for SPECIFIC, CURRENT information that requires real-time data or a source you don't already have:\n  * web_search() - when asked about recent/current events, breaking news, live information (weather, prices, sports scores), or when you need to look up documentation, libraries, APIs, error messages, or verify a specific fact\n  * web_fetch() - to read the FULL contents of a specific URL you already have. Reach for this when the user wants to "tell me more", "go deeper", "read/open that article", or asks for details about a specific source, link, or article from an EARLIER answer: take that item's URL from the previous Sources list in this conversation and fetch it, then answer from the page's actual content (not just the prior summary)\n  * image_generation() - ONLY when explicitly asked to create or generate an image\n  * ask_user({"questions": [{"question": "...", "header": "Format", "options": [{"label": "Inline (Recommended)"}, {"label": "Download a file"}]}]}) - when you are genuinely BLOCKED on a decision that is the USER's to make and cannot resolve from the request, context, or sensible defaults (e.g. show content inline vs. let them download it, which format/option they want). Renders clickable options the user answers in one step — better than asking in prose and ending your turn. Give 1-4 questions, each with 2-4 options; if one is clearly best, list it first and append " (Recommended)". The user may also type their own answer; act on it directly.\n- For general questions about concepts, definitions, explanations, or how-to topics, use your built-in knowledge WITHOUT calling tools.\n- Examples of what NOT to use tools for: "who are you?", "what is React?", "explain machine learning", "how does X work?", general programming questions.\n- When a tool is truly needed, call exactly ONE tool that best matches the request.\n- Begin tool usage with a fenced code block: \`\`\`tool_code\nfunctionName({"param": "value"})\n\`\`\`\n- If you cannot answer with your knowledge and context, and no suitable tool exists, ask a clarifying question.\n\nExamples of appropriate tool usage:\n\n\`\`\`tool_code\nweb_search({"query": "latest AI developments 2026", "count": 5})\n\`\`\`\n\n\`\`\`tool_code\nweb_fetch({"url": "https://example.com/changelog"})\n\`\`\`\n`;
           enhancedSystemPrompt += `\n\nYou have access to the following tools that can help you provide better responses. Use them when appropriate:\n\n${toolList}\n${protocol}`;
           
           debugLogger.info("MCP tools added to system prompt", { 
@@ -1263,6 +1264,37 @@ export const useAIProvider = ({
                     functionName,
                     parameters: parsedParams,
                   });
+
+                  // ask_user is handled CLIENT-SIDE: render an interactive card and
+                  // await the user's choice instead of calling a backend tool. The
+                  // answer is fed back through the same summary pass.
+                  if (functionName === "ask_user" || functionName === "ask-user") {
+                    enhancedMessage = enhancedMessage.replace(match, "");
+                    clearFlushTimer();
+                    const askPreamble = stripToolBlocks(fullMessage).trim();
+                    setStreamBuffer(askPreamble || "_Waiting for your answer…_");
+                    const questions = parseAskUserQuestions(
+                      (parsedParams as Record<string, unknown>).questions ?? parsedParams,
+                    );
+                    if (questions.length === 0) {
+                      summarizableResults.push({
+                        name: functionName,
+                        output:
+                          "ask_user failed: `questions` must be a JSON array of {question, options} objects. Ask the user in plain text instead.",
+                      });
+                      continue;
+                    }
+                    telemetryEvent("tool_loop:ask_user", { count: questions.length });
+                    const answers = await useAskUserStore.getState().ask(questions);
+                    const answerText = answers
+                      ? "The user answered:\n\n" +
+                        questions
+                          .map((q) => `Q: ${q.question}\nA: ${(answers[q.id] || "").trim() || "(no answer)"}`)
+                          .join("\n\n")
+                      : "The user dismissed the question(s) without answering. Proceed with your best judgment; do not immediately re-ask.";
+                    summarizableResults.push({ name: functionName, output: answerText });
+                    continue;
+                  }
 
                   // Insert a neutral loading placeholder while executing
                   const placeholderToken = `<<TOOL_LOADING_${functionName}_${Math.random()

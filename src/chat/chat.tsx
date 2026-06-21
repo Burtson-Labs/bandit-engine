@@ -28,6 +28,7 @@ import ChatScrollToBottomButton from "./chat-scroll-to-bottom-button";
 import BanditChatLogo from "./bandit-chat-logo";
 import ChatMessages from "./chat-messages";
 import ChatInput from "./chat-input";
+import AskUserCard from "./ask-user-card";
 import { useAIProvider } from "./hooks/useAIProvider";
 import { SCROLL_STATE_CHANGED_EVENT, useAutoScroll } from "../hooks/useAutoScroll";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
@@ -1389,6 +1390,8 @@ const ChatContent = () => {
               <QuerySuggestionPicker onSend={handleSend} inputHeight={inputHeight} />
             </Box>
           )}
+
+          <AskUserCard />
 
           <ChatInput
             inputValue={inputValue}
