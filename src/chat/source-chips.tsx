@@ -30,6 +30,24 @@ export const parseWebSources = (content: string): WebSource[] => {
   return out.filter((s) => (seen.has(s.url) ? false : (seen.add(s.url), true)));
 };
 
+/**
+ * Strip the textual source apparatus from an answer for display, since the
+ * favicon chips now render it: our appended "**Sources**" list, plus a trailing
+ * horizontal-rule + inline-citation block (superscript numbers + links) the
+ * model sometimes adds. Conservative — only removes a trailing block that
+ * clearly contains citations. The chips still parse the original content.
+ */
+export const stripSourcesForDisplay = (content: string): string => {
+  if (!content) return content;
+  let c = content;
+  const idx = c.lastIndexOf("**Sources**");
+  if (idx !== -1) c = c.slice(0, idx);
+  c = c.replace(/\n*(?:---|\*\*\*|___)[ \t]*\n[\s\S]*$/u, (m) =>
+    /[¹²³⁴⁵⁶⁷⁸⁹⁰]/u.test(m) && /\]\(https?:/i.test(m) ? "" : m,
+  );
+  return c.replace(/\s+$/u, "");
+};
+
 const domainOf = (url: string): string => {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
