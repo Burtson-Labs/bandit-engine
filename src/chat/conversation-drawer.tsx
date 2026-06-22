@@ -837,8 +837,8 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
               flex: 1,
               display: "flex",
               flexDirection: "column",
-              alignItems: isMobile ? "center" : "flex-start",
-              textAlign: isMobile ? "center" : "left",
+              alignItems: "flex-start",
+              textAlign: "left",
               gap: 0.25,
             }}
           >
@@ -858,11 +858,21 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
             </Typography>
           </Box>
           {user && (
-            <SettingsIcon
-              size={18}
-              color={theme.palette.text.secondary}
-              style={{ flexShrink: 0, opacity: 0.85 }}
-            />
+            <Box
+              sx={{
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                color: theme.palette.text.secondary,
+              }}
+            >
+              <SettingsIcon size={16} />
+            </Box>
           )}
         </Box>
       </Drawer>
