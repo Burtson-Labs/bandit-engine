@@ -87,3 +87,27 @@ export const useAuthenticationStore = create<AuthenticationState>((set) => ({
     set({ token: null, authError: null, user: null });
   },
 }));
+
+/**
+ * Re-read and validate the persisted token. The store above decodes the token
+ * once at module load, so an app-side refresh (e.g. right after the user sets a
+ * profile picture) updates localStorage but not the in-memory user — leaving
+ * claims like `avatarUrl` stale. Components can call this to re-sync.
+ */
+export const readPersistedToken = (): string | null => {
+  try {
+    const raw = localStorage.getItem(TOKEN_KEY);
+    if (!raw) return null;
+    const base64 = raw.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const decoded = JSON.parse(json) as JwtClaims;
+    return decoded.exp * 1000 > Date.now() ? raw : null;
+  } catch {
+    return null;
+  }
+};

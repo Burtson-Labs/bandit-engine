@@ -45,7 +45,7 @@ import { useTheme } from "@mui/material/styles";
 import { useConversationStore, type Conversation } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
 import { HistoryEntry } from "../store/aiQueryStore";
-import { useAuthenticationStore } from "../store/authenticationStore";
+import { useAuthenticationStore, readPersistedToken } from "../store/authenticationStore";
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
 import brandingService from "../services/branding/brandingService";
 import ProjectManagementModal from "./project-management-modal";
@@ -190,6 +190,17 @@ const ConversationDrawer: React.FC<Props> = ({ open, onClose }) => {
   }, [user, userDisplayName]);
 
   const [avatarImage, setAvatarImage] = useState<string>(BANDIT_AVATAR);
+
+  // The engine auth store decodes the token once at module load, so an app-side
+  // refresh (e.g. right after setting a profile picture) updates localStorage
+  // but not this in-memory user — leaving claims like avatarUrl stale, which
+  // would show the default Bandit head instead of the real avatar. Re-sync once
+  // on mount from the freshest persisted token.
+  useEffect(() => {
+    const fresh = readPersistedToken();
+    const store = useAuthenticationStore.getState();
+    if (fresh && fresh !== store.token) store.setToken(fresh);
+  }, []);
 
   useEffect(() => {
     let active = true;
