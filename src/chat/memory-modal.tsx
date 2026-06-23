@@ -853,7 +853,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
               fontWeight: 500,
               zIndex: 1
             }}>
-              Advanced Vector Memory Active • Memories synced to AI database for enhanced semantic search
+              Cloud memory · synced to your account
             </Typography>
           </Box>
         )}
@@ -866,7 +866,7 @@ const MemoryModal: React.FC<MemoryModalProps> = ({ open, onClose }) => {
               sx={{ color: theme.palette.text.secondary, fontSize: "0.85rem", textAlign: isMobileView ? "left" : "center" }}
             >
               {shouldUseVectorForMemories ? (
-                "Semantic memory — searches meaning across your conversations."
+                "Synced to your account for quick recall."
               ) : (
                 "Private and local. You decide what's remembered."
               )}

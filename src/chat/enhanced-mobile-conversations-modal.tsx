@@ -41,12 +41,14 @@ import {
   Avatar,
   Chip,
 } from "@mui/material";
-import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon } from "lucide-react";
+import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon, Settings as SettingsIcon, Brain as MemoryIcon } from "lucide-react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { useConversationStore, Conversation } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
 import { HistoryEntry } from "../store/aiQueryStore";
-import { useAuthenticationStore } from "../store/authenticationStore";
+import { useAuthenticationStore, readPersistedToken } from "../store/authenticationStore";
+import { usePackageSettingsStore } from "../store/packageSettingsStore";
+import MemoryModal from "./memory-modal";
 import brandingService from "../services/branding/brandingService";
 import ProjectManagementModal from "./project-management-modal";
 import MoveConversationModal from "./move-conversation-modal";
@@ -131,6 +133,7 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
 
   // State for UI
   const [projectManagementOpen, setProjectManagementOpen] = useState(false);
+  const [memoryModalOpen, setMemoryModalOpen] = useState(false);
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const didInitCollapseRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -192,22 +195,56 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
   }, [user, userDisplayName]);
 
   useEffect(() => {
-    const fetchBranding = async () => {
+    if (!open) return;
+    // Re-sync the engine auth store from the freshest persisted token (it decodes
+    // once at load, so an app-side refresh after setting an avatar leaves
+    // user.avatarUrl stale — which would show the default Bandit head).
+    const fresh = readPersistedToken();
+    const authStore = useAuthenticationStore.getState();
+    if (fresh && fresh !== authStore.token) authStore.setToken(fresh);
+
+    let active = true;
+    let objectUrl: string | null = null;
+    const resolveAvatar = async () => {
+      // 1. The user's uploaded profile picture (avatarUrl claim → S3 app-asset).
+      try {
+        const avatarId = getCustomClaim("avatarUrl");
+        const fileStorageApiUrl = usePackageSettingsStore.getState().settings?.fileStorageApiUrl;
+        const token = useAuthenticationStore.getState().token;
+        if (avatarId && fileStorageApiUrl && token) {
+          const base = fileStorageApiUrl.replace(/\/$/, "");
+          const res = await fetch(`${base}/app-asset/download/${encodeURIComponent(avatarId)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const blob = await res.blob();
+            if (active) {
+              objectUrl = URL.createObjectURL(blob);
+              setAvatarImage(objectUrl);
+            }
+            return;
+          }
+        }
+      } catch {
+        /* fall through to branding */
+      }
+      // 2. Branding logo, else the Bandit head.
       try {
         const branding = await brandingService.getBranding();
-        setAvatarImage(branding?.logoBase64 || BANDIT_AVATAR);
+        if (active) setAvatarImage(branding?.logoBase64 || BANDIT_AVATAR);
       } catch (error) {
         debugLogger.error("Failed to load branding avatar", {
           error: error instanceof Error ? error.message : String(error),
         });
-        setAvatarImage(BANDIT_AVATAR);
+        if (active) setAvatarImage(BANDIT_AVATAR);
       }
     };
-
-    if (open) {
-      fetchBranding();
-    }
-  }, [open]);
+    resolveAvatar();
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [open, getCustomClaim]);
 
   const avatarLabel = userDisplayName || user?.email || "Bandit";
   const avatarInitials = useMemo(() => deriveInitials(avatarLabel), [avatarLabel]);
@@ -503,6 +540,14 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
                   />
                 )}
                 
+                <IconButton
+                  onClick={() => setMemoryModalOpen(true)}
+                  aria-label="Memory"
+                  sx={{ color: theme.palette.text.secondary }}
+                >
+                  <MemoryIcon />
+                </IconButton>
+
                 <IconButton
                   onClick={() => setProjectManagementOpen(true)}
                   sx={{ color: theme.palette.text.secondary }}
@@ -907,6 +952,7 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
             </Box>
 
             <Box
+              onClick={user ? () => { window.location.href = "/profile"; } : undefined}
               sx={{
                 mt: "auto",
                 px: 2,
@@ -914,10 +960,9 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
                 borderTop: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
                 gap: 1.25,
                 bgcolor: alpha(theme.palette.background.default, 0.88),
-                flexWrap: "wrap",
+                cursor: user ? "pointer" : "default",
               }}
             >
               <Avatar
@@ -933,7 +978,7 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
               >
                 {avatarInitials}
               </Avatar>
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5, minWidth: 0 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 0.25 }}>
                 <Typography
                   variant="subtitle2"
                   noWrap
@@ -941,16 +986,31 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
                 >
                   {user ? userDisplayName : "Not signed in"}
                 </Typography>
-                {!user && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: theme.palette.text.secondary }}
-                    noWrap
-                  >
-                    Connect your account to sync chats
-                  </Typography>
-                )}
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{ color: theme.palette.text.secondary }}
+                >
+                  {user ? "View profile & settings" : "Connect your account to sync chats"}
+                </Typography>
               </Box>
+              {user && (
+                <Box
+                  sx={{
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  <SettingsIcon size={16} />
+                </Box>
+              )}
             </Box>
           </Box>
         </Slide>
@@ -961,6 +1021,8 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
         open={projectManagementOpen}
         onClose={() => setProjectManagementOpen(false)}
       />
+
+      <MemoryModal open={memoryModalOpen} onClose={() => setMemoryModalOpen(false)} />
 
       {/* Move Conversation Modal */}
       {conversationToMove && (
