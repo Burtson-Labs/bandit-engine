@@ -29,6 +29,7 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
+  instructions?: string;
   color?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +52,7 @@ interface ProjectStore {
   deleteProject: (id: string) => Promise<void>;
   renameProject: (id: string, newName: string, description?: string) => Promise<void>;
   updateProjectColor: (id: string, color: string) => Promise<void>;
+  updateProjectInstructions: (id: string, instructions: string) => Promise<void>;
   reorderProjects: (projectIds: string[]) => Promise<void>;
   hydrate: () => Promise<void>;
   applyRemoteProjects: (projects: Project[]) => Promise<void>;
@@ -212,6 +214,29 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
     }));
 
     debugLogger.info("Project color updated", { projectId: id, color });
+    emitProjectUpsert(id);
+  },
+
+  updateProjectInstructions: async (id: string, instructions: string) => {
+    const { projects } = get();
+    const project = projects.find((p) => p.id === id);
+    if (!project) {
+      throw new Error(`Project with id ${id} not found`);
+    }
+
+    const updatedProject = normalizeProject({
+      ...project,
+      instructions: instructions.trim() || undefined,
+      updatedAt: new Date(),
+    });
+
+    await saveProject(updatedProject);
+
+    set((state) => ({
+      projects: state.projects.map((p) => (p.id === id ? updatedProject : p)),
+    }));
+
+    debugLogger.info("Project instructions updated", { projectId: id });
     emitProjectUpsert(id);
   },
 

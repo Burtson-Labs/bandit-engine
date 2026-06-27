@@ -48,6 +48,7 @@ interface ProjectManagementModalProps {
 interface ProjectFormData {
   name: string;
   description: string;
+  instructions: string;
   color: string;
 }
 
@@ -69,6 +70,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
     deleteProject,
     renameProject,
     updateProjectColor,
+    updateProjectInstructions,
     hydrate,
   } = useProjectStore();
 
@@ -79,6 +81,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
     description: "",
+    instructions: "",
     color: DEFAULT_COLORS[0],
   });
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -106,6 +109,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
     setFormData({
       name: "",
       description: "",
+      instructions: "",
       color: DEFAULT_COLORS[0],
     });
     setEditingProject(null);
@@ -130,7 +134,10 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
     setError(null);
 
     try {
-      await createProject(formData.name, formData.description, formData.color);
+      const created = await createProject(formData.name, formData.description, formData.color);
+      if (formData.instructions.trim()) {
+        await updateProjectInstructions(created.id, formData.instructions);
+      }
       resetForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create project");
@@ -152,6 +159,9 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
       await renameProject(editingProject.id, formData.name, formData.description);
       if (formData.color !== editingProject.color) {
         await updateProjectColor(editingProject.id, formData.color);
+      }
+      if ((formData.instructions || "") !== (editingProject.instructions || "")) {
+        await updateProjectInstructions(editingProject.id, formData.instructions);
       }
       resetForm();
     } catch (err) {
@@ -188,6 +198,7 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
     setFormData({
       name: project.name,
       description: project.description || "",
+      instructions: project.instructions || "",
       color: project.color || DEFAULT_COLORS[0],
     });
     setShowCreateForm(true);
@@ -349,6 +360,17 @@ const ProjectManagementModal: React.FC<ProjectManagementModalProps> = ({
               fullWidth
               multiline
               minRows={2}
+              disabled={loading}
+            />
+
+            <TextField
+              label="Project instructions (optional)"
+              helperText="Standing context the assistant uses for every chat in this project — goals, tone, key facts."
+              value={formData.instructions}
+              onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+              fullWidth
+              multiline
+              minRows={3}
               disabled={loading}
             />
 
