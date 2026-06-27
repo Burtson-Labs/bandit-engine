@@ -128,6 +128,22 @@ const ChatContent = () => {
   useEffect(() => {
     historyRef.current = history;
   }, [history]);
+
+  // PWA share-target: when the OS shares a link/text/title into Bandit
+  // (manifest share_target -> /chat?title=&text=&url=), seed the composer with
+  // it so the user lands in chat ready to ask about what they shared.
+  useEffect(() => {
+    if (!hydrated) return;
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get("title") || "";
+    const text = params.get("text") || "";
+    const url = params.get("url") || "";
+    if (!title && !text && !url) return;
+    const shared = [title, text, url].filter(Boolean).join("\n").trim();
+    if (shared) setInputValue(shared);
+    // Clear the params so a refresh doesn't re-seed the composer.
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [hydrated, setInputValue]);
   
   // TTS functionality
   const {
