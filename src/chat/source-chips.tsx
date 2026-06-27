@@ -76,31 +76,31 @@ const SourceChip = ({ source }: { source: WebSource }) => {
         href={source.url}
         target="_blank"
         rel="noopener noreferrer"
+        className="source-chip"
         sx={{
           display: "inline-flex",
           alignItems: "center",
-          gap: 0.75,
-          maxWidth: 240,
-          px: 1,
-          py: 0.4,
+          flexShrink: 0,
+          height: 26,
+          px: 0.4,
           borderRadius: 999,
           border: "1px solid",
           borderColor: "divider",
-          bgcolor: "action.hover",
+          bgcolor: "background.paper",
           textDecoration: "none",
           color: "text.primary",
           fontSize: 12.5,
           lineHeight: 1.4,
-          transition: "border-color 0.15s ease, background-color 0.15s ease",
-          "&:hover": { borderColor: "primary.main", bgcolor: "action.selected" },
+          transition: "border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease",
+          "&:hover": { borderColor: "primary.main", bgcolor: "action.hover", boxShadow: 1, zIndex: 2 },
         }}
       >
         {failed ? (
           <Box
             sx={{
-              width: 16,
-              height: 16,
-              borderRadius: "4px",
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
               bgcolor: "primary.main",
               color: "primary.contrastText",
               display: "grid",
@@ -119,10 +119,11 @@ const SourceChip = ({ source }: { source: WebSource }) => {
             alt=""
             loading="lazy"
             onError={() => setFailed(true)}
-            sx={{ width: 16, height: 16, borderRadius: "4px", flexShrink: 0 }}
+            sx={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0 }}
           />
         )}
         <Box
+          className="chip-label"
           component="span"
           sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         >
@@ -142,13 +143,51 @@ const SourceChips = ({ content }: { content: string }) => {
   if (sources.length === 0) return null;
 
   return (
-    <Box
-      sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.5 }}
-      aria-label="Sources"
-    >
-      {sources.map((s, i) => (
-        <SourceChip key={`${s.url}-${i}`} source={s} />
-      ))}
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 1.5, flexWrap: "wrap" }} aria-label="Sources">
+      <Box
+        component="span"
+        sx={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: "text.secondary",
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          flexShrink: 0,
+        }}
+      >
+        Sources
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          rowGap: 0.5,
+          // Touch / no-hover devices: chips stay expanded (no hover to reveal).
+          "& .source-chip": { ml: "4px" },
+          "& .source-chip:first-of-type": { ml: 0 },
+          "& .chip-label": { maxWidth: 200, opacity: 1, ml: 0.6 },
+          // Hover-capable devices: collapse into an overlapping favicon stack
+          // that spreads out and reveals titles when the rail is hovered.
+          "@media (hover: hover)": {
+            "& .source-chip": { ml: "-10px", transition: "margin-left 0.22s ease" },
+            "& .source-chip:first-of-type": { ml: 0 },
+            "& .chip-label": {
+              maxWidth: 0,
+              opacity: 0,
+              ml: 0,
+              transition: "max-width 0.28s ease, opacity 0.18s ease, margin-left 0.2s ease",
+            },
+            "&:hover .source-chip": { ml: "6px" },
+            "&:hover .source-chip:first-of-type": { ml: 0 },
+            "&:hover .chip-label": { maxWidth: 200, opacity: 1, ml: 0.6 },
+          },
+        }}
+      >
+        {sources.map((s, i) => (
+          <SourceChip key={`${s.url}-${i}`} source={s} />
+        ))}
+      </Box>
     </Box>
   );
 };
