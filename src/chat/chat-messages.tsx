@@ -150,7 +150,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
               }}
             >
               <StreamingMarkdown
-                content={isStreaming && isLast ? content : stripSourcesForDisplay(content)}
+                content={stripSourcesForDisplay(content)}
                 isStreaming={isStreaming && isLast}
                 sources={sourceSummaries}
               />

@@ -62,7 +62,15 @@ const SourceChip = ({ source }: { source: WebSource }) => {
   const label = source.title?.trim() || domain;
 
   return (
-    <Tooltip title={`${label} · ${domain}`} arrow>
+    <Tooltip
+      title={
+        <>
+          <Box sx={{ fontWeight: 600 }}>{label}</Box>
+          <Box sx={{ opacity: 0.75, fontSize: 11, wordBreak: "break-all", mt: 0.25 }}>{source.url}</Box>
+        </>
+      }
+      arrow
+    >
       <Box
         component="a"
         href={source.url}
