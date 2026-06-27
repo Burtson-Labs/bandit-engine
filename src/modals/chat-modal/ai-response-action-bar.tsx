@@ -20,14 +20,25 @@ import { useState, useEffect } from "react";
 import { useVoiceStore } from "../../store/voiceStore";
 import { usePreferencesStore } from "../../store/preferencesStore";
 import { usePackageSettingsStore } from "../../store/packageSettingsStore";
+import { useCanvasStore } from "../../store/canvasStore";
 import { useTTS } from "../../hooks/useTTS";
 import { Box, CircularProgress, IconButton, Tooltip } from "@mui/material";
-import { Check as CheckIcon, ThumbsUp as ThumbUpIcon, ThumbsDown as ThumbDownIcon, Copy as ContentCopyIcon, Megaphone as CampaignOutlined, Megaphone as CampaignRounded, Square as StopIcon, Pause as PauseIcon, Play as PlayArrowIcon } from "lucide-react";
+import { Check as CheckIcon, ThumbsUp as ThumbUpIcon, ThumbsDown as ThumbDownIcon, Copy as ContentCopyIcon, Megaphone as CampaignOutlined, Megaphone as CampaignRounded, Square as StopIcon, Pause as PauseIcon, Play as PlayArrowIcon, PanelRight as CanvasIcon } from "lucide-react";
 import { debugLogger } from "../../services/logging/debugLogger";
 import { authenticationService } from "../../services/auth/authenticationService";
 
 const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
   const [copied, setCopied] = useState(false);
+  const openCanvas = useCanvasStore((s) => s.openCanvas);
+  const openInCanvas = () => {
+    const plain = text || "";
+    // Title from the first heading, else the first non-empty line, truncated.
+    const firstHeading = plain.match(/^#{1,3}\s+(.+)$/m)?.[1];
+    const firstLine = plain.split("\n").map((l) => l.trim()).find(Boolean) || "";
+    const rawTitle = (firstHeading || firstLine).replace(/[#*_>]/g, "").replace(/\s+/g, " ").trim();
+    const title = rawTitle.length > 60 ? `${rawTitle.slice(0, 57)}…` : rawTitle || "Untitled";
+    openCanvas({ content: plain, title });
+  };
   const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
   
   const {
@@ -156,6 +167,21 @@ const AiResponseActionsBar: React.FC<{ text: string }> = ({ text }) => {
           }}
         >
           {copied ? <CheckIcon size={18} /> : <ContentCopyIcon size={18} />}
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="Open in canvas — edit & export">
+        <IconButton
+          onClick={openInCanvas}
+          size="small"
+          sx={{
+            color: (theme) => (theme.palette.mode === "dark" ? "#ccc" : "#555"),
+            "&:hover": {
+              color: (theme) => (theme.palette.mode === "dark" ? "#fff" : "#000"),
+            },
+          }}
+        >
+          <CanvasIcon size={18} />
         </IconButton>
       </Tooltip>
 

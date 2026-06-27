@@ -23,6 +23,8 @@ import { Box, ThemeProvider, CssBaseline, CircularProgress, Typography } from "@
 import { createTheme } from "@mui/material/styles";
 import { useAIQueryStore } from "../store/aiQueryStore";
 import { useModelStore } from "../store/modelStore";
+import { useCanvasStore } from "../store/canvasStore";
+import CanvasPanel, { CANVAS_WIDTH } from "./canvas-panel";
 import { Navigate } from "react-router-dom";
 import ChatScrollToBottomButton from "./chat-scroll-to-bottom-button";
 import BanditChatLogo from "./bandit-chat-logo";
@@ -122,6 +124,7 @@ const ChatContent = () => {
     initialized
   } = useVoiceStore();
   const isVoiceModeEnabled = useVoiceModeStore((state) => state.enabled);
+  const canvasOpen = useCanvasStore((state) => state.open);
   const previousVoiceModeEnabledRef = useRef(isVoiceModeEnabled);
   const historyRef = useRef(history);
 
@@ -1283,7 +1286,12 @@ const ChatContent = () => {
           position: "fixed",
           top: 0,
           left: drawerOpen && !isMobile ? "340px" : 0,
-          width: drawerOpen && !isMobile ? "calc(100vw - 340px)" : "100vw",
+          width:
+            !isMobile && canvasOpen
+              ? `calc(100vw - ${drawerOpen ? "340px" : "0px"} - ${CANVAS_WIDTH})`
+              : drawerOpen && !isMobile
+                ? "calc(100vw - 340px)"
+                : "100vw",
           zIndex: 0,
           transition: "left 0.3s ease-in-out, width 0.3s ease-in-out",
         })}
@@ -1449,6 +1457,7 @@ const ChatContent = () => {
         <ConnectionStatus position="top" showWhenGood={false} />
 
       </Box>
+      <CanvasPanel isMobile={isMobile} />
     </ThemeProvider>
   );
 };
