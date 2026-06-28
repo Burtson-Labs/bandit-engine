@@ -1047,6 +1047,9 @@ const Management = () => {
         MuiTextField: {
           defaultProps: { size: "small" },
         },
+        MuiButton: {
+          defaultProps: { size: "small" },
+        },
       },
     });
   }, [theme]);
@@ -1195,89 +1198,54 @@ const Management = () => {
                 if (isMobile) setSidebarOpen(false);
               }}
               sx={{
-                minHeight: 56,
-                borderRadius: 3,
-                mx: 1,
-                my: 0.5,
-                px: 2,
-                py: 1.5,
-                border: tabIndex === idx 
-                  ? (theme) => `2px solid ${theme.palette.primary.main}40`
-                  : "2px solid transparent",
+                minHeight: 36,
+                borderRadius: 1.5,
+                mx: 0.5,
+                my: 0.125,
+                px: 1.25,
+                py: 0.5,
                 bgcolor: tabIndex === idx
                   ? (theme) =>
                     theme.palette.mode === "dark"
-                      ? "rgba(25,118,210,0.12)"
-                      : "rgba(25,118,210,0.08)"
+                      ? "rgba(25,118,210,0.14)"
+                      : "rgba(25,118,210,0.10)"
                   : "transparent",
                 color: tabIndex === idx ? "primary.main" : "text.primary",
-                fontWeight: tabIndex === idx ? 700 : 500,
-                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "background-color 0.15s ease, color 0.15s ease",
                 position: "relative",
-                overflow: "hidden",
                 "&:before": {
                   content: '""',
                   position: "absolute",
                   left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 4,
+                  top: 5,
+                  bottom: 5,
+                  width: 3,
                   bgcolor: tabIndex === idx ? "primary.main" : "transparent",
                   borderRadius: "0 2px 2px 0",
-                  transition: "all 0.2s",
                 },
                 "&:hover": {
                   bgcolor: (theme) =>
                     theme.palette.mode === "dark"
-                      ? "rgba(25,118,210,0.15)"
-                      : "rgba(25,118,210,0.10)",
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
                   color: "primary.main",
-                  transform: "translateX(4px)",
-                  "&:before": {
-                    bgcolor: "primary.main",
-                  },
-                },
-                "&:active": {
-                  transform: "translateX(2px) scale(0.98)",
                 },
                 "& .MuiListItemIcon-root": {
-                  minWidth: 44,
-                  mr: 1.5,
+                  minWidth: 28,
+                  mr: 1,
+                  color: tabIndex === idx ? "primary.main" : "text.secondary",
                 },
+                "& .MuiListItemIcon-root svg": { width: 17, height: 17 },
               }}
             >
-              <ListItemIcon 
-                sx={{ 
-                  color: tabIndex === idx ? "primary.main" : "text.secondary",
-                  fontSize: 24,
-                  transition: "all 0.2s",
-                }}
-              >
-                {tab.icon}
-              </ListItemIcon>
+              <ListItemIcon>{tab.icon}</ListItemIcon>
               <ListItemText
                 primary={tab.label}
                 primaryTypographyProps={{
-                  fontWeight: tabIndex === idx ? 700 : 600,
-                  fontSize: "1rem",
-                  letterSpacing: "-0.01em",
+                  fontWeight: tabIndex === idx ? 700 : 500,
+                  fontSize: "0.85rem",
                 }}
               />
-              {tabIndex === idx && (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    right: -10,
-                    top: -10,
-                    width: 90,
-                    height: 90,
-                    bgcolor: (theme) => theme.palette.primary.main,
-                    filter: "blur(45px)",
-                    opacity: 0.35,
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
             </ListItemButton>
           ))}
         </List>
@@ -1516,9 +1484,9 @@ const Management = () => {
         ) : (
           <Box
             sx={{
-              width: 280,
-              minWidth: 280,
-              maxWidth: 280,
+              width: 240,
+              minWidth: 240,
+              maxWidth: 240,
               height: "100vh",
               display: "flex",
               flexDirection: "column",
@@ -1556,7 +1524,7 @@ const Management = () => {
             display: "flex",
             flexDirection: "column",
             bgcolor: "background.default",
-            ml: isMobile ? 0 : "280px", // Fixed left margin only on desktop
+            ml: isMobile ? 0 : "240px", // Fixed left margin only on desktop
             mt: 0,
             transition: "margin-left 0.2s",
           }}
