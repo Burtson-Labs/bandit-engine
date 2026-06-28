@@ -41,7 +41,7 @@ import {
   Avatar,
   Chip,
 } from "@mui/material";
-import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon, Settings as SettingsIcon, Brain as MemoryIcon } from "lucide-react";
+import { X as CloseIcon, X as ClearIcon, Search as SearchIcon, Folder as FolderIcon, MoreVertical as MoreVertIcon, Trash2 as DeleteSweepIcon, Inbox as InboxIcon, Plus as AddIcon, Settings as SettingsIcon, Brain as MemoryIcon, LogOut as LogOutIcon } from "lucide-react";
 import { useTheme, alpha } from "@mui/material/styles";
 import { useConversationStore, Conversation } from "../store/conversationStore";
 import { useProjectStore } from "../store/projectStore";
@@ -50,6 +50,7 @@ import { useAuthenticationStore, readPersistedToken } from "../store/authenticat
 import { usePackageSettingsStore } from "../store/packageSettingsStore";
 import MemoryModal from "./memory-modal";
 import brandingService from "../services/branding/brandingService";
+import { authenticationService } from "../services/auth/authenticationService";
 import ProjectManagementModal from "./project-management-modal";
 import MoveConversationModal from "./move-conversation-modal";
 import SimpleConversationItem from "./simple-conversation-item";
@@ -995,21 +996,42 @@ const EnhancedMobileConversationsModal: React.FC<MobileConversationsModalProps> 
                 </Typography>
               </Box>
               {user && (
-                <Box
-                  sx={{
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
-                    color: theme.palette.text.secondary,
-                  }}
-                >
-                  <SettingsIcon size={16} />
-                </Box>
+                <>
+                  <Box
+                    sx={{
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+                      color: theme.palette.text.secondary,
+                    }}
+                  >
+                    <SettingsIcon size={16} />
+                  </Box>
+                  <IconButton
+                    aria-label="Sign out"
+                    title="Sign out"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      authenticationService.clearToken();
+                      window.location.href = "/login";
+                    }}
+                    sx={{
+                      flexShrink: 0,
+                      width: 30,
+                      height: 30,
+                      border: `1px solid ${alpha(theme.palette.error.main, 0.4)}`,
+                      color: theme.palette.error.main,
+                      "&:hover": { bgcolor: alpha(theme.palette.error.main, 0.1) },
+                    }}
+                  >
+                    <LogOutIcon size={16} />
+                  </IconButton>
+                </>
               )}
             </Box>
           </Box>

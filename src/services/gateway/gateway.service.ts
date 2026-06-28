@@ -30,6 +30,7 @@ import {
 import { FeedbackRequest, FeedbackResponse } from "./feedback.interfaces";
 import { catchError, from, lastValueFrom, map, Observable, of, shareReplay, timeout } from "rxjs";
 import { debugLogger } from "../logging/debugLogger";
+import { authenticationService } from "../auth/authenticationService";
 
 interface GatewayHttpErrorResponse {
   status: number;
@@ -93,7 +94,10 @@ export class GatewayService {
 
     instance.interceptors.response.use(
       (response) => response,
-      (error) => Promise.reject(this._normalizeAxiosError(error))
+      (error) => {
+        this._handleAuthFailure(error as AxiosError);
+        return Promise.reject(this._normalizeAxiosError(error));
+      }
     );
 
     return instance;
@@ -117,6 +121,29 @@ export class GatewayService {
     }
 
     return new Error(error.message);
+  }
+
+  private _handleAuthFailure(error: AxiosError): void {
+    const status = error.response?.status;
+    if (status !== 401 && status !== 403) {
+      return;
+    }
+
+    const data = error.response?.data as { code?: string } | undefined;
+    const code = data?.code;
+    if (code !== "FORCE_RELOGIN" && code !== "ACCOUNT_LOCKED") {
+      return;
+    }
+
+    try {
+      authenticationService.clearToken();
+    } catch {
+      // ignore — clearing is best-effort
+    }
+
+    if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new CustomEvent("auth:force-relogin", { detail: { code } }));
+    }
   }
 
   private _createHttpError(message: string, response: GatewayHttpErrorResponse): GatewayHttpError {
