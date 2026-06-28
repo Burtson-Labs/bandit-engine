@@ -996,7 +996,7 @@ interface PersonalitiesTabProps {
       {/* Formatting Guidance */}
       <Box sx={{ mb: sectionGap }}>
         <Typography variant="body1" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
-          ✨ Formatting Tips
+          Formatting Tips
         </Typography>
         <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
           Click any tip to add professional formatting to your system prompt:
@@ -1198,7 +1198,7 @@ interface PersonalitiesTabProps {
         
         {/* Premium Professional Avatars */}
         <Typography variant="caption" sx={{ mb: 1, color: "primary.main", fontWeight: 600, display: "block" }}>
-          🤖 Robotic Collection
+          Robotic Collection
         </Typography>
         <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
           {[
@@ -1287,7 +1287,7 @@ interface PersonalitiesTabProps {
 
         {/* Custom Upload Section */}
         <Typography variant="caption" sx={{ mb: 1, color: "warning.main", fontWeight: 600, display: "block" }}>
-          📸 Custom Upload
+          Custom Upload
         </Typography>
         <Button 
           variant="outlined" 
@@ -1308,7 +1308,7 @@ interface PersonalitiesTabProps {
             width: { xs: '100%', sm: 'auto' }
           }}
         >
-          🎯 Upload & Crop Custom Avatar
+          Upload & Crop Custom Avatar
           <input 
             type="file" 
             accept="image/png, image/jpeg, image/jpg" 
@@ -1336,7 +1336,7 @@ interface PersonalitiesTabProps {
             />
             <Box>
               <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                ✅ Avatar Ready
+                Avatar Ready
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {customAvatarBase64 ? 'Custom uploaded image' : 'Professional avatar selected'}
@@ -1412,7 +1412,7 @@ interface PersonalitiesTabProps {
           variant="h5"
           sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: "1.45rem", md: "1.65rem" } }}
         >
-          📋 Manage Personalities ({availableModels.length})
+          Manage Personalities ({availableModels.length})
         </Typography>
         <Box sx={{ display: "flex", gap: { xs: 1, md: 2 }, flexWrap: "wrap", width: { xs: "100%", md: "auto" } }}>
           <Button
@@ -1461,7 +1461,7 @@ interface PersonalitiesTabProps {
         <Card sx={{ textAlign: "center", py: 8, border: "2px dashed", borderColor: "divider" }}>
           <CardContent>
             <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }} gutterBottom>
-              🤖 No Personalities Yet
+              No Personalities Yet
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
               Get started by creating your first custom AI personality or choosing from our templates.
@@ -1483,7 +1483,7 @@ interface PersonalitiesTabProps {
             }}
             sx={{ px: { xs: 2.4, md: 3 }, py: { xs: 0.95, md: 1 }, width: { xs: '100%', sm: 'auto' } }}
           >
-            ✨ Create From Scratch
+            Create From Scratch
           </Button>
           <Button
             variant="outlined"
@@ -1491,7 +1491,7 @@ interface PersonalitiesTabProps {
             onClick={() => setPersonalityTabIndex(0)} // Switch to Templates tab
             sx={{ px: { xs: 2.4, md: 3 }, py: { xs: 0.95, md: 1 }, width: { xs: '100%', sm: 'auto' } }}
           >
-            🎭 Browse Templates
+            Browse Templates
           </Button>
             </Box>
           </CardContent>
