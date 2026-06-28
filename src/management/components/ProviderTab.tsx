@@ -679,7 +679,7 @@ export const ProviderTab: React.FC = () => {
         {/* Migration Information */}
         <Paper sx={{ p: 3, bgcolor: 'info.main', color: 'info.contrastText', borderRadius: 2 }}>
           <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: "text.primary" }}>
-            🚀 Gateway Provider Recommended
+            Gateway Provider Recommended
           </Typography>
           <Typography variant="body2">
             For production deployments, we recommend using the Gateway provider which routes requests through your secure backend API. 

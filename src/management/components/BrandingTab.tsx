@@ -352,11 +352,11 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
                       }}
                     />
                     <Typography variant="body2" color={logoBase64 ? "success.main" : "info.main"} sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                      {logoBase64 ? "✓ Custom Logo" : "Default Logo"}
+                      {logoBase64 ? "Custom Logo" : "Default Logo"}
                     </Typography>
                     {!logoBase64 && (
                       <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', textAlign: 'center' }}>
-                        🎯 Click to upload & crop your logo
+                        Click to upload & crop your logo
                       </Typography>
                     )}
                   </Box>
@@ -372,7 +372,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
                     }}
                   />
                   <Typography variant="body2" color="text.primary" sx={{ fontSize: '1rem' }}>
-                    {dragOver ? 'Drop here' : '🎯 Upload & Crop Logo'}
+                    {dragOver ? 'Drop here' : 'Upload & Crop Logo'}
                   </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.82rem', textAlign: 'center' }}>
                 JPG/PNG • Drag & drop or tap to upload • Built-in cropper
