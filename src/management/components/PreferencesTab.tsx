@@ -536,14 +536,8 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
         >
           Preferences
         </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          paragraph
-          sx={{ opacity: 0.9, fontSize: { xs: '0.95rem', sm: '1rem' }, lineHeight: 1.5 }}
-        >
-          Control which AI features are enabled to optimize performance for your device. Disabling features can help
-          reduce resource usage on machines with limited capabilities.
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Turn features on or off to tune performance for your device.
         </Typography>
 
         <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>

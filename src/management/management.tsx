@@ -1044,6 +1044,9 @@ const Management = () => {
             root: { borderRadius: 12 },
           },
         },
+        MuiTextField: {
+          defaultProps: { size: "small" },
+        },
       },
     });
   }, [theme]);

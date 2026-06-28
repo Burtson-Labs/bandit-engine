@@ -347,25 +347,20 @@ export const ProviderTab: React.FC = () => {
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
-      <Box sx={{ mb: { xs: 2.5, md: 3 } }}>
+      <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
         <Typography
           variant="h5"
           sx={{ fontWeight: 600, mb: 1, color: "primary.main", fontSize: { xs: '1.3rem', md: '1.45rem' } }}
         >
           AI Provider Configuration
         </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          paragraph
-          sx={{ opacity: 0.9, fontSize: { xs: '0.95rem', sm: '1rem' }, lineHeight: 1.5 }}
-        >
-          Configure your AI provider for chat, generation, and model services. This determines which backend service powers your AI interactions.
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Choose the backend that powers your AI.
         </Typography>
 
         {/* Current Provider Status */}
         <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
+          <Typography variant="overline" sx={{ fontWeight: 700, color: "text.secondary", letterSpacing: 0.6, display: 'block', mb: 1 }}>
             Current Provider
           </Typography>
           {currentProvider ? (
@@ -393,7 +388,7 @@ export const ProviderTab: React.FC = () => {
               alignItems: { xs: 'flex-start', sm: 'center' },
               justifyContent: 'space-between',
               gap: { xs: 1, sm: 2 },
-              mb: 3,
+              mb: 2,
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>
@@ -676,16 +671,10 @@ export const ProviderTab: React.FC = () => {
           )}
         </Paper>
 
-        {/* Migration Information */}
-        <Paper sx={{ p: 3, bgcolor: 'info.main', color: 'info.contrastText', borderRadius: 2 }}>
-          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: "text.primary" }}>
-            Gateway Provider Recommended
-          </Typography>
-          <Typography variant="body2">
-            For production deployments, we recommend using the Gateway provider which routes requests through your secure backend API. 
-            This approach keeps API keys secure, enables rate limiting, and provides better monitoring capabilities.
-          </Typography>
-        </Paper>
+        {/* Migration note */}
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, lineHeight: 1.5 }}>
+          Gateway is recommended for production — it routes through your secure backend, keeps API keys server-side, and enables rate limiting + monitoring.
+        </Typography>
       </Box>
 
       {/* Snackbar for messages */}
