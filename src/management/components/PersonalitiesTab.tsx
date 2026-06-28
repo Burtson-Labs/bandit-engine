@@ -499,7 +499,7 @@ interface PersonalitiesTabProps {
       {/* Create from Scratch Card */}
       <Card
         sx={{
-          mb: { xs: 1.5, md: 2 },
+          mb: { xs: 1, md: 1.25 },
           background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
           border: "2px solid transparent",
           borderRadius: { xs: 2.25, sm: 3 },
@@ -537,7 +537,7 @@ interface PersonalitiesTabProps {
         }}
       >
         <CardContent sx={{
-          p: { xs: 1.5, sm: 1.75 },
+          p: { xs: 1, sm: 1.25 },
           color: "white",
           textAlign: "left",
           position: "relative",
@@ -612,7 +612,7 @@ interface PersonalitiesTabProps {
           lg: "repeat(4, 1fr)",
           xl: "repeat(4, 1fr)",
         },
-        gap: { xs: 1.25, sm: 2.5, md: 3 },
+        gap: { xs: 1, sm: 1.5, md: 1.75 },
         alignItems: "stretch"
       }}>
         {promptTemplates.map((template, index) => (
@@ -668,7 +668,7 @@ interface PersonalitiesTabProps {
             onClick={() => handleTemplateSelect(template)}
           >
             <CardContent sx={{ 
-              p: { xs: 1.5, sm: 2 },
+              p: { xs: 1.25, sm: 1.5 },
               display: "flex",
               flexDirection: "column",
               height: "100%",
@@ -686,8 +686,8 @@ interface PersonalitiesTabProps {
                     src={template.avatar}
                     alt={template.name}
                     sx={{
-                      width: { xs: 40, sm: 48, md: 52 },
-                      height: { xs: 40, sm: 48, md: 52 },
+                      width: { xs: 38, sm: 44, md: 46 },
+                      height: { xs: 38, sm: 44, md: 46 },
                       mr: { xs: 1.2, md: 2 },
                       transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
