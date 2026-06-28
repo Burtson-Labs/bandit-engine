@@ -17,17 +17,12 @@ const __auditTrail_components_MCPToolsTabV2tsx = 'BL-AU-MGOIKVVJ-JBSK';
 // File: MCPToolsTabV2.tsx | Path: src/management/components/MCPToolsTabV2.tsx | Hash: 646825d5
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, Paper, Chip, Stack, IconButton, Tooltip, LinearProgress, Switch, FormControlLabel } from '@mui/material';
+import { Alert, Box, Typography, Paper, IconButton, Tooltip, LinearProgress, Switch } from '@mui/material';
 import { fetchAvailableMcpTools, fetchMcpHealth, McpTool } from '../../services/mcp/mcpControllerService';
 import McpServersSection from './McpServersSection';
 import { useMCPToolsStore } from '../../store/mcpToolsStore';
 import { usePackageSettingsStore } from '../../store/packageSettingsStore';
-import {
-  ErrorOutlineIcon,
-  HealthAndSafetyIcon,
-  RefreshIcon,
-  SettingsIcon,
-} from "../../icons/lucide-icons";
+import { RefreshIcon } from "../../icons/lucide-icons";
 
 const MCPToolsTabV2: React.FC = () => {
   const { settings } = usePackageSettingsStore();
@@ -136,130 +131,115 @@ const MCPToolsTabV2: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>Available Tools</Typography>
-        <Box>
-          <Tooltip title="Refresh">
-            <IconButton onClick={refresh}>
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
       <McpServersSection />
 
-      {!gatewayConfigured && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Gateway API URL isn’t configured. The controller endpoints will be fetched relative to this origin.
+      {/* Built-in capabilities — things Bandit can do on its own */}
+      <Box sx={{ mt: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.6 }}>
+            Built-in capabilities
           </Typography>
-        </Paper>
-      )}
-
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {health?.status === 'healthy' ? (
-            <HealthAndSafetyIcon color="success" />
-          ) : health?.status === 'unhealthy' ? (
-            <ErrorOutlineIcon color="error" />
-          ) : (
-            <ErrorOutlineIcon color="disabled" />
-          )}
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Controller Health</Typography>
-          <Chip
-            size="small"
-            label={(health?.status || 'unknown').toString()}
-            color={health?.status === 'healthy' ? 'success' : health?.status === 'unhealthy' ? 'error' : 'default'}
-            sx={{ ml: 1 }}
-          />
-          {health?.timestamp && (
-            <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-              {new Date(health.timestamp).toLocaleString()}
-            </Typography>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Tooltip title={`Controller: ${health?.status || 'unknown'}`}>
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor:
+                    health?.status === 'healthy'
+                      ? 'success.main'
+                      : health?.status === 'unhealthy'
+                        ? 'error.main'
+                        : 'grey.500',
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="Refresh">
+              <IconButton size="small" onClick={refresh}>
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-      </Paper>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Things Bandit can do on its own — toggle what it’s allowed to use.
+        </Typography>
 
-      {loading && (
-        <Box sx={{ mb: 2 }}>
-          <LinearProgress />
-        </Box>
-      )}
-      {error && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography color="error">{error}</Typography>
-        </Paper>
-      )}
+        {loading && <LinearProgress sx={{ mb: 2 }} />}
+        {error && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {!gatewayConfigured && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Using this origin for tool endpoints (no gateway URL configured).
+          </Alert>
+        )}
 
-      <Stack spacing={2}>
-        {tools.map((tool) => {
-          // Try multiple lookup strategies to find the local enabled state
-          let locallyEnabled = localEnabledMap.get(tool.id); // Try server tool id first
-          if (locallyEnabled === undefined) {
-            locallyEnabled = localEnabledMap.get(tool.name); // Try server tool name
-          }
-          if (locallyEnabled === undefined) {
-            // Fallback to direct lookup in localTools array (more reliable)
-            const directLookup = localTools.find(t => 
-              t.id === tool.id || 
-              t.function.name === tool.id || 
-              t.name === tool.name
-            );
-            locallyEnabled = directLookup?.enabled ?? tool.isEnabled;
-          }
-          
-          return (
-            <Paper key={tool.id} sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>{tool.name}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+            gap: 1.25,
+          }}
+        >
+          {tools.map((tool) => {
+            let locallyEnabled = localEnabledMap.get(tool.id);
+            if (locallyEnabled === undefined) {
+              locallyEnabled = localEnabledMap.get(tool.name);
+            }
+            if (locallyEnabled === undefined) {
+              const directLookup = localTools.find(
+                (t) => t.id === tool.id || t.function.name === tool.id || t.name === tool.name,
+              );
+              locallyEnabled = directLookup?.enabled ?? tool.isEnabled;
+            }
+
+            return (
+              <Paper
+                key={tool.id}
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {tool.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
                     {tool.description}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FormControlLabel
-                    control={<Switch checked={!!locallyEnabled} onChange={() => {
-                      // Find the corresponding local tool using multiple strategies
-                      let local = localTools.find(t => t.function.name === tool.id);
-                      if (!local) {
-                        local = localTools.find(t => t.function.name === tool.name);
-                      }
-                      if (!local) {
-                        local = localTools.find(t => t.id === tool.id);
-                      }
-                      if (!local) {
-                        local = localTools.find(t => t.name === tool.name);
-                      }
-                      
-                      if (local) {
-                        toggleTool(local.id);
-                      } else {
-                        console.warn('Could not find local tool for server tool:', tool);
-                      }
-                    }} />}
-                    label={locallyEnabled ? 'Enabled' : 'Disabled'}
-                  />
-                  <Tooltip title="Controller-driven tools (read-only schema)">
-                    <SettingsIcon color="disabled" />
-                  </Tooltip>
-                </Box>
-              </Box>
-              {!!tool.supportedParameters?.length && (
-                <Box sx={{ mt: 1.5 }}>
-                  <Typography variant="caption" color="text.secondary">Supported parameters</Typography>
-                  <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {tool.supportedParameters.map((p) => (
-                      <Chip key={p} size="small" label={p} />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </Paper>
-          );
-        })}
-      </Stack>
+                <Switch
+                  size="small"
+                  checked={!!locallyEnabled}
+                  sx={{ flexShrink: 0 }}
+                  onChange={() => {
+                    let local = localTools.find((t) => t.function.name === tool.id);
+                    if (!local) local = localTools.find((t) => t.function.name === tool.name);
+                    if (!local) local = localTools.find((t) => t.id === tool.id);
+                    if (!local) local = localTools.find((t) => t.name === tool.name);
+                    if (local) toggleTool(local.id);
+                  }}
+                />
+              </Paper>
+            );
+          })}
+          {!loading && tools.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No built-in tools reported.
+            </Typography>
+          )}
+        </Box>
+      </Box>
     </Box>
   );
 };
