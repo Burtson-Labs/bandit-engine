@@ -652,7 +652,7 @@ interface PersonalitiesTabProps {
               border: "1px solid",
               borderColor: "rgba(255,255,255,0.1)",
               borderRadius: 3,
-              minHeight: { xs: "200px", md: "280px" },
+              minHeight: { xs: "auto", md: "188px" },
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -1180,7 +1180,7 @@ interface PersonalitiesTabProps {
         InputLabelProps={{ shrink: true }}
         InputProps={{
           style: {
-            minHeight: isMobile ? "180px" : "240px",
+            minHeight: isMobile ? "auto" : "180px",
             maxHeight: "360px",
           },
         }}
