@@ -48,6 +48,25 @@ export const stripSourcesForDisplay = (content: string): string => {
   return c.replace(/\s+$/u, "");
 };
 
+/**
+ * Turn inline bracket citations the model emits ([1], [2], …) into clickable
+ * links to the matching web source, so each claim points at where it came from.
+ * Numbering matches the appended Sources list (and therefore the chips). Fenced
+ * code blocks are left untouched so array indices like a[1] aren't linkified.
+ */
+export const linkifyCitations = (content: string, sources: WebSource[]): string => {
+  if (!content || sources.length === 0) return content;
+  const link = (text: string): string =>
+    text.replace(/\[(\d{1,2})\]/g, (full, num: string) => {
+      const src = sources[parseInt(num, 10) - 1];
+      return src ? `[\\[${num}\\]](${src.url})` : full;
+    });
+  return content
+    .split(/(```[\s\S]*?```)/g)
+    .map((seg, i) => (i % 2 === 0 ? link(seg) : seg))
+    .join("");
+};
+
 const domainOf = (url: string): string => {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
