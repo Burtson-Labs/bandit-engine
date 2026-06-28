@@ -1034,8 +1034,8 @@ const Management = () => {
         MuiCardContent: {
           styleOverrides: {
             root: {
-              padding: 16,
-              "&:last-child": { paddingBottom: 16 },
+              padding: 12,
+              "&:last-child": { paddingBottom: 12 },
             },
           },
         },

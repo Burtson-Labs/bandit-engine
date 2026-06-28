@@ -364,7 +364,7 @@ export const ProviderTab: React.FC = () => {
         </Typography>
 
         {/* Current Provider Status */}
-        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
             Current Provider
           </Typography>
@@ -385,7 +385,7 @@ export const ProviderTab: React.FC = () => {
         </Paper>
 
         {/* Provider Configuration Form */}
-        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
           <Box
             sx={{
               display: 'flex',

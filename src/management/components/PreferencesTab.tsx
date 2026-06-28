@@ -546,7 +546,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
           reduce resource usage on machines with limited capabilities.
         </Typography>
 
-        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 } }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>Conversation Starters</Typography>
             <Typography variant="body2" color="text.secondary">
@@ -600,7 +600,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
           </Box>
         </Paper>
 
-        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 } }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', gap: 2 }}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>Conversation & Project Sync</Typography>
@@ -733,7 +733,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
           </Box>
         </Paper>
 
-        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 } }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>Feature Controls</Typography>
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -959,7 +959,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
           </Box>
         </Paper>
 
-        <Paper sx={{ p: { xs: 1.75, sm: 2.5 }, mb: { xs: 2, md: 3 } }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, mb: { xs: 1.5, md: 1.75 }, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>Backup & Restore</Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
             Export your preferences to save your settings, or import previously saved preferences. You can also reset to default values.
