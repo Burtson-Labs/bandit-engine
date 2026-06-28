@@ -41,7 +41,7 @@ const KnowledgeHubTab: React.FC<KnowledgeHubTabProps> = (props) => {
 
   return (
     <Box>
-      <Box sx={{ px: { xs: 1.5, sm: 3, md: 4 }, pt: { xs: 1.5, md: 2 } }}>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, pt: { xs: 1.5, md: 2 } }}>
         <Tabs
           value={effectiveTabIndex}
           onChange={(_, newValue) => setTabIndex(newValue)}
