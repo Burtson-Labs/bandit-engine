@@ -1225,7 +1225,15 @@ export const useAIProvider = ({
           setIsThinking?.(inThinkBlock);
           // Detect tool call block in visible (non-thinking) content only
           const visibleMessage = stripThinking(fullMessage);
-          if (/```(?:tool_code|TOOL_CODE)/.test(visibleMessage)) {
+          // Show the working indicator the moment the model starts a tool call —
+          // whether via the ```tool_code``` fence OR a bare known-tool call (e.g.
+          // create_file(...) from models that skip the fence). Without the bare
+          // case, create_file streamed silently and the bubble looked frozen,
+          // unlike web_search/web_fetch which fence their calls.
+          if (
+            /```(?:tool_code|TOOL_CODE)/.test(visibleMessage) ||
+            /\b(?:web_search|web_fetch|image_generation|create_file|ask_user)\s*\(/.test(visibleMessage)
+          ) {
             sawToolBlock = true;
             clearFlushTimer();
             startWorking();
