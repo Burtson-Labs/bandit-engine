@@ -76,13 +76,13 @@ const SourceChip = ({ source }: { source: WebSource }) => {
         href={source.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="source-chip"
         sx={{
           display: "inline-flex",
           alignItems: "center",
           flexShrink: 0,
+          gap: 0.5,
           height: 26,
-          px: 0.4,
+          px: 0.75,
           borderRadius: 999,
           border: "1px solid",
           borderColor: "divider",
@@ -123,9 +123,8 @@ const SourceChip = ({ source }: { source: WebSource }) => {
           />
         )}
         <Box
-          className="chip-label"
           component="span"
-          sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          sx={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         >
           {label}
         </Box>
@@ -157,33 +156,7 @@ const SourceChips = ({ content }: { content: string }) => {
       >
         Sources
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          rowGap: 0.5,
-          // Touch / no-hover devices: chips stay expanded (no hover to reveal).
-          "& .source-chip": { ml: "4px" },
-          "& .source-chip:first-of-type": { ml: 0 },
-          "& .chip-label": { maxWidth: 200, opacity: 1, ml: 0.6 },
-          // Hover-capable devices: collapse into an overlapping favicon stack
-          // that spreads out and reveals titles when the rail is hovered.
-          "@media (hover: hover)": {
-            "& .source-chip": { ml: "-10px", transition: "margin-left 0.22s ease" },
-            "& .source-chip:first-of-type": { ml: 0 },
-            "& .chip-label": {
-              maxWidth: 0,
-              opacity: 0,
-              ml: 0,
-              transition: "max-width 0.28s ease, opacity 0.18s ease, margin-left 0.2s ease",
-            },
-            "&:hover .source-chip": { ml: "6px" },
-            "&:hover .source-chip:first-of-type": { ml: 0 },
-            "&:hover .chip-label": { maxWidth: 200, opacity: 1, ml: 0.6 },
-          },
-        }}
-      >
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
         {sources.map((s, i) => (
           <SourceChip key={`${s.url}-${i}`} source={s} />
         ))}
