@@ -76,40 +76,33 @@ const SourceChip = ({ source }: { source: WebSource }) => {
         href={source.url}
         target="_blank"
         rel="noopener noreferrer"
+        className="source-chip"
         sx={{
           display: "inline-flex",
           alignItems: "center",
+          justifyContent: "center",
           flexShrink: 0,
-          gap: 0.5,
-          height: 26,
-          px: 0.75,
-          borderRadius: 999,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-          textDecoration: "none",
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          border: "2px solid",
+          borderColor: "background.paper",
+          bgcolor: "action.hover",
           color: "text.primary",
-          fontSize: 12.5,
-          lineHeight: 1.4,
-          transition: "border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease",
-          "&:hover": { borderColor: "primary.main", bgcolor: "action.hover", boxShadow: 1, zIndex: 2 },
+          textDecoration: "none",
+          // Hover lifts the chip via transform/z-index only — no layout reflow,
+          // so the overlapping stack can never jitter the way the expand did.
+          transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease",
+          "&:hover": {
+            transform: "translateY(-3px)",
+            boxShadow: 3,
+            borderColor: "primary.main",
+            zIndex: 3,
+          },
         }}
       >
         {failed ? (
-          <Box
-            sx={{
-              width: 18,
-              height: 18,
-              borderRadius: "50%",
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
-              display: "grid",
-              placeItems: "center",
-              fontSize: 9,
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
+          <Box component="span" sx={{ fontSize: 11, fontWeight: 700, color: "primary.main" }}>
             {domain.charAt(0).toUpperCase()}
           </Box>
         ) : (
@@ -119,15 +112,9 @@ const SourceChip = ({ source }: { source: WebSource }) => {
             alt=""
             loading="lazy"
             onError={() => setFailed(true)}
-            sx={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0 }}
+            sx={{ width: 16, height: 16, borderRadius: "4px", flexShrink: 0 }}
           />
         )}
-        <Box
-          component="span"
-          sx={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-        >
-          {label}
-        </Box>
       </Box>
     </Tooltip>
   );
@@ -156,7 +143,15 @@ const SourceChips = ({ content }: { content: string }) => {
       >
         Sources
       </Box>
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          // Overlapping stack; each chip lifts on hover (no reflow → no jitter).
+          "& .source-chip": { ml: "-9px" },
+          "& .source-chip:first-of-type": { ml: 0 },
+        }}
+      >
         {sources.map((s, i) => (
           <SourceChip key={`${s.url}-${i}`} source={s} />
         ))}

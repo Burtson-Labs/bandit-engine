@@ -1292,6 +1292,19 @@ export const useAIProvider = ({
               }
             }
 
+            // Fallback: some models (the Kimi engines especially) sometimes write
+            // the tool call as a plain code block ("```\ncreate_file({...})\n```")
+            // instead of the tool_code fence or native tool_calls — so it renders
+            // as text and never runs. Promote the first such block to tool_code.
+            if (!/```(?:tool_code|TOOL_CODE)/.test(fullMessage)) {
+              const plainToolFence =
+                /```[a-zA-Z0-9_-]*[ \t]*\n([ \t]*(?:web_search|web_fetch|image_generation|create_file|ask_user)[\s\S]*?)\n```/;
+              const fm = fullMessage.match(plainToolFence);
+              if (fm) {
+                fullMessage = fullMessage.replace(plainToolFence, `\`\`\`tool_code\n${fm[1].trim()}\n\`\`\``);
+              }
+            }
+
             // Check for tool calls in the response and execute them
             const toolCallMatches = fullMessage.match(/```(?:tool_code|TOOL_CODE)\s*\n([^`]+)\n```/gi);
             let enhancedMessage = fullMessage;
