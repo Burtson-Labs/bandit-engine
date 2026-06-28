@@ -1108,12 +1108,12 @@ const Management = () => {
   // gets their powers inside their OWN tenant workspace (Phase 1, resolved by
   // subdomain), not on the shared platform site. So normal users
   // (user / team_member / "<product>-admin") see only Preferences here.
-  // super-user IS a platform-admin role. The real bug was AuthApi granting it to
-  // verified TRIAL users by default (LocalAuthService.GrantVerifiedRoles) — fixed
-  // on the AuthApi side so trials get 'user'. Existing trial accounts that already
-  // carry super-user stay admins until their role is removed.
+  // super-user is NOT an admin — it's a normal trial/power-user role that AuthApi
+  // correctly grants verified trial users. Only 'admin' (and a future
+  // platform_admin) opens the platform config tabs. So trial/consumer users —
+  // who carry super-user but NOT admin — see only Preferences.
   const platformAdminRoles = new Set([
-    'admin', 'super-user', 'superuser', 'platform_admin', 'super_admin',
+    'admin', 'platform_admin',
   ]);
   const userRoles = (
     authenticationService.parseJwtClaims(authenticationService.getToken() ?? "")?.roles ?? []
