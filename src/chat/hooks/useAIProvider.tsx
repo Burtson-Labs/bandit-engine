@@ -1076,7 +1076,7 @@ export const useAIProvider = ({
               return `- ${tool.function.name}: ${tool.function.description}${paramSuffix}`;
             })
             .join("\n");
-  const protocol = `\n\nTOOL USAGE PROTOCOL (conservative approach)\n- PRIORITIZE your built-in knowledge and the provided context ABOVE to answer questions first.\n- Use your training data and general knowledge confidently for common topics, concepts, and questions.\n- Only call tools for SPECIFIC, CURRENT information that requires real-time data or a source you don't already have:\n  * web_search() - when asked about recent/current events, breaking news, live information (weather, prices, sports scores), or when you need to look up documentation, libraries, APIs, error messages, or verify a specific fact\n  * web_fetch() - to read the FULL contents of a specific URL you already have. Reach for this when the user wants to "tell me more", "go deeper", "read/open that article", or asks for details about a specific source, link, or article from an EARLIER answer: take that item's URL from the previous Sources list in this conversation and fetch it, then answer from the page's actual content (not just the prior summary)\n  * image_generation() - ONLY when explicitly asked to create or generate an image\n  * create_file({"content": "...", "filename": "report.docx", "format": "docx"}) - when the user asks for a downloadable FILE (a document, spreadsheet, slides, markdown, code, etc.) or to "export"/"download"/"save" something. Formats: md, txt, csv, json, html, xml, yaml, docx, pptx. For docx/pptx write well-structured Markdown (use "## " headings to start each slide for pptx). It returns a temporary download link — ALWAYS tell the user the file expires (~1 hour). If it is unclear whether they want it shown inline vs. as a downloadable file, use ask_user first.\n  * ask_user({"questions": [{"question": "...", "header": "Format", "options": [{"label": "Inline (Recommended)"}, {"label": "Download a file"}]}]}) - when you are genuinely BLOCKED on a decision that is the USER's to make and cannot resolve from the request, context, or sensible defaults (e.g. show content inline vs. let them download it, which format/option they want). Renders clickable options the user answers in one step — better than asking in prose and ending your turn. Give 1-4 questions, each with 2-4 options; if one is clearly best, list it first and append " (Recommended)". The user may also type their own answer; act on it directly.\n- For general questions about concepts, definitions, explanations, or how-to topics, use your built-in knowledge WITHOUT calling tools.\n- Examples of what NOT to use tools for: "who are you?", "what is React?", "explain machine learning", "how does X work?", general programming questions.\n- When a tool is truly needed, call exactly ONE tool that best matches the request.\n- Begin tool usage with a fenced code block: \`\`\`tool_code\nfunctionName({"param": "value"})\n\`\`\`\n- If you cannot answer with your knowledge and context, and no suitable tool exists, ask a clarifying question.\n\nExamples of appropriate tool usage:\n\n\`\`\`tool_code\nweb_search({"query": "latest AI developments 2026", "count": 5})\n\`\`\`\n\n\`\`\`tool_code\nweb_fetch({"url": "https://example.com/changelog"})\n\`\`\`\n`;
+  const protocol = `\n\nTOOL USAGE PROTOCOL (conservative approach)\n- PRIORITIZE your built-in knowledge and the provided context ABOVE to answer questions first.\n- Use your training data and general knowledge confidently for common topics, concepts, and questions.\n- Only call tools for SPECIFIC, CURRENT information that requires real-time data or a source you don't already have:\n  * web_search() - when asked about recent/current events, breaking news, live information (weather, prices, sports scores), or when you need to look up documentation, libraries, APIs, error messages, or verify a specific fact\n  * web_fetch() - to read the FULL contents of a specific URL you already have. Reach for this when the user wants to "tell me more", "go deeper", "read/open that article", or asks for details about a specific source, link, or article from an EARLIER answer: take that item's URL from the previous Sources list in this conversation and fetch it, then answer from the page's actual content (not just the prior summary)\n  * image_generation() - ONLY when explicitly asked to create or generate an image\n  * create_file({"content": "...", "filename": "report.docx", "format": "docx"}) - when the user asks for a downloadable FILE (a document, spreadsheet, slides, markdown, code, etc.) or to "export"/"download"/"save" something. Formats: md, txt, csv, json, html, xml, yaml, docx, pptx. PDF is NOT a supported format — if the user asks for a PDF, create a docx instead. For docx/pptx write well-structured Markdown (use "## " headings to start each slide for pptx). It returns a temporary download link — ALWAYS tell the user the file expires (~1 hour). If it is unclear whether they want it shown inline vs. as a downloadable file, use ask_user first.\n  * ask_user({"questions": [{"question": "...", "header": "Format", "options": [{"label": "Inline (Recommended)"}, {"label": "Download a file"}]}]}) - when you are genuinely BLOCKED on a decision that is the USER's to make and cannot resolve from the request, context, or sensible defaults (e.g. show content inline vs. let them download it, which format/option they want). Renders clickable options the user answers in one step — better than asking in prose and ending your turn. Give 1-4 questions, each with 2-4 options; if one is clearly best, list it first and append " (Recommended)". The user may also type their own answer; act on it directly.\n- For general questions about concepts, definitions, explanations, or how-to topics, use your built-in knowledge WITHOUT calling tools.\n- Examples of what NOT to use tools for: "who are you?", "what is React?", "explain machine learning", "how does X work?", general programming questions.\n- When a tool is truly needed, call exactly ONE tool that best matches the request.\n- Begin tool usage with a fenced code block: \`\`\`tool_code\nfunctionName({"param": "value"})\n\`\`\`\n- If you cannot answer with your knowledge and context, and no suitable tool exists, ask a clarifying question.\n\nExamples of appropriate tool usage:\n\n\`\`\`tool_code\nweb_search({"query": "latest AI developments 2026", "count": 5})\n\`\`\`\n\n\`\`\`tool_code\nweb_fetch({"url": "https://example.com/changelog"})\n\`\`\`\n`;
           enhancedSystemPrompt += `\n\nYou have access to the following tools that can help you provide better responses. Use them when appropriate:\n\n${toolList}\n${protocol}`;
           
           debugLogger.info("MCP tools added to system prompt", { 
@@ -1292,21 +1292,62 @@ export const useAIProvider = ({
               }
             }
 
-            // Fallback: some models (the Kimi engines especially) sometimes write
-            // the tool call as a plain code block ("```\ncreate_file({...})\n```")
-            // instead of the tool_code fence or native tool_calls — so it renders
-            // as text and never runs. Promote the first such block to tool_code.
-            if (!/```(?:tool_code|TOOL_CODE)/.test(fullMessage)) {
-              const plainToolFence =
-                /```[a-zA-Z0-9_-]*[ \t]*\n([ \t]*(?:web_search|web_fetch|image_generation|create_file|ask_user)[\s\S]*?)\n```/;
-              const fm = fullMessage.match(plainToolFence);
-              if (fm) {
-                fullMessage = fullMessage.replace(plainToolFence, `\`\`\`tool_code\n${fm[1].trim()}\n\`\`\``);
+            // Extract tool calls by BALANCED-PARSING the arguments rather than
+            // fence-matching. create_file's argument is frequently a Markdown
+            // document that itself contains ``` code fences and { } braces, which
+            // broke both the old `[^`]+` tool_code regex AND a non-greedy fence
+            // fallback — so create_file rendered as text and never ran. This scanner
+            // finds each known tool call, walks balanced parens while respecting
+            // JSON string state (backticks/braces inside the content are ignored),
+            // and strips an enclosing tool_code/plain fence from the display span.
+            const extractToolCalls = (
+              message: string,
+            ): Array<{ raw: string; functionName: string; params: string }> => {
+              const KNOWN = ["web_search", "web_fetch", "image_generation", "create_file", "ask_user", "ask-user"];
+              const out: Array<{ raw: string; functionName: string; params: string }> = [];
+              const nameRe = new RegExp(`\\b(${KNOWN.join("|")})\\s*\\(`, "g");
+              let m: RegExpExecArray | null;
+              while ((m = nameRe.exec(message)) !== null) {
+                const functionName = m[1];
+                const openIdx = m.index + m[0].length - 1; // index of '('
+                let depth = 0;
+                let i = openIdx;
+                let inStr = false;
+                let esc = false;
+                for (; i < message.length; i++) {
+                  const ch = message[i];
+                  if (inStr) {
+                    if (esc) esc = false;
+                    else if (ch === "\\") esc = true;
+                    else if (ch === '"') inStr = false;
+                  } else if (ch === '"') inStr = true;
+                  else if (ch === "(") depth++;
+                  else if (ch === ")") {
+                    depth--;
+                    if (depth === 0) {
+                      i++;
+                      break;
+                    }
+                  }
+                }
+                if (depth !== 0) continue; // unbalanced — call likely still streaming
+                const params = message.slice(openIdx + 1, i - 1).trim();
+                let start = m.index;
+                let end = i;
+                const fenceOpen = message.slice(0, m.index).match(/```[a-zA-Z0-9_-]*[ \t]*\n[ \t]*$/);
+                if (fenceOpen) {
+                  start = m.index - fenceOpen[0].length;
+                  const fenceClose = message.slice(i).match(/^[ \t]*\n```/);
+                  if (fenceClose) end = i + fenceClose[0].length;
+                }
+                out.push({ raw: message.slice(start, end), functionName, params });
+                nameRe.lastIndex = i;
               }
-            }
+              return out;
+            };
 
             // Check for tool calls in the response and execute them
-            const toolCallMatches = fullMessage.match(/```(?:tool_code|TOOL_CODE)\s*\n([^`]+)\n```/gi);
+            const toolCallMatches = extractToolCalls(fullMessage);
             let enhancedMessage = fullMessage;
             // Informational tool outputs get fed back to the model for a
             // natural-language summary; image outputs are surfaced as-is.
@@ -1317,14 +1358,11 @@ export const useAIProvider = ({
             if (toolCallMatches && toolCallMatches.length > 0 && mcpToolsAvailable) {
               debugLogger.info("Detected tool calls in AI response", {
                 toolCallCount: toolCallMatches.length,
-                toolCalls: toolCallMatches,
+                toolCalls: toolCallMatches.map((t) => t.functionName),
               });
 
-              for (const match of toolCallMatches) {
-                const toolCallCode = match.replace(/```(?:tool_code|TOOL_CODE)\s*\n|\n```/gi, "").trim();
-                const functionCallMatch = toolCallCode.match(/^(\w+)\(\s*(.*?)\s*\)$/);
-                if (!functionCallMatch) continue;
-                const [, functionName, params] = functionCallMatch;
+              for (const call of toolCallMatches) {
+                const { raw: match, functionName, params } = call;
 
                 try {
                   // Parse parameters if any
