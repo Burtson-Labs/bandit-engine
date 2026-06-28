@@ -508,7 +508,6 @@ interface PersonalitiesTabProps {
               color: "primary.main"
             }
           }}
-          icon={<Typography sx={{ fontSize: "1.2rem" }}>💡</Typography>}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}>
@@ -809,7 +808,6 @@ interface PersonalitiesTabProps {
         <Alert 
           severity="info" 
           sx={{ mt: { xs: 2.5, md: 4 }, borderRadius: 2, px: { xs: 1.5, sm: 2 }, py: { xs: 1.25, sm: 1.5 } }}
-          icon={<Typography>💡</Typography>}
         >
           <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: "0.85rem", sm: "0.9rem" } }}>
             Pro Tip:
@@ -859,7 +857,6 @@ interface PersonalitiesTabProps {
               px: { xs: 1.5, sm: 2 },
               py: { xs: 1.25, sm: 1.5 }
             }}
-            icon={<Typography sx={{ fontSize: "1.2rem" }}>🎯</Typography>}
           >
             <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}>
               Creating a new personality
