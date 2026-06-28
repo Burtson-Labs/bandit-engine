@@ -915,52 +915,47 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
   };
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 3, md: 4 } }}>
-      <Box sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 3, md: 4 } }}>
-        {/* Enhanced Header with Statistics */}
-        <Box sx={{ mb: { xs: 2.5, md: 4 } }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+      <Box>
+        {/* Header with Statistics */}
+        <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
           <Box
             sx={{
               display: 'flex',
               flexDirection: { xs: 'column', md: 'row' },
-              gap: { xs: 1.5, md: 2 },
+              gap: { xs: 1, md: 1.5 },
               justifyContent: 'space-between',
               alignItems: { xs: 'flex-start', md: 'center' },
-              mb: { xs: 1.5, md: 2 },
+              mb: 1.5,
             }}
           >
             <Box sx={{ textAlign: { xs: 'left', md: 'initial' } }}>
               <Typography
                 variant="h5"
                 color="text.primary"
-                sx={{ mb: 1, fontWeight: 600, fontSize: { xs: '1.55rem', md: '1.8rem' } }}
+                sx={{ mb: 0.5, fontWeight: 600, fontSize: '1.3rem' }}
               >
                 Document Knowledge Base
                 {shouldUseVector && (
-                  <Chip 
-                    label="Synced" 
-                    color="primary" 
-                    size="small" 
-                    sx={{ ml: 1 }} 
+                  <Chip
+                    label="Synced"
+                    color="primary"
+                    size="small"
+                    sx={{ ml: 1 }}
                   />
                 )}
               </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ fontSize: { xs: '0.95rem', sm: '1rem' }, lineHeight: 1.5 }}
-              >
-                Add documents to your private knowledge base. Files are securely stored {shouldUseVector ? 'in your private workspace' : 'locally in your browser'}.
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0 }}>
+                Add documents to your private knowledge base, stored {shouldUseVector ? 'in your private workspace' : 'locally in your browser'}.
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
               {shouldUseVector && (
                 <Button
                   variant="outlined"
-                  size={isMobile ? 'small' : 'medium'}
                   onClick={loadVectorDocuments}
                   disabled={loadingVectorDocs}
-                  sx={{ mr: { xs: 0, md: 1 }, width: { xs: '100%', md: 'auto' } }}
+                  sx={{ width: { xs: '100%', md: 'auto' } }}
                 >
                   {loadingVectorDocs ? 'Loading...' : 'Refresh'}
                 </Button>
@@ -969,23 +964,22 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                 <Button
                   variant="outlined"
                   color="error"
-                  size={isMobile ? 'small' : 'medium'}
                   startIcon={<DeleteIcon />}
                   onClick={() => setClearDocsDialogOpen(true)}
-                  sx={{ ml: { xs: 0, md: 2 }, width: { xs: '100%', md: 'auto' } }}
+                  sx={{ width: { xs: '100%', md: 'auto' } }}
                 >
                   Clear All
                 </Button>
               )}
             </Box>
           </Box>
-          
+
           {/* Statistics Cards */}
           {documents.length > 0 && (
-            <Box sx={{ display: 'flex', gap: { xs: 1.5, md: 2 }, flexWrap: 'wrap', mb: { xs: 2, md: 3 } }}>
-              <Card sx={{ minWidth: 120 }}>
-                <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="h6" color="primary">
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 0 }}>
+              <Card sx={{ minWidth: 96, border: '1px solid', borderColor: 'divider', borderRadius: 2, boxShadow: 'none' }}>
+                <CardContent sx={{ py: 1, px: 1.5, '&:last-child': { pb: 1 } }}>
+                  <Typography variant="subtitle2" color="primary" sx={{ lineHeight: 1.2 }}>
                     {statistics.totalDocuments}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -993,9 +987,9 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                   </Typography>
                 </CardContent>
               </Card>
-              <Card sx={{ minWidth: 120 }}>
-                <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-                  <Typography variant="h6" color="primary">
+              <Card sx={{ minWidth: 96, border: '1px solid', borderColor: 'divider', borderRadius: 2, boxShadow: 'none' }}>
+                <CardContent sx={{ py: 1, px: 1.5, '&:last-child': { pb: 1 } }}>
+                  <Typography variant="subtitle2" color="primary" sx={{ lineHeight: 1.2 }}>
                     {statistics.totalSize}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -1004,9 +998,9 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                 </CardContent>
               </Card>
               {Object.entries(statistics.categoryCounts).map(([category, count]) => (
-                <Card key={category} sx={{ minWidth: 100 }}>
-                  <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-                    <Typography variant="h6" color="primary">
+                <Card key={category} sx={{ minWidth: 80, border: '1px solid', borderColor: 'divider', borderRadius: 2, boxShadow: 'none' }}>
+                  <CardContent sx={{ py: 1, px: 1.5, '&:last-child': { pb: 1 } }}>
+                    <Typography variant="subtitle2" color="primary" sx={{ lineHeight: 1.2 }}>
                       {count as number}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -1020,11 +1014,13 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
 
         </Box>
 
-        {/* Enhanced Upload Area */}
-        <Card 
-          sx={{ 
-            mb: 3,
-            border: dragActive ? `2px dashed ${currentTheme.palette?.primary?.main}` : `1px dashed ${currentTheme.palette?.divider}`,
+        {/* Upload Area */}
+        <Card
+          sx={{
+            mb: { xs: 1.25, md: 1.5 },
+            borderRadius: 2,
+            boxShadow: 'none',
+            border: dragActive ? `1px dashed ${currentTheme.palette?.primary?.main}` : `1px dashed ${currentTheme.palette?.divider}`,
             bgcolor: dragActive ? `${currentTheme.palette?.primary?.main}08` : 'transparent',
             transition: 'all 0.2s ease-in-out',
             cursor: 'pointer',
@@ -1038,95 +1034,55 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
           onDragLeave={handleDragLeave}
           onClick={() => document.getElementById('file-upload')?.click()}
         >
-          <CardContent sx={{ textAlign: 'center', py: { xs: 3, md: 4 }, px: { xs: 2, md: 3 } }}>
-            <UploadFileIcon 
-              sx={{ 
-                fontSize: 48, 
-                color: dragActive ? 'primary.main' : 'text.secondary',
-                mb: 2 
-              }} 
-            />
-            <Typography variant="h6" color={dragActive ? 'primary' : 'text.primary'} gutterBottom>
-              {dragActive ? 'Drop files here' : 'Upload Documents'}
+          <CardContent sx={{ textAlign: 'center', py: 1.75, px: { xs: 1.5, sm: 1.75 }, '&:last-child': { pb: 1.75 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+              <UploadFileIcon
+                sx={{ fontSize: 18, color: dragActive ? 'primary.main' : 'text.secondary' }}
+              />
+              <Typography variant="subtitle2" color={dragActive ? 'primary' : 'text.primary'}>
+                {dragActive ? 'Drop files here' : 'Upload Documents'}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+              Drag and drop or click to browse — PDF, DOC, TXT, MD, code files, and more
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Drag and drop files here or click to browse
-            </Typography>
-            
+
             {/* Team Sharing Control for Vector Documents - only show if user has a team */}
             {shouldUseVector && hasTeam && (
-              <Box 
-                sx={{ 
-                  mb: 2, 
-                  p: 2, 
-                  bgcolor: 'background.paper', 
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'divider'
-                }}
+              <Box
+                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 1 }}
                 onClick={(e) => e.stopPropagation()} // Prevent triggering file upload
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                  <Switch
-                    checked={shareWithTeam}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShareWithTeam(e.target.checked)}
-                    color="primary"
-                    size="small"
-                  />
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {shareWithTeam ? (
-                      <>
-                        <GroupIcon sx={{ fontSize: '1rem', color: 'success.main' }} />
-                        <Typography variant="body2" color="success.main" fontWeight={500}>
-                          Share with team
-                        </Typography>
-                      </>
-                    ) : (
-                      <>
-                        <PersonIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                          Personal only
-                        </Typography>
-                      </>
-                    )}
-                  </Box>
-                </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 0.5 }}>
-                  {shareWithTeam 
-                    ? 'Team members can search and access these documents' 
-                    : 'Documents will be private to your account only'
-                  }
-                </Typography>
+                <Switch
+                  checked={shareWithTeam}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShareWithTeam(e.target.checked)}
+                  color="primary"
+                  size="small"
+                />
+                {shareWithTeam ? (
+                  <>
+                    <GroupIcon sx={{ fontSize: '1rem', color: 'success.main' }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Shared with team — members can search these documents
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <PersonIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Personal only — private to your account
+                    </Typography>
+                  </>
+                )}
               </Box>
             )}
-            
+
             {/* Message for users without teams */}
             {shouldUseVector && !hasTeam && (
-              <Box 
-                sx={{ 
-                  mb: 2, 
-                  p: 1.5, 
-                  bgcolor: 'info.main' + '10', 
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'info.main' + '30'
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                  <PersonIcon sx={{ fontSize: '1rem', color: 'info.main' }} />
-                  <Typography variant="body2" color="info.main" fontWeight={500}>
-                    Personal Documents Only
-                  </Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 0.5 }}>
-                  Documents will be stored privately in your personal account
-                </Typography>
-              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                Documents will be stored privately in your personal account
+              </Typography>
             )}
-            
-            <Typography variant="caption" color="text.secondary">
-              Supported: PDF, DOC, TXT, MD, Code files, and more
-            </Typography>
             <input
               id="file-upload"
               type="file"
@@ -1140,10 +1096,10 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
 
         {/* Upload Progress */}
         {uploadStatuses.length > 0 && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: { xs: 1.25, md: 1.5 } }}>
             {uploadStatuses.map((status, index) => (
-              <Card key={index} sx={{ mb: 1 }}>
-                <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+              <Card key={index} sx={{ mb: 1, borderRadius: 2, boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
+                <CardContent sx={{ py: 1, px: 1.5, '&:last-child': { pb: 1 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     {status.status === 'success' ? (
                       <CheckCircleIcon color="success" />
@@ -1178,11 +1134,11 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
           </Box>
         )}
 
-        {/* Enhanced Search and Filter Bar */}
+        {/* Search and Filter Bar */}
         {documents.length > 0 && (
-          <Card sx={{ mb: 3 }}>
-            <CardContent sx={{ py: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Card sx={{ mb: { xs: 1.25, md: 1.5 }, borderRadius: 2, boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ py: 1.5, px: { xs: 1.5, sm: 1.75 }, '&:last-child': { pb: 1.5 } }}>
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
                 {/* Search Field */}
                 <TextField
                   placeholder="Search documents..."
@@ -1316,8 +1272,8 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
 
               {/* Selection Controls */}
               {selectedDocuments.length > 0 && (
-                <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ mt: 1.5, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                     <Typography variant="body2" color="text.secondary">
                       {selectedDocuments.length} selected
                     </Typography>
@@ -1351,16 +1307,16 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
           </Card>
         )}
         
-        {/* Enhanced Document Grid/List */}
+        {/* Document Grid/List */}
         {filteredAndSortedDocuments.length === 0 ? (
-          <Card sx={{ textAlign: 'center', py: 8 }}>
+          <Card sx={{ textAlign: 'center', py: 4, borderRadius: 2, boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
             <CardContent>
-              <FolderIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
+              <FolderIcon sx={{ fontSize: 20, color: 'text.secondary', mb: 1 }} />
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 No Documents Yet
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {shouldUseVector ? 
+              <Typography variant="caption" color="text.secondary">
+                {shouldUseVector ?
                   'Upload and embed your first document to get started with advanced search' :
                   'Upload your first document to get started'
                 }
@@ -1370,7 +1326,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
         ) : (
           <Box>
             {/* Results Summary */}
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
               Showing {filteredAndSortedDocuments.length} of {shouldUseVector ? vectorDocuments.length : documents.length} documents
               {searchQuery && ` for "${searchQuery}"`}
               {shouldUseVector && ` (Synced workspace)`}
@@ -1387,7 +1343,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                     md: "repeat(4, 1fr)",
                     lg: "repeat(6, 1fr)",
                   },
-                  gap: 2,
+                  gap: 1.5,
                 }}
               >
                 {filteredAndSortedDocuments.map((doc: KnowledgeDoc) => {
@@ -1413,7 +1369,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
               </Box>
             ) : (
               /* List View */
-              <Stack spacing={1}>
+              <Stack spacing={0.75}>
                 {filteredAndSortedDocuments.map((doc: KnowledgeDoc) => {
                   const fileInfo = getFileTypeInfo(doc.name);
                   const IconComponent = fileInfo.icon;
@@ -1425,14 +1381,16 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                       key={doc.id}
                       sx={{
                         cursor: "pointer",
-                        transition: "all 0.3s ease-in-out",
-                        border: isSelected ? `2px solid ${currentTheme.palette?.primary?.main}` : `1px solid ${currentTheme.palette?.divider}`,
+                        boxShadow: 'none',
+                        borderRadius: 2,
+                        transition: "all 0.2s ease-in-out",
+                        border: isSelected ? `1px solid ${currentTheme.palette?.primary?.main}` : `1px solid ${currentTheme.palette?.divider}`,
                         "&:hover": {
-                          boxShadow: 4,
+                          borderColor: currentTheme.palette?.primary?.main,
                         },
                         bgcolor: isSelected ? `${currentTheme.palette?.primary?.main}08` : 'background.paper',
                         opacity: isDeleting ? 0.3 : 1,
-                        transform: isDeleting ? 'scale(0.95)' : 'scale(1)',
+                        transform: isDeleting ? 'scale(0.98)' : 'scale(1)',
                       }}
                       onClick={(e) => {
                         if (e.ctrlKey || e.metaKey) {
@@ -1442,13 +1400,13 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                         }
                       }}
                     >
-                      <CardContent sx={{ py: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <IconComponent sx={{ fontSize: 32, color: fileInfo.color }} />
-                          
+                      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <IconComponent sx={{ fontSize: 20, color: fileInfo.color, flexShrink: 0 }} />
+
                           <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Typography
-                              variant="subtitle1"
+                              variant="body2"
                               sx={{
                                 fontWeight: 600,
                                 whiteSpace: "nowrap",
@@ -1459,70 +1417,59 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                             >
                               {doc.name}
                             </Typography>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                mt: 0.5,
-                              }}
-                            >
-                              {doc.content.substring(0, 200)}...
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                              <Chip 
-                                label={fileInfo.category} 
-                                size="small" 
-                                sx={{ 
-                                  bgcolor: fileInfo.color + '20',
-                                  color: fileInfo.color,
-                                  fontWeight: 600,
-                                }}
-                              />
-                              {(() => {
-                                const sourceInfo = getContentSourceInfo(doc, shouldUseVector);
-                                return (
-                                  <Chip
-                                    icon={<sourceInfo.icon sx={{ fontSize: '0.8rem' }} />}
-                                    label={sourceInfo.label}
-                                    size="small"
-                                    sx={{
-                                      bgcolor: sourceInfo.bgColor,
-                                      color: sourceInfo.color,
-                                      fontWeight: 500,
-                                      fontSize: '0.75rem',
-                                      '& .MuiChip-icon': {
-                                        color: sourceInfo.color,
-                                      }
-                                    }}
-                                  />
-                                );
-                              })()}
-                              <Chip 
-                                label={formatFileSize(doc.content.length * 2)} 
-                                size="small" 
-                                variant="outlined"
-                              />
-                            </Box>
                           </Box>
 
-                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexShrink: 0 }}>
+                            <Chip
+                              label={fileInfo.category}
+                              size="small"
+                              sx={{
+                                bgcolor: fileInfo.color + '20',
+                                color: fileInfo.color,
+                                fontWeight: 600,
+                              }}
+                            />
+                            {(() => {
+                              const sourceInfo = getContentSourceInfo(doc, shouldUseVector);
+                              return (
+                                <Chip
+                                  icon={<sourceInfo.icon sx={{ fontSize: '0.8rem' }} />}
+                                  label={sourceInfo.label}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: sourceInfo.bgColor,
+                                    color: sourceInfo.color,
+                                    fontWeight: 500,
+                                    fontSize: '0.75rem',
+                                    '& .MuiChip-icon': {
+                                      color: sourceInfo.color,
+                                    }
+                                  }}
+                                />
+                              );
+                            })()}
+                            <Chip
+                              label={formatFileSize(doc.content.length * 2)}
+                              size="small"
+                              variant="outlined"
+                              sx={{ display: { xs: 'none', sm: 'flex' } }}
+                            />
+                          </Box>
+
+                          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexShrink: 0 }}>
                             <IconButton
+                              size="small"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleDocumentSelection(doc.id);
                               }}
-                              sx={{ 
-                                width: 32,
-                                height: 32,
+                              sx={{
+                                width: 28,
+                                height: 28,
                                 bgcolor: isSelected ? 'primary.main' : 'transparent',
                                 color: isSelected ? 'primary.contrastText' : 'text.secondary',
-                                border: isSelected ? 'none' : '2px solid',
-                                borderColor: 'text.secondary',
+                                border: isSelected ? 'none' : '1px solid',
+                                borderColor: 'divider',
                                 borderRadius: '50%',
                                 '&:hover': {
                                   bgcolor: isSelected ? 'primary.dark' : 'action.hover',
@@ -1531,50 +1478,34 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                               }}
                             >
                               {isSelected ? (
-                                <CheckIcon sx={{ fontSize: 16 }} />
+                                <CheckIcon sx={{ fontSize: 14 }} />
                               ) : (
-                                <Box sx={{ 
-                                  width: 12, 
-                                  height: 12, 
+                                <Box sx={{
+                                  width: 10,
+                                  height: 10,
                                   borderRadius: '50%',
                                   bgcolor: 'transparent'
                                 }} />
                               )}
                             </IconButton>
-                            
-                            <Button
-                              variant="outlined"
+
+                            <IconButton
                               size="small"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDownloadDocument(e, doc);
                               }}
-                              sx={{ 
-                                textTransform: 'none',
-                                height: { xs: 32, sm: 36, md: 40 }, // Responsive height matching grid view
-                                minWidth: { xs: 90, sm: 100, md: 110 }, // Consistent width
-                                borderWidth: 2,
-                                fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' }, // Responsive font
-                                fontWeight: 600,
-                                px: { xs: 1, sm: 1.5 }, // Responsive padding
-                                '&:hover': {
-                                  borderWidth: 2,
-                                  bgcolor: 'primary.main',
-                                  color: 'primary.contrastText',
-                                  transform: 'translateY(-1px)',
-                                  boxShadow: 2,
-                                },
-                              }}
-                              startIcon={<DownloadIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />}
+                              sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
                             >
-                              Download
-                            </Button>
-                            
+                              <DownloadIcon sx={{ fontSize: 18 }} />
+                            </IconButton>
+
                             <IconButton
+                              size="small"
                               onClick={(e) => handleRemoveDocument(e, doc.id)}
                               color="error"
                             >
-                              <DeleteIcon />
+                              <DeleteIcon sx={{ fontSize: 18 }} />
                             </IconButton>
                           </Box>
                         </Box>
@@ -1587,13 +1518,13 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
 
             {/* No Results */}
             {filteredAndSortedDocuments.length === 0 && (
-              <Card sx={{ textAlign: 'center', py: 6 }}>
+              <Card sx={{ textAlign: 'center', py: 4, borderRadius: 2, boxShadow: 'none', border: '1px solid', borderColor: 'divider' }}>
                 <CardContent>
-                  <SearchIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                  <SearchIcon sx={{ fontSize: 20, color: 'text.secondary', mb: 1 }} />
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     No documents found
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                     Try adjusting your search or filter criteria
                   </Typography>
                   <Button
@@ -1602,7 +1533,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({
                       setSearchQuery('');
                       setSelectedCategory('all');
                     }}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 1 }}
                   >
                     Clear Filters
                   </Button>

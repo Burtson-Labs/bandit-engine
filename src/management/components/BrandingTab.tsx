@@ -254,38 +254,33 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
   return (
     <Box sx={{ height: "100%", display: 'flex', flexDirection: 'column', p: { xs: 1.5, sm: 2 } }}>
       {/* Header Section */}
-      <Box sx={{ mb: { xs: 2, md: 3 }, flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box sx={{ mb: { xs: 1.5, md: 2 }, flex: '0 0 auto' }}>
         <Typography
           variant="h5"
           sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: '1.55rem', md: '1.8rem' } }}
         >
           Branding & Themes
         </Typography>
-        <Typography
-          variant="body1"
-          sx={{ color: "text.secondary", fontSize: { xs: '0.95rem', sm: '1rem' }, lineHeight: 1.5 }}
-        >
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           Customize your brand identity and visual appearance.
         </Typography>
-
-        <Alert severity="info" sx={{ borderRadius: 2, px: { xs: 1.5, sm: 2 }, py: { xs: 1.25, sm: 1.5 } }}>
-          <Typography variant="body2" sx={{ fontSize: { xs: '0.82rem', sm: '0.88rem' }, lineHeight: 1.6 }}>
-            <strong>Logo requirements:</strong> JPG or PNG up to 10MB. Uploads open a built-in cropper to help you
-            finalize the perfect size. Leave any fields blank to fall back to Bandit defaults.
-          </Typography>
-        </Alert>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
+          Logo: JPG or PNG up to 10MB; uploads open a built-in cropper, and blank fields fall back to Bandit defaults.
+        </Typography>
       </Box>
 
       {/* Main Content Section */}
       <Paper
         sx={{
-          p: { xs: 1.5, sm: 2 },
+          p: { xs: 1.5, sm: 1.75 },
+          border: '1px solid',
+          borderColor: 'divider',
           borderRadius: 2,
           flex: 1,
           display: 'flex',
           flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 1.5, md: 2.5 },
-          mb: { xs: 2, md: 3 },
+          gap: { xs: 1.5, md: 1.5 },
+          mb: { xs: 1.25, md: 1.5 },
         }}
       >
         {/* Logo Upload and Branding Text Section */}
@@ -294,14 +289,13 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
             width: { xs: '100%', md: '26%' },
             display: 'flex',
             flexDirection: 'column',
-            height: { xs: 'auto', md: 320 },
-            gap: { xs: 2, md: 0 },
+            height: { xs: 'auto', md: 260 },
+            gap: { xs: 1.5, md: 0 },
           }}
         >
           {/* Logo Upload Section - Fixed height to match preview */}
           <Box sx={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1, fontSize: '1rem', color: "text.primary" }}>
-              <UploadIcon color="primary" fontSize="small" />
+            <Typography variant="overline" sx={{ mb: 0.5, fontWeight: 700, fontSize: '0.7rem', letterSpacing: 0.6, color: "text.secondary" }}>
               Logo Upload
             </Typography>
 
@@ -321,7 +315,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
                 transition: 'all 0.3s ease',
                 position: 'relative',
                 flex: '1 1 auto',
-                minHeight: 160,
+                minHeight: 120,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -366,7 +360,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
                   <UploadIcon
                     className="upload-icon"
                     sx={{
-                      fontSize: 56,
+                      fontSize: 32,
                       color: 'text.secondary',
                       transition: 'color 0.3s ease'
                     }}
@@ -414,7 +408,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
             )}
           </Box>
           {/* Branding Text Section - Fixed at bottom */}
-          <Box sx={{ mt: 2, flex: '0 0 auto' }}>
+          <Box sx={{ mt: 1.5, flex: '0 0 auto' }}>
             <TextField
               label="Custom Branding Text"
               variant="outlined"
@@ -432,14 +426,13 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
         </Box>
         {/* Live Preview Section */}
         <Box sx={{ flex: 1, width: '100%' }}>
-          <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1, fontSize: '1rem', color: "text.primary" }}>
-            <PreviewIcon color="primary" fontSize="small" />
+          <Typography variant="overline" sx={{ mb: 0.5, fontWeight: 700, fontSize: '0.7rem', letterSpacing: 0.6, color: "text.secondary", display: 'block' }}>
             Live Preview
           </Typography>
           {/* New Chat Preview - closer to real chat page */}
           <Box
             sx={{
-              height: { xs: 260, md: 320 },
+              height: { xs: 220, md: 260 },
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
@@ -447,7 +440,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
               borderRadius: 2,
               overflow: 'hidden',
               px: 2,
-              py: 3,
+              py: 2,
             }}
           >
             {/* Centered Logo - Top section */}
@@ -535,15 +528,15 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
       </Paper>
 
       {/* Theme Selection - Compact */}
-      <Paper sx={{ p: 2, borderRadius: 2, flex: '0 0 auto', mb: 2 }}>
-        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600, fontSize: '1rem', color: "text.primary" }}>
+      <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, border: '1px solid', borderColor: 'divider', borderRadius: 2, flex: '0 0 auto', mb: { xs: 1.25, md: 1.5 } }}>
+        <Typography variant="overline" sx={{ mb: 1, fontWeight: 700, fontSize: '0.7rem', letterSpacing: 0.6, color: "text.secondary", display: 'block' }}>
           Theme Selection
         </Typography>
 
         <Box
           sx={{
             display: "grid",
-            gap: 1.5,
+            gap: 1,
             gridTemplateColumns: {
               xs: "repeat(4, 1fr)",
               sm: "repeat(6, 1fr)",
@@ -568,12 +561,10 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
                   position: 'relative',
                   overflow: 'visible',
                   "&:hover": {
-                    transform: 'scale(1.05)',
-                    boxShadow: 2,
                     borderColor: "primary.main",
                   },
                 }}
-                elevation={isSelected ? 2 : 0}
+                elevation={0}
               >
                 {isSelected && (
                   <Chip
@@ -590,10 +581,10 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
                     }}
                   />
                 )}
-                <CardContent sx={{ p: 1 }}>
+                <CardContent sx={{ p: 0.75, '&:last-child': { pb: 0.75 } }}>
                   <Box
                     sx={{
-                      height: 40,
+                      height: 32,
                       backgroundColor: themeOption.palette?.background?.default,
                       borderRadius: 1,
                       position: "relative",
@@ -658,13 +649,13 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
       </Paper>
 
       {/* Action Buttons - Compact */}
-      <Paper sx={{ p: 2, borderRadius: 2, flex: '0 0 auto' }}>
-        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600, fontSize: '1rem', color: "text.primary" }}>
+      <Paper sx={{ p: { xs: 1.5, sm: 1.75 }, border: '1px solid', borderColor: 'divider', borderRadius: 2, flex: '0 0 auto' }}>
+        <Typography variant="overline" sx={{ mb: 1, fontWeight: 700, fontSize: '0.7rem', letterSpacing: 0.6, color: "text.secondary", display: 'block' }}>
           Actions
         </Typography>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-          <Box sx={{ flexBasis: { xs: 'calc(50% - 6px)', sm: 'calc(25% - 9px)' } }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ flexBasis: { xs: 'calc(50% - 4px)', sm: 'calc(25% - 6px)' } }}>
             <Button
               variant="outlined"
               fullWidth
@@ -680,7 +671,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
             </Button>
           </Box>
 
-          <Box sx={{ flexBasis: { xs: 'calc(50% - 6px)', sm: 'calc(25% - 9px)' } }}>
+          <Box sx={{ flexBasis: { xs: 'calc(50% - 4px)', sm: 'calc(25% - 6px)' } }}>
             <Button
               variant="outlined"
               fullWidth
@@ -692,7 +683,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
             </Button>
           </Box>
 
-          <Box sx={{ flexBasis: { xs: 'calc(50% - 6px)', sm: 'calc(25% - 9px)' } }}>
+          <Box sx={{ flexBasis: { xs: 'calc(50% - 4px)', sm: 'calc(25% - 6px)' } }}>
             <Button
               variant="outlined"
               fullWidth
@@ -711,7 +702,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({
             />
           </Box>
 
-          <Box sx={{ flexBasis: { xs: 'calc(50% - 6px)', sm: 'calc(25% - 9px)' } }}>
+          <Box sx={{ flexBasis: { xs: 'calc(50% - 4px)', sm: 'calc(25% - 6px)' } }}>
             <Button
               variant="outlined"
               fullWidth

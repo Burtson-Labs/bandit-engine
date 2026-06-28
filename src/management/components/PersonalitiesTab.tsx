@@ -96,7 +96,6 @@ interface PersonalitiesTabProps {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [personalityTabIndex, setPersonalityTabIndex] = useState(0);
-  const sectionGap = isMobile ? 2 : 3;
   const tabWrapperStyles = isMobile ? { flexDirection: 'column', gap: 0.35, fontSize: '0.78rem' } : { flexDirection: 'row', gap: 0.75, fontSize: '0.95rem' };
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -785,54 +784,23 @@ interface PersonalitiesTabProps {
 
   const renderCreateEditTab = () => (
     <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
-      <Box sx={{ mb: { xs: 2.5, md: 4 } }}>
+      <Box sx={{ mb: { xs: 1.25, md: 1.5 } }}>
         <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 600,
-            mb: 1,
-            color: "primary.main",
-            fontSize: { xs: "1.55rem", sm: "1.7rem" },
-          }}
+          variant="overline"
+          sx={{ fontWeight: 700, color: "primary.main", letterSpacing: 0.5, display: "block" }}
         >
           {localSelectedModel.selectedModel ? "Edit Personality" : "Create New Personality"}
         </Typography>
-        
-        <Typography
-          variant="body1"
-          sx={{ color: "text.secondary", mb: { xs: 2, md: 3 }, fontSize: { xs: "0.95rem", sm: "1rem" }, lineHeight: 1.5 }}
-        >
-          {localSelectedModel.selectedModel 
-            ? `Customize and modify the "${localSelectedModel.selectedModel}" personality to better suit your needs.`
-            : "Design a custom AI personality that matches your brand, use case, and communication style."
-          }
+        <Typography variant="body2" color="text.secondary">
+          {localSelectedModel.selectedModel
+            ? `Customize the "${localSelectedModel.selectedModel}" personality.`
+            : "Design a custom AI personality matching your brand and use case."}
         </Typography>
-
-        {!localSelectedModel.selectedModel && (
-          <Alert 
-            severity="info" 
-            sx={{ 
-              mb: { xs: 2.5, md: 3 }, 
-              borderRadius: 2,
-              border: "1px solid rgba(25, 118, 210, 0.2)",
-              background: "linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(66, 165, 245, 0.05) 100%)",
-              px: { xs: 1.5, sm: 2 },
-              py: { xs: 1.25, sm: 1.5 }
-            }}
-          >
-            <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}>
-              Creating a new personality
-            </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary", fontSize: { xs: "0.85rem", sm: "0.9rem" }, lineHeight: 1.5 }}>
-              Fill out the form below to create your custom AI assistant. Start with a template from the Templates tab, or build from scratch!
-            </Typography>
-          </Alert>
-        )}
       </Box>
 
-      <Box sx={{ mb: sectionGap }}>
+      <Box sx={{ mb: 1.5 }}>
         {localSelectedModel.selectedModel && (
-          <Box sx={{ display: "flex", alignItems: "center", mt: 2, mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
             <Avatar
               src={
                 resolveAvatar(
@@ -843,12 +811,12 @@ interface PersonalitiesTabProps {
                 )
               }
               alt={localSelectedModel.selectedModel}
-              sx={{ width: 48, height: 48, mr: 2, filter: "brightness(1.5)" }}
+              sx={{ width: 36, height: 36, mr: 1.5, filter: "brightness(1.5)" }}
             />
-            <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }}>{localSelectedModel.selectedModel}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary" }}>{localSelectedModel.selectedModel}</Typography>
           </Box>
         )}
-        
+
         <TextField
           label="Select Existing Personality to Edit"
           variant="outlined"
@@ -883,7 +851,7 @@ interface PersonalitiesTabProps {
           }}
           fullWidth
           select
-          sx={{ mb: sectionGap }}
+          sx={{ mb: 1.5 }}
         >
           <MenuItem value="">Create New Personality</MenuItem>
           {availableModels.map((model, index) => (
@@ -894,38 +862,37 @@ interface PersonalitiesTabProps {
         </TextField>
       </Box>
 
-      <TextField
-        label="Personality Name"
-        variant="outlined"
-        value={localSelectedModel.name}
-        onChange={(e) =>
-          setLocalSelectedModel({ ...localSelectedModel, name: e.target.value })
-        }
-        fullWidth
-        placeholder="e.g., My Custom Assistant"
-        sx={{ mb: sectionGap }}
-      />
-      
-      <TextField
-        label="Tagline"
-        variant="outlined"
-        value={localSelectedModel.tagline}
-        onChange={(e) =>
-          setLocalSelectedModel({ ...localSelectedModel, tagline: e.target.value })
-        }
-        fullWidth
-        placeholder="e.g., Your helpful companion for daily tasks"
-        sx={{ mb: sectionGap }}
-      />
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 1.5, mb: 1.5 }}>
+        <TextField
+          label="Personality Name"
+          variant="outlined"
+          value={localSelectedModel.name}
+          onChange={(e) =>
+            setLocalSelectedModel({ ...localSelectedModel, name: e.target.value })
+          }
+          fullWidth
+          placeholder="e.g., My Custom Assistant"
+        />
+        <TextField
+          label="Tagline"
+          variant="outlined"
+          value={localSelectedModel.tagline}
+          onChange={(e) =>
+            setLocalSelectedModel({ ...localSelectedModel, tagline: e.target.value })
+          }
+          fullWidth
+          placeholder="e.g., Your helpful companion for daily tasks"
+        />
+      </Box>
 
-      <Box sx={{ mb: sectionGap }}>
-        <Typography variant="body1" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 700, color: "text.primary" }}>
           Mood & Personality
         </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-          Click any mood to automatically add personality instructions to your system prompt:
+        <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+          Click a mood to add personality instructions to your prompt.
         </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {moodSuggestions.map((mood) => (
             <Chip
               key={mood.label}
@@ -953,14 +920,14 @@ interface PersonalitiesTabProps {
       </Box>
 
       {/* Formatting Guidance */}
-      <Box sx={{ mb: sectionGap }}>
-        <Typography variant="body1" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 700, color: "text.primary" }}>
           Formatting Tips
         </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-          Click any tip to add professional formatting to your system prompt:
+        <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+          Click a tip to add formatting guidance to your prompt.
         </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {[
             { label: "Be Specific", text: "Always be specific and detailed in your responses.", color: "#2196F3" },
             { label: "Stay In Character", text: "Maintain your personality consistently throughout the conversation.", color: "#4CAF50" },
@@ -1018,14 +985,14 @@ interface PersonalitiesTabProps {
       </Box>
 
       {/* Formatting Tools */}
-      <Box sx={{ mb: sectionGap }}>
-        <Typography variant="body1" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 700, color: "text.primary" }}>
           Formatting Tools
         </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-          Add visual formatting to make your AI responses more engaging:
+        <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+          Add visual formatting to make responses more engaging.
         </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
           {[
             { 
               label: "Highlight Text", 
@@ -1134,32 +1101,31 @@ interface PersonalitiesTabProps {
         }
         fullWidth
         multiline
-        rows={10}
+        rows={8}
         placeholder="Describe how your assistant should behave..."
         InputLabelProps={{ shrink: true }}
         InputProps={{
           style: {
-            minHeight: isMobile ? "auto" : "180px",
-            maxHeight: "360px",
+            maxHeight: "320px",
           },
         }}
-        sx={{ mb: 3 }}
+        sx={{ mb: 1.5 }}
       />
 
       {/* Avatar selection: show for all models */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="body1" sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
+      <Box sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 700, color: "text.primary" }}>
           Select an Avatar
         </Typography>
-        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-          Choose from our curated collection of avatars to give your AI personality a face:
+        <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+          Choose an avatar to give your personality a face.
         </Typography>
-        
+
         {/* Premium Professional Avatars */}
-        <Typography variant="caption" sx={{ mb: 1, color: "primary.main", fontWeight: 600, display: "block" }}>
+        <Typography variant="caption" sx={{ mb: 0.75, color: "primary.main", fontWeight: 600, display: "block" }}>
           Robotic Collection
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1.5, mb: 1.5, flexWrap: "wrap" }}>
           {[
             { label: 'Fembot', src: "https://cdn.burtson.ai/avatars/fembot.png" },
             { label: 'Dudebot', src: "https://cdn.burtson.ai/avatars/dudebot.png" },
@@ -1174,8 +1140,8 @@ interface PersonalitiesTabProps {
                 setCustomAvatarBase64(null);
               }}
               sx={{
-                width: 72,
-                height: 72,
+                width: 56,
+                height: 56,
                 border: presetAvatar === src ? "3px solid #1976d2" : "2px solid transparent",
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -1191,10 +1157,10 @@ interface PersonalitiesTabProps {
         </Box>
 
         {/* Professional Character Avatars */}
-        <Typography variant="caption" sx={{ mb: 1, color: "secondary.main", fontWeight: 600, display: "block" }}>
-          👥 Professional Characters
+        <Typography variant="caption" sx={{ mb: 0.75, color: "secondary.main", fontWeight: 600, display: "block" }}>
+          Professional Characters
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: 1.5, mb: 1.5, flexWrap: "wrap" }}>
           {[
             { label: 'Business Professional', src: "https://cdn.burtson.ai/avatars/businessman.png", role: 'Business & Strategy' },
             { label: 'Data Scientist', src: "https://cdn.burtson.ai/avatars/datascience.png", role: 'Analytics & Insights' },
@@ -1205,7 +1171,7 @@ interface PersonalitiesTabProps {
             { label: 'Startup Mentor', src: "https://cdn.burtson.ai/avatars/startupmentor.png", role: 'Entrepreneurship' },
             { label: 'Travel Expert', src: "https://cdn.burtson.ai/avatars/travel.png", role: 'Travel & Adventure' },
           ].map(({ label, src, role }) => (
-            <Box key={label} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+            <Box key={label} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
               <Avatar
                 src={src}
                 alt={label}
@@ -1214,8 +1180,8 @@ interface PersonalitiesTabProps {
                   setCustomAvatarBase64(null);
                 }}
                 sx={{
-                  width: 72,
-                  height: 72,
+                  width: 56,
+                  height: 56,
                   border: presetAvatar === src ? "3px solid #1976d2" : "2px solid transparent",
                   cursor: "pointer",
                   transition: "all 0.2s",
@@ -1245,49 +1211,47 @@ interface PersonalitiesTabProps {
         </Box>
 
         {/* Custom Upload Section */}
-        <Typography variant="caption" sx={{ mb: 1, color: "warning.main", fontWeight: 600, display: "block" }}>
+        <Typography variant="caption" sx={{ mb: 0.75, color: "warning.main", fontWeight: 600, display: "block" }}>
           Custom Upload
         </Typography>
-        <Button 
-          variant="outlined" 
-          component="label"
-          sx={{
-            mb: 2,
-            px: { xs: 2.2, sm: 3 },
-            py: { xs: 1.2, sm: 1.5 },
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            borderStyle: 'dashed',
-            borderWidth: 2,
-            '&:hover': {
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { sm: "center" }, gap: 1.5 }}>
+          <Button
+            variant="outlined"
+            component="label"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
               borderStyle: 'dashed',
               borderWidth: 2,
-            },
-            width: { xs: '100%', sm: 'auto' }
-          }}
-        >
-          Upload & Crop Custom Avatar
-          <input 
-            type="file" 
-            accept="image/png, image/jpeg, image/jpg" 
-            hidden 
-            onChange={handleImageUpload}
-          />
-        </Button>
-        
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.8rem' }}>
-          • Supports JPG/PNG up to 10MB • Built-in cropper for perfect sizing • Final output: 512×512px
-        </Typography>
+              '&:hover': {
+                borderStyle: 'dashed',
+                borderWidth: 2,
+              },
+              width: { xs: '100%', sm: 'auto' }
+            }}
+          >
+            Upload & Crop Custom Avatar
+            <input
+              type="file"
+              accept="image/png, image/jpeg, image/jpg"
+              hidden
+              onChange={handleImageUpload}
+            />
+          </Button>
+          <Typography variant="caption" color="text.secondary">
+            JPG/PNG up to 10MB · output 512×512px
+          </Typography>
+        </Box>
 
         {(customAvatarBase64 || presetAvatar) && (
-          <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Avatar
               src={(customAvatarBase64 || presetAvatar) as string}
               alt="Avatar Preview"
-              sx={{ 
-                width: 96, 
-                height: 96,
+              sx={{
+                width: 56,
+                height: 56,
                 border: '3px solid',
                 borderColor: 'primary.main',
                 boxShadow: 3
@@ -1320,11 +1284,11 @@ interface PersonalitiesTabProps {
           zIndex: { xs: 5, sm: "auto" },
           display: "flex",
           flexDirection: { xs: "column", sm: "row" },
-          gap: { xs: 1.5, sm: 2 },
+          gap: { xs: 1.5, sm: 1.5 },
           justifyContent: "flex-start", // Changed from flex-end to flex-start
           mr: { xs: 0, sm: 10 }, // Add right margin to avoid FAB
-          mb: { xs: 8, sm: 2 }, // Add bottom margin on mobile for FAB clearance
-          mt: { xs: 1.5, sm: 0 },
+          mb: { xs: 8, sm: 1.5 }, // Add bottom margin on mobile for FAB clearance
+          mt: { xs: 1.5, sm: 0.5 },
           p: { xs: 1.1, sm: 0 },
           borderRadius: { xs: 2, sm: 0 },
           border: { xs: "1px solid", sm: "none" },
@@ -1362,23 +1326,22 @@ interface PersonalitiesTabProps {
           flexDirection: { xs: "column", md: "row" },
           alignItems: { xs: "flex-start", md: "center" },
           justifyContent: "space-between",
-          mb: { xs: 2, md: 3 },
+          mb: { xs: 1.25, md: 1.5 },
           flexWrap: "wrap",
-          gap: { xs: 1.5, md: 2 },
+          gap: { xs: 1, md: 1.5 },
         }}
       >
         <Typography
-          variant="h5"
-          sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: "1.45rem", md: "1.65rem" } }}
+          variant="subtitle2"
+          sx={{ fontWeight: 700, color: "primary.main" }}
         >
           Manage Personalities ({availableModels.length})
         </Typography>
-        <Box sx={{ display: "flex", gap: { xs: 1, md: 2 }, flexWrap: "wrap", width: { xs: "100%", md: "auto" } }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", width: { xs: "100%", md: "auto" } }}>
           <Button
             variant="contained"
             color="primary"
-            size={isMobile ? "medium" : "large"}
-            startIcon={<AutoAwesomeIcon fontSize={isMobile ? 'small' : 'medium'} />}
+            startIcon={<AutoAwesomeIcon fontSize="small" />}
             onClick={() => {
               setLocalSelectedModel({
                 name: "",
@@ -1390,16 +1353,10 @@ interface PersonalitiesTabProps {
               setPresetAvatar(null);
               setPersonalityTabIndex(1); // Switch to Create/Edit tab
             }}
-            sx={{ 
-              px: { xs: 2.2, md: 3 },
-              py: { xs: 0.95, md: 1 },
+            sx={{
               fontWeight: 600,
               borderRadius: 2,
               textTransform: 'none',
-              boxShadow: 3,
-              '&:hover': {
-                boxShadow: 6,
-              },
               width: { xs: '100%', sm: 'auto' }
             }}
           >
@@ -1417,15 +1374,15 @@ interface PersonalitiesTabProps {
       </Box>
 
       {availableModels.length === 0 ? (
-        <Card sx={{ textAlign: "center", py: 8, border: "2px dashed", borderColor: "divider" }}>
+        <Card sx={{ textAlign: "center", py: 3, border: "1px dashed", borderColor: "divider", borderRadius: 2, boxShadow: "none" }}>
           <CardContent>
-            <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }} gutterBottom>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary" }} gutterBottom>
               No Personalities Yet
             </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Get started by creating your first custom AI personality or choosing from our templates.
+            <Typography variant="body2" color="text.secondary">
+              Create your first custom AI personality or choose from a template.
             </Typography>
-            <Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap", mt: 3 }}>
+            <Box sx={{ display: "flex", gap: 1.5, justifyContent: "center", flexWrap: "wrap", mt: 1.5 }}>
               <Button
                 variant="contained"
                 color="primary"
@@ -1440,7 +1397,7 @@ interface PersonalitiesTabProps {
               setPresetAvatar(null);
               setPersonalityTabIndex(1); // Switch to Create/Edit tab
             }}
-            sx={{ px: { xs: 2.4, md: 3 }, py: { xs: 0.95, md: 1 }, width: { xs: '100%', sm: 'auto' } }}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
             Create From Scratch
           </Button>
@@ -1448,7 +1405,7 @@ interface PersonalitiesTabProps {
             variant="outlined"
             color="primary"
             onClick={() => setPersonalityTabIndex(0)} // Switch to Templates tab
-            sx={{ px: { xs: 2.4, md: 3 }, py: { xs: 0.95, md: 1 }, width: { xs: '100%', sm: 'auto' } }}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
           >
             Browse Templates
           </Button>
@@ -1456,41 +1413,33 @@ interface PersonalitiesTabProps {
           </CardContent>
         </Card>
       ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, md: 3 } }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           {availableModels.map((model) => (
-          <Card key={model.name} sx={{ border: "1px solid", borderColor: "divider" }}>
-            <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: { xs: 1.5, md: 2 } }}>
-                <Avatar
-                  src={resolveAvatar(model)}
-                  alt={model.name}
-                  sx={{ width: { xs: 44, sm: 48 }, height: { xs: 44, sm: 48 }, mr: { xs: 1.5, sm: 2 } }}
-                />
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body1" sx={{ fontWeight: 600, color: "text.primary" }}>
-                    {model.name}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                    {model.tagline}
-                  </Typography>
-                </Box>
+          <Card key={model.name} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, boxShadow: "none" }}>
+            <CardContent
+              sx={{
+                p: 1,
+                "&:last-child": { pb: 1 },
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                flexWrap: { xs: "wrap", sm: "nowrap" },
+              }}
+            >
+              <Avatar
+                src={resolveAvatar(model)}
+                alt={model.name}
+                sx={{ width: 40, height: 40, flexShrink: 0 }}
+              />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", lineHeight: 1.2 }} noWrap>
+                  {model.name}
+                </Typography>
+                <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }} noWrap>
+                  {model.tagline}
+                </Typography>
               </Box>
-              
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: "text.secondary", 
-                  mb: 3,
-                  display: "-webkit-box",
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-              >
-                {model.systemPrompt}
-              </Typography>
-
-              <Box sx={{ display: "flex", gap: 2 }}>
+              <Box sx={{ display: "flex", gap: 1, flexShrink: 0, width: { xs: "100%", sm: "auto" } }}>
                 <Button
                   variant="outlined"
                   color="primary"
@@ -1505,7 +1454,7 @@ interface PersonalitiesTabProps {
                     setPresetAvatar(null);
                     setPersonalityTabIndex(1); // Switch to edit tab
                   }}
-                  sx={{ flex: 1 }}
+                  sx={{ flex: { xs: 1, sm: "initial" } }}
                 >
                   Edit
                 </Button>
@@ -1513,7 +1462,7 @@ interface PersonalitiesTabProps {
                   variant="outlined"
                   color="error"
                   onClick={() => handleDeletePersonality(model.name)}
-                  sx={{ flex: 1 }}
+                  sx={{ flex: { xs: 1, sm: "initial" } }}
                 >
                   Delete
                 </Button>

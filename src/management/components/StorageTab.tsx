@@ -21,8 +21,6 @@ import {
   Box,
   Typography,
   Button,
-  Card,
-  CardContent,
   LinearProgress,
   Dialog,
   DialogTitle,
@@ -651,23 +649,22 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
 
   return (
     <Box>
-      <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, pt: 3, pb: 5 }}>
+      <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: 2, pb: 3 }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ 
-            display: 'flex', 
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{
+            display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
-            justifyContent: 'space-between', 
-            alignItems: { xs: 'stretch', sm: 'flex-start' }, 
-            gap: { xs: 2, sm: 0 },
-            mb: 2 
+            justifyContent: 'space-between',
+            alignItems: { xs: 'stretch', sm: 'flex-start' },
+            gap: { xs: 1.5, sm: 0 },
           }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="h5" color="text.primary" sx={{ mb: 1, fontWeight: 600 }}>
+              <Typography variant="h5" color="text.primary" sx={{ mb: 0.5, fontWeight: 600 }}>
                 Storage Management
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Monitor and manage your local browser storage usage
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Monitor and manage your local browser storage usage.
               </Typography>
             </Box>
             <Box sx={{ 
@@ -682,18 +679,17 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
                 size="small"
                 onClick={loadStorageData}
                 disabled={loading}
-                sx={{ 
+                sx={{
                   minWidth: { xs: 'auto', sm: 'fit-content' },
                   flex: { xs: '1', sm: '0 0 auto' },
-                  minHeight: 36
                 }}
               >
                 <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-                  <RefreshIcon fontSize="medium" />
+                  <RefreshIcon fontSize="small" />
                   Refresh
                 </Box>
                 <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', justifyContent: 'center' }}>
-                  <RefreshIcon fontSize="medium" />
+                  <RefreshIcon fontSize="small" />
                 </Box>
               </Button>
               {clearableCategories.length > 0 && (
@@ -735,116 +731,104 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
         </Box>
 
         {/* Storage Overview */}
-        <Box sx={{ mb: 4 }}>
-          {/* Storage Quota - Full width on mobile */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent sx={{ 
-              display: 'flex', 
-              flexDirection: 'column',
-              minHeight: 180 
-            }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: "text.primary" }}>
-                <StorageIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Storage Quota
-              </Typography>
-              <Box sx={{ mb: 2, flex: 1 }}>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  <Chip 
-                    label={`${formatBytes(storageQuota.used)} Used`} 
-                    color="warning" 
-                    size="small" 
-                    variant="outlined"
-                  />
-                  <Chip 
-                    label={`${formatBytes(storageQuota.available)} Available`} 
-                    color="success" 
-                    size="small" 
-                    variant="outlined"
-                  />
-                  <Chip 
-                    label={`${formatBytes(storageQuota.quota)} Total`} 
-                    color="info" 
-                    size="small" 
-                    variant="outlined"
-                  />
-                  {storageQuota.browserQuotaEstimate > 0 &&
-                   storageQuota.quota > 0 &&
-                   Math.abs(storageQuota.browserQuotaEstimate - storageQuota.quota) > storageQuota.quota * 0.05 && (
-                    <Chip
-                      label={`≈${formatBytes(storageQuota.browserQuotaEstimate)} Browser Estimate`}
-                      color="default"
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={usagePercentage}
-                  sx={{
-                    height: 8,
-                    borderRadius: 4,
-                    bgcolor: 'action.hover',
-                    '& .MuiLinearProgress-bar': {
-                      borderRadius: 4,
-                      bgcolor: usagePercentage > 80 ? 'error.main' : usagePercentage > 60 ? 'warning.main' : 'success.main',
-                    }
-                  }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                  {usagePercentage.toFixed(1)}% used
-                </Typography>
-              </Box>
-              {usagePercentage > 80 && (
-                <Alert severity="warning" sx={{ mt: 'auto' }}>
-                  Storage usage is high. Consider clearing unused data.
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
+        <Box
+          sx={{
+            p: { xs: 1.5, sm: 1.75 },
+            mb: { xs: 1.25, md: 1.5 },
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+          }}
+        >
+          {/* Storage Quota */}
+          <Typography variant="overline" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <StorageIcon fontSize="small" />
+            Storage Quota
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.5, mb: 1.5 }}>
+            <Chip
+              label={`${formatBytes(storageQuota.used)} Used`}
+              color="warning"
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`${formatBytes(storageQuota.available)} Available`}
+              color="success"
+              size="small"
+              variant="outlined"
+            />
+            <Chip
+              label={`${formatBytes(storageQuota.quota)} Total`}
+              color="info"
+              size="small"
+              variant="outlined"
+            />
+            {storageQuota.browserQuotaEstimate > 0 &&
+             storageQuota.quota > 0 &&
+             Math.abs(storageQuota.browserQuotaEstimate - storageQuota.quota) > storageQuota.quota * 0.05 && (
+              <Chip
+                label={`≈${formatBytes(storageQuota.browserQuotaEstimate)} Browser Estimate`}
+                color="default"
+                size="small"
+                variant="outlined"
+              />
+            )}
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={usagePercentage}
+            sx={{
+              height: 6,
+              borderRadius: 3,
+              bgcolor: 'action.hover',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3,
+                bgcolor: usagePercentage > 80 ? 'error.main' : usagePercentage > 60 ? 'warning.main' : 'success.main',
+              }
+            }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {usagePercentage.toFixed(1)}% used
+          </Typography>
+          {usagePercentage > 80 && (
+            <Alert severity="warning" sx={{ mt: 1, py: 0 }}>
+              Storage usage is high. Consider clearing unused data.
+            </Alert>
+          )}
 
-          {/* Usage Summary - Full width on mobile */}
-          <Card>
-            <CardContent sx={{ 
-              display: 'flex', 
-              flexDirection: 'column',
-              minHeight: 140 
-            }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: "text.primary" }}>
-                Usage Summary
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                <Chip 
-                  label={`${storageCategories.length} Categories`} 
-                  color="primary" 
-                  size="small" 
-                />
-                <Chip 
-                  label={`${storageCategories.reduce((sum, cat) => sum + cat.itemCount, 0)} Items`} 
-                  color="secondary" 
-                  size="small" 
-                />
-                <Chip 
-                  label={`${formatBytes(totalUsed)} Used`} 
-                  color="info" 
-                  size="small" 
-                />
-              </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 'auto' }}>
-                {usageSummaryMessage}
-              </Typography>
-            </CardContent>
-          </Card>
+          {/* Usage Summary */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 1.5 }}>
+            <Chip
+              label={`${storageCategories.length} Categories`}
+              color="primary"
+              size="small"
+            />
+            <Chip
+              label={`${storageCategories.reduce((sum, cat) => sum + cat.itemCount, 0)} Items`}
+              color="secondary"
+              size="small"
+            />
+            <Chip
+              label={`${formatBytes(totalUsed)} Used`}
+              color="info"
+              size="small"
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            {usageSummaryMessage}
+          </Typography>
         </Box>
 
         {/* Storage Categories */}
-        <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}>
+        <Typography variant="overline" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>
           Storage Categories
         </Typography>
 
         <Box>
           {storageCategories.length === 0 ? (
-            <Alert severity="info" sx={{ mt: 2 }}>
+            <Alert severity="info" sx={{ mt: 1 }}>
               <Typography variant="body2">
                 No storage data found. This could mean:
               </Typography>
@@ -858,7 +842,7 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
               </Typography>
             </Alert>
           ) : (
-            <Stack spacing={2}>
+            <Stack spacing={1}>
               {storageCategories.map((category) => {
                 const IconComponent = category.icon;
                 // Calculate percentage relative to total storage quota for more meaningful display
@@ -875,80 +859,89 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
                 });
                 
                 return (
-                  <Accordion key={category.name} sx={{ bgcolor: 'background.paper' }}>
+                  <Accordion
+                    key={category.name}
+                    disableGutters
+                    elevation={0}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      '&:before': { display: 'none' },
+                    }}
+                  >
                     <AccordionSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls={`${category.name}-content`}
                       id={`${category.name}-header`}
+                      sx={{ px: 1.5, minHeight: 0, '& .MuiAccordionSummary-content': { my: 1 } }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pr: 2 }}>
-                        <IconComponent sx={{ color: category.color, mr: 2 }} />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography 
-                            variant="body1" 
-                            style={{ 
-                              fontWeight: 600,
-                              color: theme.palette.mode === 'dark' ? '#ffffff' : theme.palette.text.primary
+                      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1.5, pr: 1.5 }}>
+                        <IconComponent fontSize="small" sx={{ color: category.color }} />
+                        <Typography
+                          variant="body2"
+                          style={{
+                            fontWeight: 600,
+                            color: theme.palette.mode === 'dark' ? '#ffffff' : theme.palette.text.primary,
+                          }}
+                          sx={{ minWidth: 0, flexShrink: 0 }}
+                        >
+                          {category.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                          {formatBytes(category.size)}
+                        </Typography>
+                        <Chip
+                          label={`${category.itemCount} items`}
+                          size="small"
+                          variant="outlined"
+                        />
+                        <Box sx={{ flex: 1, minWidth: 24 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.min(categoryRelativePercentage, 100)} // Use relative percentage for visual bar
+                            sx={{
+                              height: 4,
+                              borderRadius: 2,
+                              bgcolor: 'action.hover',
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 2,
+                                bgcolor: category.color,
+                              }
                             }}
-                          >
-                            {category.name}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5 }}>
-                            <Typography variant="body2" color="text.secondary">
-                              {formatBytes(category.size)}
-                            </Typography>
-                            <Chip 
-                              label={`${category.itemCount} items`} 
-                              size="small" 
-                              variant="outlined"
-                            />
-                            <Box sx={{ flex: 1, mx: 2 }}>
-                              <LinearProgress
-                                variant="determinate"
-                                value={Math.min(categoryRelativePercentage, 100)} // Use relative percentage for visual bar
-                                sx={{
-                                  height: 4,
-                                  borderRadius: 2,
-                                  bgcolor: 'action.hover',
-                                  '& .MuiLinearProgress-bar': {
-                                    borderRadius: 2,
-                                    bgcolor: category.color,
-                                  }
-                                }}
-                              />
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {categoryRelativePercentage.toFixed(1)}%
-                            </Typography>
-                          </Box>
+                          />
                         </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                          {categoryRelativePercentage.toFixed(1)}%
+                        </Typography>
                       </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ pl: 5 }}>
-                        <Typography variant="body2" color="text.secondary" paragraph>
+                    <AccordionDetails sx={{ px: 1.5, pt: 0, pb: 1.5 }}>
+                      <Box sx={{ pl: 3.5 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                           {category.description}
                         </Typography>
-                        
-                        <Typography variant="subtitle2" gutterBottom>
-                          Storage Locations:
+
+                        <Typography variant="overline" sx={{ color: 'text.secondary' }}>
+                          Storage Locations
                         </Typography>
-                        <List dense>
+                        <List dense disablePadding>
                           {category.stores.map((store) => (
-                            <ListItem key={store} sx={{ py: 0.5 }}>
-                              <ListItemIcon sx={{ minWidth: 32 }}>
+                            <ListItem key={store} sx={{ py: 0.25 }}>
+                              <ListItemIcon sx={{ minWidth: 28 }}>
                                 <StorageIcon fontSize="small" />
                               </ListItemIcon>
-                              <ListItemText 
+                              <ListItemText
                                 primary={store}
-                                primaryTypographyProps={{ variant: 'body2', fontFamily: 'monospace' }}
+                                primaryTypographyProps={{ variant: 'caption', fontFamily: 'monospace' }}
                               />
                             </ListItem>
                           ))}
                         </List>
 
                         {category.canClear ? (
-                          <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                          <Box sx={{ mt: 1, pt: 1, borderTop: 1, borderColor: 'divider' }}>
                             <Button
                               variant="outlined"
                               color="error"
@@ -960,19 +953,15 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
                               Clear {category.name}
                             </Button>
                             {category.clearWarning && (
-                              <Alert severity="warning" sx={{ mt: 2 }}>
-                                <Typography variant="caption">
-                                  {category.clearWarning}
-                                </Typography>
-                              </Alert>
+                              <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
+                                {category.clearWarning}
+                              </Typography>
                             )}
                           </Box>
                         ) : (
-                          <Alert severity="info" sx={{ mt: 2 }}>
-                            <Typography variant="caption">
-                              {category.itemCount === 0 ? 'This category is empty.' : 'This category cannot be cleared automatically.'}
-                            </Typography>
-                          </Alert>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                            {category.itemCount === 0 ? 'This category is empty.' : 'This category cannot be cleared automatically.'}
+                          </Typography>
                         )}
                       </Box>
                     </AccordionDetails>
@@ -984,62 +973,78 @@ const StorageTab: React.FC<StorageTabProps> = ({ currentTheme }) => {
         </Box>
 
         {/* Storage Tips */}
-        <Card sx={{ mt: 4 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: "text.primary" }}>
-              <InfoIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Storage Tips & Clear Options
-            </Typography>
-            <List>
-              <ListItem>
-                <ListItemIcon>
-                  <CheckCircleIcon
-                    sx={{
-                      color: syncFeaturesActive
-                        ? theme.palette.warning.main
-                        : theme.palette.success.main,
-                    }}
-                  />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={storageStatusPrimary}
-                  secondary={
-                    syncFeaturesActive
-                      ? 'Some features (conversation sync or advanced vector storage) can sync items to your configured gateway storage.'
-                      : 'With conversation sync and advanced vector storage turned off, everything stays in this browser.'
-                  }
+        <Box
+          sx={{
+            mt: 1.5,
+            p: { xs: 1.5, sm: 1.75 },
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Typography variant="overline" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <InfoIcon fontSize="small" />
+            Storage Tips & Clear Options
+          </Typography>
+          <List dense disablePadding sx={{ mt: 0.5 }}>
+            <ListItem sx={{ py: 0.5 }}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <CheckCircleIcon
+                  fontSize="small"
+                  sx={{
+                    color: syncFeaturesActive
+                      ? theme.palette.warning.main
+                      : theme.palette.success.main,
+                  }}
                 />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <CleaningServicesIcon color="info" />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Clear All Data (Safe)"
-                  secondary="Deletes all items but keeps database structure intact. App continues working normally."
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <DeleteIcon color="error" />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Nuclear Clear (Complete Reset)"
-                  secondary="Completely destroys all databases and forces app reload. Use only for complete reset."
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemIcon>
-                  <WarningIcon color="warning" />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Backup important data"
-                  secondary="Export custom models and important documents before clearing storage"
-                />
-              </ListItem>
-            </List>
-          </CardContent>
-        </Card>
+              </ListItemIcon>
+              <ListItemText
+                primary={storageStatusPrimary}
+                primaryTypographyProps={{ variant: 'body2' }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+                secondary={
+                  syncFeaturesActive
+                    ? 'Some features (conversation sync or advanced vector storage) can sync items to your configured gateway storage.'
+                    : 'With conversation sync and advanced vector storage turned off, everything stays in this browser.'
+                }
+              />
+            </ListItem>
+            <ListItem sx={{ py: 0.5 }}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <CleaningServicesIcon fontSize="small" color="info" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Clear All Data (Safe)"
+                primaryTypographyProps={{ variant: 'body2' }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+                secondary="Deletes all items but keeps database structure intact. App continues working normally."
+              />
+            </ListItem>
+            <ListItem sx={{ py: 0.5 }}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Nuclear Clear (Complete Reset)"
+                primaryTypographyProps={{ variant: 'body2' }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+                secondary="Completely destroys all databases and forces app reload. Use only for complete reset."
+              />
+            </ListItem>
+            <ListItem sx={{ py: 0.5 }}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <WarningIcon fontSize="small" color="warning" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Backup important data"
+                primaryTypographyProps={{ variant: 'body2' }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+                secondary="Export custom models and important documents before clearing storage"
+              />
+            </ListItem>
+          </List>
+        </Box>
 
         {/* Clear Category Dialog */}
         <Dialog 
