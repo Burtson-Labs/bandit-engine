@@ -1054,46 +1054,68 @@ const Management = () => {
     });
   }, [theme]);
   // Side navigation tab config
+  // requiresAdmin: platform/tenant CONFIG — only a workspace admin sees these.
+  // Preferences is the user's OWN settings, so it has requiresAdmin: false.
   const allNavTabs = [
     {
       label: "Personalities",
       icon: <FaceRetouchingNaturalIcon />,
-      requiresFeature: 'limitedAdminDashboard', // Available to premium+
+      requiresFeature: 'limitedAdminDashboard',
+      requiresAdmin: true,
     },
     {
       label: "Branding",
       icon: <BrushIcon />,
-      requiresFeature: 'limitedAdminDashboard', // Available to premium+
+      requiresFeature: 'limitedAdminDashboard',
+      requiresAdmin: true,
     },
     {
       label: "Knowledge",
       icon: <MenuBookIcon />,
-      requiresFeature: 'limitedAdminDashboard', // Available to premium+
+      requiresFeature: 'limitedAdminDashboard',
+      requiresAdmin: true,
     },
     {
       label: "Storage",
       icon: <StorageIcon />,
-      requiresFeature: 'limitedAdminDashboard', // Available to premium+ (changed from adminDashboardEnabled)
+      requiresFeature: 'limitedAdminDashboard',
+      requiresAdmin: true,
     },
     {
       label: "Preferences",
       icon: <TuneIcon />,
-      requiresFeature: 'limitedAdminDashboard', // Available to premium+
+      requiresFeature: 'limitedAdminDashboard',
+      requiresAdmin: false,
     },
     {
       label: "Provider",
       icon: <CloudIcon />,
-      requiresFeature: 'advancedSearch', // Pro/Team users with advanced features
+      requiresFeature: 'advancedSearch',
+      requiresAdmin: true,
     },
     {
       label: "Tools",
       icon: <BuildIcon />,
-      requiresFeature: 'advancedSearch', // Pro/Team users with advanced features
+      requiresFeature: 'advancedSearch',
+      requiresAdmin: true,
     },
   ];
 
-  // Filter tabs based on user's features
+  // A workspace admin is a platform admin (admin / super-user) OR any team
+  // "<team>-admin" role (e.g. pburg-bowling-admin). Trial/consumer users have
+  // none of these, so they only ever see Preferences — they can never view or
+  // change shared Provider/MCP/Branding/etc. that affect the wider workspace.
+  const adminRoleNames = new Set([
+    'admin', 'super-user', 'superuser', 'super_admin', 'platform_admin', 'tenant_admin',
+  ]);
+  const userRoles = (
+    authenticationService.parseJwtClaims(authenticationService.getToken() ?? "")?.roles ?? []
+  ).map((r) => r.toLowerCase());
+  const isWorkspaceAdmin = userRoles.some((r) => adminRoleNames.has(r) || r.endsWith('-admin'));
+
+  // Filter tabs by role first, then by the user's plan features.
   const navTabs = allNavTabs.filter(tab => {
+    if (tab.requiresAdmin && !isWorkspaceAdmin) return false;
     if (tab.requiresFeature === 'limitedAdminDashboard') {
       return hasLimitedAdminDashboard() || hasAdminDashboard();
     }
