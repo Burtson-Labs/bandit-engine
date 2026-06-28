@@ -112,7 +112,6 @@ export const ProviderTab: React.FC = () => {
     gatewayUrl: packageSettings?.gatewayApiUrl || '',
     provider: 'bandit'
   });
-  const [isProviderConfigOpen, setIsProviderConfigOpen] = useState(false);
 
   // Snackbar states
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -391,20 +390,12 @@ export const ProviderTab: React.FC = () => {
               mb: 2,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, color: "text.primary" }}>
+            <Typography variant="overline" sx={{ fontWeight: 700, color: "text.secondary", letterSpacing: 0.6 }}>
               Provider Configuration
             </Typography>
-            <Button
-              variant="outlined"
-              onClick={() => setIsProviderConfigOpen(!isProviderConfigOpen)}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              {isProviderConfigOpen ? 'Hide' : 'Configure'} Provider
-            </Button>
           </Box>
 
-          {isProviderConfigOpen && (
-            <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 2 }}>
               {/* Provider Type Selection */}
               <TextField
                 label="Provider Type"
@@ -668,7 +659,6 @@ export const ProviderTab: React.FC = () => {
                 </Button>
               </Box>
             </Box>
-          )}
         </Paper>
 
         {/* Migration note */}
