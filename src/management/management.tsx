@@ -1101,17 +1101,23 @@ const Management = () => {
     },
   ];
 
-  // A workspace admin is a platform admin (admin / super-user) OR any team
-  // "<team>-admin" role (e.g. pburg-bowling-admin). Trial/consumer users have
-  // none of these, so they only ever see Preferences — they can never view or
-  // change shared Provider/MCP/Branding/etc. that affect the wider workspace.
-  const adminRoleNames = new Set([
-    'admin', 'super-user', 'superuser', 'super_admin', 'platform_admin', 'tenant_admin',
+  // Phase 0 (the banditailabs.com PLATFORM site): only PLATFORM admins see the
+  // config tabs. We deliberately do NOT grant access for "<team>-admin"/product
+  // roles here — AuthApi's TeamService adds a "<product>-admin" role when a user
+  // joins a team/product, so a brand-new consumer can carry one. A tenant admin
+  // gets their powers inside their OWN tenant workspace (Phase 1, resolved by
+  // subdomain), not on the shared platform site. So normal users
+  // (user / team_member / "<product>-admin") see only Preferences here.
+  // NOTE: 'super-user' is intentionally EXCLUDED — AuthApi currently defaults new
+  // local signups to super-user (LocalAuthService), so it is not a reliable admin
+  // marker. Gate on the explicit platform-admin roles only.
+  const platformAdminRoles = new Set([
+    'admin', 'platform_admin', 'super_admin',
   ]);
   const userRoles = (
     authenticationService.parseJwtClaims(authenticationService.getToken() ?? "")?.roles ?? []
   ).map((r) => r.toLowerCase());
-  const isWorkspaceAdmin = userRoles.some((r) => adminRoleNames.has(r) || r.endsWith('-admin'));
+  const isWorkspaceAdmin = userRoles.some((r) => platformAdminRoles.has(r));
 
   // Filter tabs by role first, then by the user's plan features.
   const navTabs = allNavTabs.filter(tab => {
