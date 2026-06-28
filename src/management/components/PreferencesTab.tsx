@@ -532,7 +532,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
         <Typography
           variant="h5"
           color="text.primary"
-          sx={{ mb: 1, fontWeight: 600, fontSize: { xs: '1.6rem', md: '1.8rem' } }}
+          sx={{ mb: 1, fontWeight: 600, fontSize: { xs: '1.3rem', md: '1.45rem' } }}
         >
           Preferences
         </Typography>
