@@ -422,11 +422,11 @@ interface PersonalitiesTabProps {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minWidth: { xs: "42px", sm: "48px" },
-            height: { xs: "42px", sm: "48px" },
+            minWidth: { xs: "36px", sm: "38px" },
+            height: { xs: "36px", sm: "38px" },
             boxShadow: "0 4px 12px rgba(25,118,210,0.25)",
           }}>
-            <RocketLaunchOutlinedIcon sx={{ fontSize: { xs: "1.3rem", sm: "1.5rem" }, color: 'common.white' }} />
+            <RocketLaunchOutlinedIcon sx={{ fontSize: { xs: "1.15rem", sm: "1.25rem" }, color: 'common.white' }} />
           </Box>
           <Box sx={{ textAlign: { xs: "left", md: "initial" }, flex: 1 }}>
             <Typography 
@@ -438,7 +438,7 @@ interface PersonalitiesTabProps {
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 mb: { xs: 0.25, sm: 0.5 },
-                fontSize: { xs: "1.35rem", sm: "1.75rem" }
+                fontSize: { xs: "1.2rem", sm: "1.35rem" }
               }}
             >
               Quick Start Templates
@@ -465,7 +465,7 @@ interface PersonalitiesTabProps {
         />
       </Box>
       
-      {isMobile ? (
+      {isMobile && (
         <Box
           sx={{
             mb: 1.75,
@@ -494,37 +494,12 @@ interface PersonalitiesTabProps {
             </Typography>
           </Collapse>
         </Box>
-      ) : (
-        <Alert
-          severity="info"
-          sx={{
-            mb: { xs: 2.5, md: 4 },
-            borderRadius: 2,
-            border: "1px solid rgba(25, 118, 210, 0.2)",
-            background: "linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(66, 165, 245, 0.05) 100%)",
-            px: { xs: 1.5, sm: 2 },
-            py: { xs: 1.25, sm: 1.5 },
-            "& .MuiAlert-icon": {
-              color: "primary.main"
-            }
-          }}
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: "primary.main", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}>
-              Choose a template to get started instantly
-            </Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary", fontSize: { xs: "0.85rem", sm: "0.9rem" }, lineHeight: 1.5 }}>
-              Click any template to automatically fill the creation form with a proven personality setup.
-              You can then customize it further to match your specific needs.
-            </Typography>
-          </Box>
-        </Alert>
       )}
       
       {/* Create from Scratch Card */}
       <Card
         sx={{
-          mb: { xs: 2, md: 2.5 },
+          mb: { xs: 1.5, md: 2 },
           background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
           border: "2px solid transparent",
           borderRadius: { xs: 2.25, sm: 3 },
@@ -562,7 +537,7 @@ interface PersonalitiesTabProps {
         }}
       >
         <CardContent sx={{
-          p: { xs: 1.75, sm: 2.5 },
+          p: { xs: 1.5, sm: 1.75 },
           color: "white",
           textAlign: "left",
           position: "relative",
@@ -580,7 +555,7 @@ interface PersonalitiesTabProps {
             mb: 0,
             flexShrink: 0,
           }}>
-            <AutoAwesomeIcon sx={{ fontSize: { xs: 28, sm: 34 }, color: 'common.white', filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }} />
+            <AutoAwesomeIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: 'common.white', filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.25))" }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography 
@@ -589,7 +564,7 @@ interface PersonalitiesTabProps {
                 fontWeight: 700,
                 mb: 0.25,
                 textShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                fontSize: { xs: "1.1rem", sm: "1.25rem" }
+                fontSize: { xs: "1rem", sm: "1.1rem" }
               }}
             >
               Create from Scratch
@@ -651,7 +626,7 @@ interface PersonalitiesTabProps {
               border: "1px solid",
               borderColor: "rgba(255,255,255,0.1)",
               borderRadius: 3,
-              minHeight: { xs: "auto", md: "188px" },
+              minHeight: { xs: "auto", md: "150px" },
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -693,9 +668,9 @@ interface PersonalitiesTabProps {
             onClick={() => handleTemplateSelect(template)}
           >
             <CardContent sx={{ 
-              p: { xs: 2, sm: 3 }, 
-              display: "flex", 
-              flexDirection: "column", 
+              p: { xs: 1.5, sm: 2 },
+              display: "flex",
+              flexDirection: "column",
               height: "100%",
               justifyContent: "space-between"
             }}>
@@ -704,15 +679,15 @@ interface PersonalitiesTabProps {
                 <Box sx={{ 
                   display: "flex", 
                   alignItems: "center", 
-                  mb: { xs: 1.25, md: 2.5 },
-                  minHeight: { xs: "auto", md: "60px" }
+                  mb: { xs: 1, md: 1.5 },
+                  minHeight: { xs: "auto", md: "auto" }
                 }}>
                   <Avatar
                     src={template.avatar}
                     alt={template.name}
                     sx={{
-                      width: { xs: 40, sm: 56, md: 60 },
-                      height: { xs: 40, sm: 56, md: 60 },
+                      width: { xs: 40, sm: 48, md: 52 },
+                      height: { xs: 40, sm: 48, md: 52 },
                       mr: { xs: 1.2, md: 2 },
                       transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -762,11 +737,11 @@ interface PersonalitiesTabProps {
                     lineHeight: 1.5,
                     fontSize: { xs: "0.82rem", sm: "0.85rem", md: "0.875rem" },
                     display: "-webkit-box",
-                    WebkitLineClamp: { xs: 2, sm: 4 },
+                    WebkitLineClamp: { xs: 2, sm: 3 },
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
-                    mb: { xs: 1.25, md: 2 },
-                    minHeight: { xs: "auto", md: "84px" },
+                    mb: { xs: 1, md: 1.5 },
+                    minHeight: { xs: "auto", md: "auto" },
                   }}
                 >
                   {template.description}
@@ -804,19 +779,6 @@ interface PersonalitiesTabProps {
         ))}
       </Box>
 
-      {!isMobile && (
-        <Alert 
-          severity="info" 
-          sx={{ mt: { xs: 2.5, md: 4 }, borderRadius: 2, px: { xs: 1.5, sm: 2 }, py: { xs: 1.25, sm: 1.5 } }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: "0.85rem", sm: "0.9rem" } }}>
-            Pro Tip:
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, lineHeight: 1.5 }}>
-            Click any template to automatically switch to the Create/Edit tab with the form pre-filled. Mix and match ideas to create your perfect AI personality!
-          </Typography>
-        </Alert>
-      )}
       </Box>
     </>
   );
