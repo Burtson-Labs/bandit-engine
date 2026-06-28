@@ -346,11 +346,11 @@ export const ProviderTab: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 3, md: 4 } }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 } }}>
       <Box sx={{ mb: { xs: 2.5, md: 3 } }}>
         <Typography
           variant="h5"
-          sx={{ fontWeight: 600, mb: 1, color: "primary.main", fontSize: { xs: '1.6rem', md: '1.8rem' } }}
+          sx={{ fontWeight: 600, mb: 1, color: "primary.main", fontSize: { xs: '1.3rem', md: '1.45rem' } }}
         >
           AI Provider Configuration
         </Typography>
