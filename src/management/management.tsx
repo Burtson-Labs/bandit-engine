@@ -1108,11 +1108,12 @@ const Management = () => {
   // gets their powers inside their OWN tenant workspace (Phase 1, resolved by
   // subdomain), not on the shared platform site. So normal users
   // (user / team_member / "<product>-admin") see only Preferences here.
-  // NOTE: 'super-user' is intentionally EXCLUDED — AuthApi currently defaults new
-  // local signups to super-user (LocalAuthService), so it is not a reliable admin
-  // marker. Gate on the explicit platform-admin roles only.
+  // super-user IS a platform-admin role. The real bug was AuthApi granting it to
+  // verified TRIAL users by default (LocalAuthService.GrantVerifiedRoles) — fixed
+  // on the AuthApi side so trials get 'user'. Existing trial accounts that already
+  // carry super-user stay admins until their role is removed.
   const platformAdminRoles = new Set([
-    'admin', 'platform_admin', 'super_admin',
+    'admin', 'super-user', 'superuser', 'platform_admin', 'super_admin',
   ]);
   const userRoles = (
     authenticationService.parseJwtClaims(authenticationService.getToken() ?? "")?.roles ?? []
