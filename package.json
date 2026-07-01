@@ -51,7 +51,7 @@
     "@burtson-labs/bandit-types": "^1.0.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/material": "^7.1.0",
+    "@mui/material": ">=5",
     "@tanstack/react-query": "^5.66.3",
     "axios": "^1.7.9",
     "highlight.js": "^11.10.0",
@@ -60,7 +60,7 @@
     "lucide-react": "^1.7.0",
     "mammoth": "^1.9.0",
     "pdfjs-dist": "^5.2.133",
-    "react": "^19.0.0",
+    "react": ">=18",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.5.0",
@@ -69,7 +69,7 @@
     "remark-gfm": "^4.0.1",
     "rxjs": "^7.8.2",
     "uuid": "^11.1.0",
-    "zustand": "^4.5.6"
+    "zustand": ">=4"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
@@ -101,5 +101,8 @@
       "types": "./dist/public-types.d.ts",
       "default": "./dist/public-types.d.ts"
     }
+  },
+  "allowScripts": {
+    "esbuild@0.25.11": true
   }
 }
